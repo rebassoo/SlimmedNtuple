@@ -20,4 +20,5 @@
 <use name="DataFormats/EgammaCandidates"/>
 <use name="RecoEgamma/EgammaTools"/>
 <use name="HLTrigger/HLTcore"/>
+<use name="DataFormats/HepMCCandidate"/>
 <flags EDM_PLUGIN="1"/>
