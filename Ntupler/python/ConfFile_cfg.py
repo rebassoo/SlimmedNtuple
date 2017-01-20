@@ -1,7 +1,5 @@
 import FWCore.ParameterSet.Config as cms
 
-#TSETING CHANGE
-
 process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
@@ -9,7 +7,7 @@ process.MessageLogger.cerr.threshold = ''
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1001) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5000) )
 
 process.source = cms.Source("PoolSource",
@@ -35,18 +33,18 @@ process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 process.load("Configuration.Geometry.GeometryIdeal_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.GlobalTag.globaltag = '80X_dataRun2_2016SeptRepro_v4'  #
 
-#from Configuration.AlCa.GlobalTag import GlobalTag
-#process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
+ISMC = False
+from Configuration.AlCa.GlobalTag import GlobalTag
+if ISMC:
+    process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
+else:
+    process.GlobalTag.globaltag = '80X_dataRun2_2016SeptRepro_v4'  #
 
-#process.demo = cms.EDAnalyzer('Ntupler'
-#)
-
-#process.dump=cms.EDAnalyzer('EventContentAnalyzer')
-
+CHANNEL="mue"
 process.load("SlimmedNtuple.Ntupler.CfiFile_cfi") 
-
+process.demo.ismc=True
+process.demo.channel="mue"
 
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 # turn on VID producer, indicate data format  to be
@@ -61,8 +59,8 @@ switchOnVIDElectronIdProducer(process, dataFormat)
 
 # define which IDs we want to produce
 my_id_modules = [
-'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronHLTPreselecition_Summer16_V1_cff'
-#'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Summer16_80X_V1_cff',
+#'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronHLTPreselecition_Summer16_V1_cff'
+'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Summer16_80X_V1_cff',
 #'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronHLTPreselecition_Summer16_V1_cff',
     ]
 
@@ -71,7 +69,7 @@ for idmod in my_id_modules:
     setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
 
-
+process.dump=cms.EDAnalyzer('EventContentAnalyzer')
 #process.p = cms.Path(process.demo*process.dump)
 process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
 #process.p = cms.Path(process.demo)
