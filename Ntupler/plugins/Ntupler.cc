@@ -49,6 +49,7 @@
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateClosestToPoint.h"
 
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 //#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
 //For Electrons
@@ -69,18 +70,7 @@
 #include "DataFormats/CTPPSDigi/interface/TotemVFATStatus.h"
 #include "DataFormats/CTPPSDetId/interface/TotemRPDetId.h"
 
-//For Conversions
-//#include "DataFormats/EgammaCandidates/interface/ConversionFwd.h"
-//#include "DataFormats/EgammaCandidates/interface/Conversion.h"
-//#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
-
-//For electrons
-//#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
-//#include "DataFormats/PatCandidates/interface/Electron.h"
-
-//For electron id
-//#include "DataFormats/Common/interface/ValueMap.h"
-//#include "DataFormats/PatCandidates/interface/VIDCutFlowResult.h"
+#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 
 #include "shared_track.h"
 #include "shared_alignment.h"
@@ -122,6 +112,8 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   string fp1;
   AlignmentResultsCollection alignment;
   TTree * tree_;
+  bool isMC;
+  string channel;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
   // ID decisions objects
   edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
@@ -136,6 +128,14 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   std::vector<float> * muon_pz_;
   std::vector<float> * muon_e_;
   std::vector<float> * muon_charge_;
+
+  std::vector<float> * electron_pt_;
+  std::vector<float> * electron_eta_;
+  std::vector<float> * electron_px_;
+  std::vector<float> * electron_py_;
+  std::vector<float> * electron_pz_;
+  std::vector<float> * electron_e_;
+  std::vector<float> * electron_charge_;
 
   uint * vertex_ntracks_;
   float * vertex_x_;
@@ -163,6 +163,7 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   uint * ev_;
   uint * lumiblock_;
 
+  float * Tnpv_;
   float * mumu_mass_;
   float * mumu_rapidity_;
 
@@ -187,30 +188,24 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig)
   cout<<"I get to beginning of constructor"<<endl;
   //now do what ever initialization is needed
   usesResource("TFileService");
+  isMC = iConfig.getParameter<bool>("ismc");
+  channel = iConfig.getParameter<string>("channel");
+  cout<<"channel is: "<<channel<<endl;
   consumes<reco::TrackCollection>(edm::InputTag("generalTracks"));
   consumes<std::vector<reco::Muon>>(edm::InputTag("muons"));
   consumes<std::vector<reco::Vertex>>(edm::InputTag("offlinePrimaryVertices"));
   consumes< edm::DetSetVector<TotemRPLocalTrack> >(edm::InputTag("totemRPLocalTrackFitter"));
   consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","","HLT"));
-  //consumes<edm::TriggerResults>(edm::InputTag("TriggerResults"));
-
-  //consumes<edm::ValueMap<bool> >(iConfig.getParameter<edm::InputTag>("eleIdMap"))
+  consumes<reco::GenParticleCollection>(edm::InputTag("genParticles"));
   consumes<reco::GsfElectronCollection >(edm::InputTag("gedGsfElectrons"));
   consumes<reco::ConversionCollection>(edm::InputTag("allConversions"));
-
+  consumes<std::vector< PileupSummaryInfo > >(edm::InputTag("addPileupInfo"));
   beamSpotToken_= consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
-  //eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronHLTPreselection-Summer16-V1"));
-eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
-  //eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronHLTPreselection-Summer16-V1"));
- eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
+  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
+  eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
 
   fp0 = iConfig.getParameter<string>("particleFile");
   fp1 = iConfig.getParameter<string>("particleFile2");
-  //fp = iConfig.getParameter<edm::FileInPath>("particleFile");
-  //fp2 = iConfig.getParameter<edm::FileInPath>("particleFile2");
-  //cout<<"file path alignment: "<<fp.fullPath()<<endl;
-  //cout<<"file path optics: "<<fp.fullPath()<<endl;
-  //cout<<"Is local?: "<<fp.isLocal()<<endl;
 
   InitReconstruction(fp1);
   InitFillInfoCollection();
@@ -228,6 +223,14 @@ eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:c
   muon_pz_ = new std::vector<float>;
   muon_e_ = new std::vector<float>;
   muon_charge_ = new std::vector<float>;
+
+  electron_pt_ = new std::vector<float>;
+  electron_eta_ = new std::vector<float>;
+  electron_px_ = new std::vector<float>;
+  electron_py_ = new std::vector<float>;
+  electron_pz_ = new std::vector<float>;
+  electron_e_ = new std::vector<float>;
+  electron_charge_ = new std::vector<float>;
 
   vertex_ntracks_ = new uint;
   vertex_x_ = new float;
@@ -254,6 +257,7 @@ eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:c
   run_ = new uint;
   lumiblock_ = new uint;
 
+  Tnpv_ = new float;
   mumu_mass_ = new float;
   mumu_rapidity_ = new float;
 
@@ -268,6 +272,15 @@ eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:c
   tree_->Branch("muon_pz",&muon_pz_);
   tree_->Branch("muon_e",&muon_e_);
   tree_->Branch("muon_charge",&muon_charge_);
+
+  tree_->Branch("electron_pt",&electron_pt_);
+  tree_->Branch("electron_eta",&electron_eta_);
+  tree_->Branch("electron_px",&electron_px_);
+  tree_->Branch("electron_py",&electron_py_);
+  tree_->Branch("electron_pz",&electron_pz_);
+  tree_->Branch("electron_e",&electron_e_);
+  tree_->Branch("electron_charge",&electron_charge_);
+
   tree_->Branch("vertex_ntracks",vertex_ntracks_,"vertex_ntracks/i");
   tree_->Branch("vertex_x",vertex_x_,"vertex_x/f");
   tree_->Branch("vertex_y",vertex_y_,"vertex_y/f");
@@ -291,6 +304,7 @@ eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:c
   tree_->Branch("event",ev_,"event/i");
   tree_->Branch("lumiblock",lumiblock_,"lumiblock/i");
 
+  tree_->Branch("Tnpv",Tnpv_,"Tnpv/f");
   tree_->Branch("mumu_mass",mumu_mass_,"mumu_mass/f");
   tree_->Branch("mumu_rapidity",mumu_rapidity_,"mumu_rapidity/f");
 
@@ -311,6 +325,14 @@ Ntupler::~Ntupler()
   delete muon_pz_;
   delete muon_e_;
   delete muon_charge_;
+
+  delete electron_px_;
+  delete electron_pt_;
+  delete electron_eta_;
+  delete electron_py_;
+  delete electron_pz_;
+  delete electron_e_;
+  delete electron_charge_;
 
   delete vertex_ntracks_;
   delete vertex_x_;
@@ -336,7 +358,7 @@ Ntupler::~Ntupler()
   delete run_;
   delete ev_;
   delete lumiblock_;
-
+  delete Tnpv_;
   delete mumu_mass_;
   delete mumu_rapidity_;
 
@@ -428,6 +450,43 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        //////////////////End of reconstruction of RP si strips////////////////////////////////
        */
 
+
+       if(isMC){
+	 //cout<<" I get into MC"<<endl;
+	 Handle<reco::GenParticleCollection> genP;
+	 iEvent.getByLabel("genParticles",genP);
+	 for (reco::GenParticleCollection::const_iterator mcIter=genP->begin(); mcIter != genP->end(); mcIter++ ) {
+	   //cout<<", MC id is: "<<mcIter->pdgId()<<endl;
+	   //cout<<"MC status is: "<<mcIter->status()<<endl;
+	   //cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
+	   //	     cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
+	   //if ( (fabs(mcIter->pdgId())==11|| fabs(mcIter->pdgId())==12 || fabs(mcIter->pdgId())==13 || fabs(mcIter->pdgId())==14 || fabs(mcIter->pdgId())==15 || fabs(mcIter->pdgId())==16 ) && mcIter->status() == 3 ){
+	   if ( (fabs(mcIter->pdgId())==11|| fabs(mcIter->pdgId())==12 || fabs(mcIter->pdgId())==13 || fabs(mcIter->pdgId())==14 || fabs(mcIter->pdgId())==15 || fabs(mcIter->pdgId())==16 )){
+	     //cout<<", MC id is: "<<mcIter->pdgId()<<endl;
+	     //cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
+	   }
+	   
+	 }
+	 
+	 edm::InputTag PileupSrc_("addPileupInfo");
+	 Handle<std::vector< PileupSummaryInfo > >  PupInfo;
+	 iEvent.getByLabel(PileupSrc_, PupInfo);
+	 std::vector<PileupSummaryInfo>::const_iterator PVI;
+	 //cout<<"I get here pileup 0"<<endl;
+	 for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
+	   //cout<<"I get here pileup 1"<<endl;
+	   //std::cout << " Pileup Information: bunchXing, nvtx: " << PVI->getBunchCrossing() << " " << PVI->getPU_NumInteractions() << std::endl;
+	   //std::cout << " True Num Interactions: " << PVI->getTrueNumInteractions() << endl;
+	   //h_trueNumInteractions->Fill(PVI->getTrueNumInteractions());
+	   if(PVI->getBunchCrossing()==0){     
+	     //h_trueNumInteractions0->Fill(PVI->getTrueNumInteractions());
+	     *Tnpv_=PVI->getTrueNumInteractions();
+	     //*pileupWeight_ = LumiWeights->weight( PVI->getTrueNumInteractions() );
+	   }
+	 }
+	 //cout<<"I get here pileup 2"<<endl;
+       }//end of looking at MC
+
        edm::Handle< std::vector<reco::Vertex> > vtxs;
        iEvent.getByLabel("offlinePrimaryVertices", vtxs);
        std::vector<reco::Vertex>::const_iterator vtxIt ;
@@ -452,6 +511,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        vector<reco::TransientTrack> t_tks = (*theB).build(tks);
        std::vector<reco::TransientTrack>::const_iterator ttrk_It;
        //t_tks.setBeamSpot(beamSpot)
+       std::vector<reco::TransientTrack> ttrkC_mu;
+       std::vector<reco::TransientTrack> ttrkC_e;
        std::vector<reco::TransientTrack> ttrkC;
 
        TLorentzVector mu1,mu2;
@@ -476,7 +537,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   for(const auto at : t_tks){
 	     if(fabs(MuonIt->pt()-at.track().pt())<0.001&&fabs(MuonIt->eta()-at.track().eta())<0.001&&fabs(MuonIt->phi()-at.track().phi())<0.001){
 	       //cout<<"This is the correct track, pt: "<<MuonIt->pt()<<endl;
-	       ttrkC.push_back(at);
+	       ttrkC_mu.push_back(at);
 	     }
 	   }
 	   //reco::TrackRef mutrk = MuonIt->innerTrack();
@@ -513,7 +574,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        edm::Handle<reco::BeamSpot> theBeamSpot;
        iEvent.getByToken(beamSpotToken_,theBeamSpot);
 
-       // conversions                                                                                   
+       // conversions                                                             
        edm::Handle<reco::ConversionCollection> conversions_h;
        iEvent.getByLabel("allConversions", conversions_h);
 
@@ -523,87 +584,124 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        unsigned int n = els_h->size();
        for(unsigned int i = 0; i < n; ++i) {
 	 reco::GsfElectronRef ele(els_h, i);
-
 	 bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,conversions_h,theBeamSpot->position());
-
 	 bool isPassEleId = (*ele_id_decisions)[ele];
 
-	 vid::CutFlowResult fullCutFlowData = (*ele_id_cutflow_data)[ele];
-	 printf("\nDEBUG CutFlow, full info for cand with pt=%f:\n", ele->pt());
-	 //printCutFlowResult(fullCutFlowData);
-
-	 printf("    CutFlow name= %s    decision is %d\n", 
-		fullCutFlowData.cutFlowName().c_str(),
-		(int) fullCutFlowData.cutFlowPassed());
-	 int ncuts = fullCutFlowData.cutFlowSize();
-	 printf(" Index                               cut name              isMasked    value-cut-upon     pass?\n");
-	 for(int icut = 0; icut<ncuts; icut++){
-	   printf("  %2d      %50s    %d        %f          %d\n", icut,
-		  fullCutFlowData.getNameAtIndex(icut).c_str(),
-		  (int)fullCutFlowData.isCutMasked(icut),
-		  fullCutFlowData.getValueCutUpon(icut),
-		  (int)fullCutFlowData.getCutResultByIndex(icut));
+	 if(isPassEleId&&passConvVeto){
+	   (*electron_pt_).push_back(ele->pt());
+	   cout<<"Electron pt: "<<ele->pt()<<endl;
+	   (*electron_eta_).push_back(ele->superCluster()->eta());
+	   (*electron_px_).push_back(ele->px());
+	   (*electron_py_).push_back(ele->py());
+	   (*electron_pz_).push_back(ele->pz());
+	   (*electron_e_).push_back(ele->energy());
+	   (*electron_charge_).push_back(ele->charge());
+	   for(const auto at : t_tks){
+	     if(fabs(ele->pt()-at.track().pt())<0.001&&fabs(ele->eta()-at.track().eta())<0.001&&fabs(ele->phi()-at.track().phi())<0.001){
+	       //cout<<"This is the correct track, pt: "<<MuonIt->pt()<<endl;
+	       ttrkC_e.push_back(at);
+	     }
+	   }//end of looping over tracks to get track matching to electron
 	 }
-
-       }
+	 vid::CutFlowResult fullCutFlowData = (*ele_id_cutflow_data)[ele];
+	 bool verbose_electron=false;
+	 if(verbose_electron){
+	   printf("\nDEBUG CutFlow, full info for cand with pt=%f:\n", ele->pt());
+	   //printCutFlowResult(fullCutFlowData);
+	   printf("    CutFlow name= %s    decision is %d\n", 
+		  fullCutFlowData.cutFlowName().c_str(),
+		  (int) fullCutFlowData.cutFlowPassed());
+	   int ncuts = fullCutFlowData.cutFlowSize();
+	   printf(" Index                               cut name              isMasked    value-cut-upon     pass?\n");
+	   for(int icut = 0; icut<ncuts; icut++){
+	     printf("  %2d      %50s    %d        %f          %d\n", icut,
+		    fullCutFlowData.getNameAtIndex(icut).c_str(),
+		    (int)fullCutFlowData.isCutMasked(icut),
+		    fullCutFlowData.getValueCutUpon(icut),
+		    (int)fullCutFlowData.getCutResultByIndex(icut));
+	   }
+	 }//end of looking at electrons cutflow
+       }//end of loop over electrons
       
 
-       if(ttrkC.size()>1){
-	 AdaptiveVertexFitter fitter;
-	 TransientVertex myVertex = fitter.vertex(ttrkC);
-	 if(myVertex.isValid()){
-	   *fvertex_x_=myVertex.position().x();
-	   *fvertex_y_=myVertex.position().y();
-	   *fvertex_z_=myVertex.position().z();
-	   *fvertex_chi2ndof_=myVertex.normalisedChiSquared();
-	   //cout<<"Position: "<<myVertex.position().x()<<", "<<myVertex.position().y()<<", "<<myVertex.position().z()<<endl;
-	   //cout<<"Ndof: "<<myVertex.degreesOfFreedom()<<endl;
-	   //cout<<"Normalized ChiSquared: "<<myVertex.normalisedChiSquared()<<endl;
-	   //cout<<"ChiSquared: "<<myVertex.totalChiSquared()<<endl;
-	   
-	   uint num_close_tracks=-1;
-	   //for (ttrk_It=t_tks->begin();ttrk_It != t_tks->end(); ++ttrk_It){
-	   for (uint i=0; i < t_tks.size();i++){
-	     //cout<<"Track pt: "<<t_tks[i].track().pt()<<endl;
-	     //cout<<"Track eta: "<<t_tks[i].track().eta()<<endl;
-	     TrajectoryStateClosestToPoint tS=t_tks[i].trajectoryStateClosestToPoint(myVertex.position());
-	     //cout<<"Closest position on track: "<<tS.position().x()<<", "<<tS.position().y()<<", "<<tS.position().z()<<endl;
-	     //believe this is all in cm
-	     if(tS.isValid()){
-	       float closest_pos = sqrt( pow(myVertex.position().x()-tS.position().x(),2)+pow(myVertex.position().y()-tS.position().y(),2)+pow(myVertex.position().z()-tS.position().z(),2));
-	       //cout<<"Closest position: "<<closest_pos<<endl;
-	       if(closest_pos<1){
-		 (*fvertex_tkdist_).push_back(closest_pos);
-		 (*fvertex_tkpt_).push_back(t_tks[i].track().pt());
-		 (*fvertex_tketa_).push_back(t_tks[i].track().eta());
-	       }//fill ntuple with tracks within 1 m
-	       if(closest_pos<0.1){
-		 num_close_tracks++;
-	       }//end of counting tracks within 1 mm
-	     }//end of making sure Trajectory state is valid
-	     else{cout<<"TrajectoryStateClosestToPoint is not valid"<<endl;}
-	   }//end of looping over tracks
-	   *fvertex_ntracks_=num_close_tracks+1;
-	 }//end of requiring valid vertex
-	 else{cout<<"Fitted vertex is not valid"<<endl;
-	   *fvertex_x_=-999.;
-	   *fvertex_y_=-999.;
-	   *fvertex_z_=-999.;
-	   *fvertex_chi2ndof_=-999.;
-	   cout<<"Number tracks at dimuon vertex: "<<*vertex_ntracks_<<endl;
+	 bool fitVertex = false;
+	 if(channel=="mue"){
+	   if(ttrkC_mu.size()==1&&ttrkC_e.size()==1){fitVertex=true;}
 	 }
-       }//end of requirement of two tight muon tracks
-     
-     //}//end of looking at one specific event
-
-   
-       *run_ = iEvent.id().run();
-       *ev_ = iEvent.id().event();
-       *lumiblock_ = iEvent.luminosityBlock();
+	 if(channel=="mumu"){
+	   if(ttrkC_mu.size()==2){fitVertex=true;}
+	 }
+	 if(channel=="ee"){
+	   if(ttrkC_e.size()==2){fitVertex=true;}
+	 }
+	 
+	 if(fitVertex){
+	   AdaptiveVertexFitter fitter;
+	   TransientVertex myVertex;
+	   if(channel=="mue"){
+	     ttrkC.push_back(ttrkC_mu[0]);
+	     ttrkC.push_back(ttrkC_e[0]);
+	     myVertex = fitter.vertex(ttrkC);
+	   }
+	   if(channel=="mumu"){
+	     myVertex = fitter.vertex(ttrkC_mu);
+	   }
+	   if(channel=="ee"){
+	     myVertex = fitter.vertex(ttrkC_e);
+	   }
+	   if(myVertex.isValid()){
+	     *fvertex_x_=myVertex.position().x();
+	     *fvertex_y_=myVertex.position().y();
+	     *fvertex_z_=myVertex.position().z();
+	     *fvertex_chi2ndof_=myVertex.normalisedChiSquared();
+	     //cout<<"Position: "<<myVertex.position().x()<<", "<<myVertex.position().y()<<", "<<myVertex.position().z()<<endl;
+	     //cout<<"Ndof: "<<myVertex.degreesOfFreedom()<<endl;
+	     //cout<<"Normalized ChiSquared: "<<myVertex.normalisedChiSquared()<<endl;
+	     //cout<<"ChiSquared: "<<myVertex.totalChiSquared()<<endl;
+	     
+	     uint num_close_tracks=-1;
+	     //for (ttrk_It=t_tks->begin();ttrk_It != t_tks->end(); ++ttrk_It){
+	     for (uint i=0; i < t_tks.size();i++){
+	       //cout<<"Track pt: "<<t_tks[i].track().pt()<<endl;
+	       //cout<<"Track eta: "<<t_tks[i].track().eta()<<endl;
+	       TrajectoryStateClosestToPoint tS=t_tks[i].trajectoryStateClosestToPoint(myVertex.position());
+	       //cout<<"Closest position on track: "<<tS.position().x()<<", "<<tS.position().y()<<", "<<tS.position().z()<<endl;
+	       //believe this is all in cm
+	       if(tS.isValid()){
+		 float closest_pos = sqrt( pow(myVertex.position().x()-tS.position().x(),2)+pow(myVertex.position().y()-tS.position().y(),2)+pow(myVertex.position().z()-tS.position().z(),2));
+		 //cout<<"Closest position: "<<closest_pos<<endl;
+		 if(closest_pos<1){
+		   (*fvertex_tkdist_).push_back(closest_pos);
+		   (*fvertex_tkpt_).push_back(t_tks[i].track().pt());
+		   (*fvertex_tketa_).push_back(t_tks[i].track().eta());
+		 }//fill ntuple with tracks within 1 cm
+		 if(closest_pos<0.1){
+		   num_close_tracks++;
+		 }//end of counting tracks within 1 mm
+	       }//end of making sure Trajectory state is valid
+	       else{cout<<"TrajectoryStateClosestToPoint is not valid"<<endl;}
+	     }//end of looping over tracks
+	     *fvertex_ntracks_=num_close_tracks+1;
+	   }//end of requiring valid vertex
+	   else{cout<<"Fitted vertex is not valid"<<endl;
+	     *fvertex_x_=-999.;
+	     *fvertex_y_=-999.;
+	     *fvertex_z_=-999.;
+	     *fvertex_chi2ndof_=-999.;
+	     cout<<"Number tracks at dimuon vertex: "<<*vertex_ntracks_<<endl;
+	   }
+	 }//end of requirement of two tight muon tracks
+	 
+	 //}//end of looking at one specific event
+	 
+	 
+	 *run_ = iEvent.id().run();
+	 *ev_ = iEvent.id().event();
+	 *lumiblock_ = iEvent.luminosityBlock();
        
-       tree_->Fill();
-
-     }//end of looking at passing trigger
+	 tree_->Fill();
+	 
+       }//end of looking at passing trigger
 
      (*muon_pt_).clear();
      (*muon_eta_).clear();
@@ -612,6 +710,15 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      (*muon_pz_).clear();
      (*muon_e_).clear();
      (*muon_charge_).clear();
+
+     (*electron_pt_).clear();
+     (*electron_eta_).clear();
+     (*electron_px_).clear();
+     (*electron_py_).clear();
+     (*electron_pz_).clear();
+     (*electron_e_).clear();
+     (*electron_charge_).clear();
+
      (*fvertex_tkdist_).clear();
      (*fvertex_tkpt_).clear();
      (*fvertex_tketa_).clear();
