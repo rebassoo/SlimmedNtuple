@@ -50,6 +50,7 @@
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateClosestToPoint.h"
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 //#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 
 //For Electrons
@@ -114,6 +115,7 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   TTree * tree_;
   bool isMC;
   string channel;
+  edm::LumiReWeighting *LumiWeights;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
   // ID decisions objects
   edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
@@ -164,6 +166,7 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   uint * lumiblock_;
 
   float * Tnpv_;
+  float * pileupWeight_;
   float * mumu_mass_;
   float * mumu_rapidity_;
 
@@ -258,13 +261,17 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig)
   lumiblock_ = new uint;
 
   Tnpv_ = new float;
+  pileupWeight_ = new float;
   mumu_mass_ = new float;
   mumu_rapidity_ = new float;
 
   edm::Service<TFileService> fs; 
   tree_=fs->make<TTree>("SlimmedNtuple","SlimmedNtuple");
-
-
+  
+  if(isMC){
+    LumiWeights = new edm::LumiReWeighting("MCPileup.root","MyDataPileupHistogramNotMu.root","h1","pileup");
+  }
+  
   tree_->Branch("muon_pt",&muon_pt_);
   tree_->Branch("muon_eta",&muon_eta_);
   tree_->Branch("muon_px",&muon_px_);
@@ -305,6 +312,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig)
   tree_->Branch("lumiblock",lumiblock_,"lumiblock/i");
 
   tree_->Branch("Tnpv",Tnpv_,"Tnpv/f");
+  tree_->Branch("pileupWeight",pileupWeight_,"pileupWeight/f");
   tree_->Branch("mumu_mass",mumu_mass_,"mumu_mass/f");
   tree_->Branch("mumu_rapidity",mumu_rapidity_,"mumu_rapidity/f");
 
@@ -359,6 +367,7 @@ Ntupler::~Ntupler()
   delete ev_;
   delete lumiblock_;
   delete Tnpv_;
+  delete pileupWeight_;
   delete mumu_mass_;
   delete mumu_rapidity_;
 
@@ -450,6 +459,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        //////////////////End of reconstruction of RP si strips////////////////////////////////
        */
 
+       *pileupWeight_=1;
 
        if(isMC){
 	 //cout<<" I get into MC"<<endl;
@@ -481,7 +491,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   if(PVI->getBunchCrossing()==0){     
 	     //h_trueNumInteractions0->Fill(PVI->getTrueNumInteractions());
 	     *Tnpv_=PVI->getTrueNumInteractions();
-	     //*pileupWeight_ = LumiWeights->weight( PVI->getTrueNumInteractions() );
+	     *pileupWeight_ = LumiWeights->weight( PVI->getTrueNumInteractions() );
 	   }
 	 }
 	 //cout<<"I get here pileup 2"<<endl;
@@ -589,7 +599,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	 if(isPassEleId&&passConvVeto){
 	   (*electron_pt_).push_back(ele->pt());
-	   cout<<"Electron pt: "<<ele->pt()<<endl;
+	   //cout<<"Electron pt: "<<ele->pt()<<endl;
 	   (*electron_eta_).push_back(ele->superCluster()->eta());
 	   (*electron_px_).push_back(ele->px());
 	   (*electron_py_).push_back(ele->py());
