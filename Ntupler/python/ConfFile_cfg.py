@@ -76,6 +76,6 @@ process.dump=cms.EDAnalyzer('EventContentAnalyzer')
 if ISMC:
     process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
 else:
-    #process.p = cms.Path(process.noBadGlobalMuons * process.egmGsfElectronIDSequence * process.demo)
-    process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
+    process.p = cms.Path(process.noBadGlobalMuons * process.egmGsfElectronIDSequence * process.demo)
+    #process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
 #process.p = cms.Path(process.demo)
