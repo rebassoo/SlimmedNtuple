@@ -4,10 +4,10 @@ process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 4000
 
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1001) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5000) )
 
 process.source = cms.Source("PoolSource",
@@ -16,9 +16,9 @@ process.source = cms.Source("PoolSource",
         #'file:/tmp/rebassoo/miniAOD_PAT_1.root'
         #'file:/tmp/rebassoo/B2846F07-B046-E611-8CC0-0CC47A13CDA0.root'
         #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90001/B2846F07-B046-E611-8CC0-0CC47A13CDA0.root'
-        #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90001/E49F4520-B046-E611-B7DF-003048F5B2F0.root'
+        'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90001/E49F4520-B046-E611-B7DF-003048F5B2F0.root'
         #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90000/1C4F8054-D845-E611-8251-FA163E149DE8.root'
-        'root://cmsxrootd.fnal.gov//store/mc/RunIISpring16DR80/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/AODSIM/PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext1-v1/20000/004938DD-26FC-E511-A80F-02163E017620.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIISpring16DR80/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/AODSIM/PUSpring16_80X_mcRun2_asymptotic_2016_v3_ext1-v1/20000/004938DD-26FC-E511-A80F-02163E017620.root'
         #/SingleElectron/Run2016B-01Jul2016-v1/AOD
         #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90002/8A922D2A-5C47-E611-B3E7-001A648F1BFA.root'
         #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90000/A656B0C9-BF45-E611-9921-002590200A28.root'
@@ -33,6 +33,8 @@ process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
 process.load("Configuration.Geometry.GeometryIdeal_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+process.load('RecoMET.METFilters.badGlobalMuonTaggersAOD_cff')
+
 
 ISMC = False
 from Configuration.AlCa.GlobalTag import GlobalTag
@@ -43,7 +45,7 @@ else:
 
 CHANNEL="mue"
 process.load("SlimmedNtuple.Ntupler.CfiFile_cfi") 
-process.demo.ismc=True
+process.demo.ismc=ISMC
 process.demo.channel="mue"
 
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
@@ -71,5 +73,9 @@ for idmod in my_id_modules:
 
 process.dump=cms.EDAnalyzer('EventContentAnalyzer')
 #process.p = cms.Path(process.demo*process.dump)
-process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
+if ISMC:
+    process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
+else:
+    #process.p = cms.Path(process.noBadGlobalMuons * process.egmGsfElectronIDSequence * process.demo)
+    process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
 #process.p = cms.Path(process.demo)
