@@ -23,7 +23,10 @@
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-#include "FWCore/Framework/interface/one/EDAnalyzer.h"
+//#include "FWCore/Framework/interface/one/EDAnalyzer.h"
+//#include "FWCore/Framework/interface/stream/EDAnalyzer.h"
+#include "FWCore/Framework/interface/EDAnalyzer.h"
+
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
@@ -51,7 +54,8 @@
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
-//#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
+#include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
 
 //For Electrons
 #include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
@@ -87,13 +91,7 @@
 // class declaration
 //
 
-// If the analyzer does not use TFileService, please remove
-// the template argument to the base class so the class inherits
-// from  edm::one::EDAnalyzer<> and also remove the line from
-// constructor "usesResource("TFileService");"
-// This will improve performance in multithreaded jobs.
-
-class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+class Ntupler : public edm::EDAnalyzer {
    public:
       explicit Ntupler(const edm::ParameterSet&);
       ~Ntupler();
@@ -101,10 +99,13 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
       static void fillDescriptions(edm::ConfigurationDescriptions& descriptions);
 
 
-   private:
-      virtual void beginJob() override;
-      virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
-      virtual void endJob() override;
+private:
+  virtual void beginJob() override;
+  virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
+  virtual void endJob() override;
+  virtual void endRun(edm::Run const &, edm::EventSetup const&) override;
+  virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
+
   // ----------member data ---------------------------
   
   edm::FileInPath fp;
@@ -121,7 +122,8 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
   // One example of full information about the cut flow
   edm::EDGetTokenT<edm::ValueMap<vid::CutFlowResult> > eleIdFullInfoMapToken_;
-  //HLTConfigProvider hltConfig_;
+  HLTConfigProvider hltConfig_;
+  HLTPrescaleProvider hltPrescaleProvider_;
 
   std::vector<float> * muon_pt_;
   std::vector<float> * muon_eta_;
@@ -138,6 +140,8 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
   std::vector<float> * electron_pz_;
   std::vector<float> * electron_e_;
   std::vector<float> * electron_charge_;
+
+  std::vector<float> * allvertices_z_;
 
   uint * vertex_ntracks_;
   float * vertex_x_;
@@ -183,16 +187,16 @@ class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
 //
 // constructors and destructor
 //
-Ntupler::Ntupler(const edm::ParameterSet& iConfig)
-
+Ntupler::Ntupler(const edm::ParameterSet& iConfig):
+  hltPrescaleProvider_(iConfig, consumesCollector(), *this)
 {
   
-
   cout<<"I get to beginning of constructor"<<endl;
-  //now do what ever initialization is needed
-  usesResource("TFileService");
+  //usesResource("TFileService");
   isMC = iConfig.getParameter<bool>("ismc");
   channel = iConfig.getParameter<string>("channel");
+
+
   cout<<"channel is: "<<channel<<endl;
   consumes<reco::TrackCollection>(edm::InputTag("generalTracks"));
   consumes<std::vector<reco::Muon>>(edm::InputTag("muons"));
@@ -234,6 +238,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig)
   electron_pz_ = new std::vector<float>;
   electron_e_ = new std::vector<float>;
   electron_charge_ = new std::vector<float>;
+
+  allvertices_z_ = new std::vector<float>;
 
   vertex_ntracks_ = new uint;
   vertex_x_ = new float;
@@ -287,6 +293,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig)
   tree_->Branch("electron_pz",&electron_pz_);
   tree_->Branch("electron_e",&electron_e_);
   tree_->Branch("electron_charge",&electron_charge_);
+
+  tree_->Branch("allvertices_z",&allvertices_z_);
 
   tree_->Branch("vertex_ntracks",vertex_ntracks_,"vertex_ntracks/i");
   tree_->Branch("vertex_x",vertex_x_,"vertex_x/f");
@@ -342,6 +350,8 @@ Ntupler::~Ntupler()
   delete electron_e_;
   delete electron_charge_;
 
+  delete allvertices_z_;
+
   delete vertex_ntracks_;
   delete vertex_x_;
   delete vertex_y_;
@@ -382,29 +392,49 @@ Ntupler::~Ntupler()
 void
 Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+
+
    using namespace edm;
    using namespace std;
    //if(iEvent.id().event()==883153054||iEvent.id().event()==814088551){
      //cout<<"iEvent.id().run()"<<iEvent.id().run()<<endl;
      //cout<<"iEvent.id().luminosityBlock"<<iEvent.luminosityBlock()<<endl;
      //cout<<"iEvent.id().event()"<<iEvent.id().event()<<endl;
-
-     bool passTrigger=false;
-     edm::Handle<TriggerResults> hltResults;
-     iEvent.getByLabel(InputTag("TriggerResults","","HLT"),hltResults);
-     const TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
-     for(unsigned int i=0; i<trigNames.size();i++){
-       //cout<<"Trigger_name: "<<trigNames.triggerName(i)<<endl;
-       //cout<<"Trigger decision: "<<hltResults->accept(i)<<endl;
-       //cout<<"Prescale: "<<hltConfig_.prescaleValue(iEvent,iSetup,trigNames.triggerName(i))<<endl;
-       if(trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v3"&&hltResults->accept(i)>0){
+   bool passTrigger=false;
+   edm::Handle<TriggerResults> hltResults;
+   iEvent.getByLabel(InputTag("TriggerResults","","HLT"),hltResults);
+   const TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
+   for(unsigned int i=0; i<trigNames.size();i++){
+     cout<<"Trigger_name: "<<trigNames.triggerName(i)<<endl;
+     //cout<<"Trigger decision: "<<hltResults->accept(i)<<endl;
+     //int prescale_set = hltPrescaleProvider_.prescaleSet(iEvent, iSetup);
+     int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
+     //int prescale_value2 = hltConfig_.prescaleValue(prescale_set, trigNames.triggerNames().at(i));
+     //std::pair<int,int> test = hltPrescaleProvider_.prescaleValues(iEvent,iSetup,trigNames.triggerName(i));
+     //cout<<"PrescalesSet: "<<prescale_set<<endl;
+     //cout<<"Prescale: "<<prescale_value<<endl;
+     //cout<<"Prescale, v2: "<<prescale_value2<<endl;
+     //cout<<"Combined: "<<test.first<<", "<<test.second<<endl;
+     //const unsigned int prescaleSize = hltConfig_.prescaleSize();
+     //cout<<"Prescale size: "<<prescaleSize<<endl;
+     //for (unsigned int ps = 0; ps < prescaleSize; ps++) {
+     //  const unsigned int prescaleValue = hltConfig_.prescaleValue(ps,trigNames.triggerName(i));
+     //  cout<<"Prescale, 2nd method: "<<prescaleValue<<endl;
+     //}
+     if(trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v3"&&hltResults->accept(i)>0&&prescale_value==1){
+       passTrigger=true;
+     }
+     if(isMC){
+       if(trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v5"&&hltResults->accept(i)>0){
 	 passTrigger=true;
        }
      }
-     passTrigger=true;
-     if(passTrigger){
-       //cout<<"I pass trigger"<<endl;
-       /*
+   }//end of looping over triggers
+   
+   //passTrigger=true;
+   if(passTrigger){
+     //cout<<"I pass trigger"<<endl;
+     /*
        //////////////////Start of reconstruction of RP si strips////////////////////////////////
        map<unsigned int, bool> tr; 
        tr[2] = false;
@@ -502,9 +532,11 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        std::vector<reco::Vertex>::const_iterator vtxIt ;
        //cout<<"Number of vertices: "<<vtxs.product()->size();
        *vertex_nvtxs_ = vtxs.product()->size();
-       //for (vtxIt = vtxs->begin(); vtxIt != vtxs->end(); ++vtxIt) {
-       // cout<<"Vertex track size: "<<vtxIt->tracksSize()<<endl;
-       //}
+       for (vtxIt = vtxs->begin(); vtxIt != vtxs->end(); ++vtxIt) {
+	 //cout<<"Vertex track size: "<<vtxIt->tracksSize()<<endl;
+	 //cout<<"Vertex z position: "<<vtxIt->position().z()<<endl;
+	(*allvertices_z_).push_back(vtxIt->position().z());
+       }
 
        edm::Handle< std::vector<reco::Muon> > muonHandle;
        iEvent.getByLabel("muons",muonHandle);
@@ -729,6 +761,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      (*electron_e_).clear();
      (*electron_charge_).clear();
 
+     (*allvertices_z_).clear();
+
      (*fvertex_tkdist_).clear();
      (*fvertex_tkpt_).clear();
      (*fvertex_tketa_).clear();
@@ -742,6 +776,35 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 }
 
+void
+Ntupler::endRun(edm::Run const & iRun, edm::EventSetup const& iSetup) {}
+
+
+void 
+Ntupler::beginRun(edm::Run const& iRun, edm::EventSetup const& iSetup)
+{
+
+  //cout<<"I get to beginning of beginRun"<<endl;
+  bool changed(true);
+  hltPrescaleProvider_.init(iRun,iSetup,"HLT",changed);
+  //  if (hltConfig_.init(iRun,iSetup,processName_,changed)) {
+  if (hltConfig_.init(iRun,iSetup,"HLT",changed)) {
+    // if init returns TRUE, initialisation has succeeded!
+    if (changed) {
+      // The HLT config has actually changed wrt the previous Run, hence rebook your
+      // histograms or do anything else dependent on the revised HLT config
+     
+    }
+  } else {
+    // if init returns FALSE, initialisation has NOT succeeded, which indicates a problem
+    // with the file and/or code and needs to be investigated!
+    //    coutr") << " HLT config extraction failure with process name " << processName_<<endl;
+    //    LogError("MyAnalyzer") << " HLT config extraction failure with process name " << "HLT";
+    std::cout << " HLT config extraction failure with process name " << "HLT"<<std::endl;
+    // In this case, all access methods will return empty values!
+  }
+
+}
 
 // ------------ method called once each job just before starting event loop  ------------
 void 
