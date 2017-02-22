@@ -4,10 +4,13 @@ process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
-process.MessageLogger.cerr.FwkReport.reportEvery = 4000
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+#process.MessageLogger.cerr.FwkReport.reportEvery = 1
 
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1001) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3000) )
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5000) )
 
 process.source = cms.Source("PoolSource",
@@ -22,14 +25,15 @@ process.source = cms.Source("PoolSource",
         #'root://cms-xrd-global.cern.ch//store/data/Run2016C/MuonEG/AOD/23Sep2016-v1/70000/0009D8A4-DC87-E611-9090-0CC47A044888.root'
         #/SingleElectron/Run2016B-01Jul2016-v1/AOD
         #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90002/8A922D2A-5C47-E611-B3E7-001A648F1BFA.root'
-        'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90000/A656B0C9-BF45-E611-9921-002590200A28.root'
+        #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90000/A656B0C9-BF45-E611-9921-002590200A28.root'
         #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/AOD/01Jul2016-v1/90000/CCB0A6F2-B145-E611-A8AB-B083FEC76567.root'
         #'root://xrootd.pic.es:1094/pnfs/pic.es/data/cms/disk/store/mc/RunIISummer16DR80Premix/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/AODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/110000/58D3DB31-B9B1-E611-8F7A-001EC94BA173.root'
+        'file:/hadoop/cms/store/user/rebassoo/58D3DB31-B9B1-E611-8F7A-001EC94BA173.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIISummer16DR80Premix/WWTo2L2Nu_13TeV-powheg/AODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/120000/04F11512-AEB0-E611-8949-0242AC130008.root'
         #'file:/hadoop/cms/phedex/store/data/Run2016B/DoubleMuon/MINIAOD/01Jul2016-v1/90000/FEF32273-1647-E611-9AA3-848F69FD2D6F.root'
         #'root://cmsxrootd.fnal.gov//store/data/Run2016F/DoubleMuon/AOD/23Sep2016-v1/50000/9E0F8266-0590-E611-A14E-0242AC130002.root'
-    ),
-   skipEvents=cms.untracked.uint32(3420)
+    )#,
+#   skipEvents=cms.untracked.uint32(3420)
 )
 
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
@@ -39,7 +43,8 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('RecoMET.METFilters.badGlobalMuonTaggersAOD_cff')
 
 
-ISMC = False
+#ISMC = False
+ISMC = True
 from Configuration.AlCa.GlobalTag import GlobalTag
 if ISMC:
     process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
@@ -49,6 +54,7 @@ else:
 CHANNEL="mue"
 process.load("SlimmedNtuple.Ntupler.CfiFile_cfi") 
 process.demo.ismc=ISMC
+#process.demo.ispps=true
 process.demo.channel="mue"
 
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
