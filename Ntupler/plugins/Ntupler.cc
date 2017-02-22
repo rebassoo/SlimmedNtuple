@@ -115,6 +115,7 @@ private:
   AlignmentResultsCollection alignment;
   TTree * tree_;
   bool isMC;
+  bool isPPS;
   string channel;
   edm::LumiReWeighting *LumiWeights;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
@@ -124,6 +125,8 @@ private:
   edm::EDGetTokenT<edm::ValueMap<vid::CutFlowResult> > eleIdFullInfoMapToken_;
   HLTConfigProvider hltConfig_;
   HLTPrescaleProvider hltPrescaleProvider_;
+
+  TH1F * h_trueNumInteractions;
 
   std::vector<float> * muon_pt_;
   std::vector<float> * muon_eta_;
@@ -158,21 +161,20 @@ private:
   std::vector<float> * fvertex_tkpt_;
   std::vector<float> * fvertex_tketa_;
 
-
   std::vector<float> * rp_tracks_xraw_;
   std::vector<float> * rp_tracks_y_;
   std::vector<float> * rp_tracks_x_;
   std::vector<float> * rp_tracks_xi_;
   std::vector<float> * rp_tracks_detId_;
+  //float * mumu_mass_;
+  //float * mumu_rapidity_;
 
   uint * run_;
   uint * ev_;
   uint * lumiblock_;
 
-  float * Tnpv_;
+  //float * Tnpv_;
   float * pileupWeight_;
-  float * mumu_mass_;
-  float * mumu_rapidity_;
 
 };
 
@@ -194,6 +196,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   cout<<"I get to beginning of constructor"<<endl;
   //usesResource("TFileService");
   isMC = iConfig.getParameter<bool>("ismc");
+  isPPS = iConfig.getParameter<bool>("ispps");
   channel = iConfig.getParameter<string>("channel");
 
 
@@ -214,14 +217,16 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   fp0 = iConfig.getParameter<string>("particleFile");
   fp1 = iConfig.getParameter<string>("particleFile2");
 
-  InitReconstruction(fp1);
-  InitFillInfoCollection();
+  if(isPPS){
 
-  if (alignment.Load(fp0.c_str()) != 0)
-    {  
-      printf("ERROR: can't load alignment data.\n");
-    }
-
+    InitReconstruction(fp1);
+    InitFillInfoCollection();
+    
+    if (alignment.Load(fp0.c_str()) != 0)
+      {  
+	printf("ERROR: can't load alignment data.\n");
+      }
+  }
 
   muon_pt_ = new std::vector<float>;
   muon_eta_ = new std::vector<float>;
@@ -256,26 +261,31 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   fvertex_tkpt_ = new std::vector<float>;
   fvertex_tketa_ = new std::vector<float>;
 
-  rp_tracks_xraw_ = new std::vector<float>;
-  rp_tracks_y_ = new std::vector<float>;
-  rp_tracks_x_ = new std::vector<float>;
-  rp_tracks_xi_ = new std::vector<float>;
-  rp_tracks_detId_ = new std::vector<float>;
+  if(isPPS){
+    rp_tracks_xraw_ = new std::vector<float>;
+    rp_tracks_y_ = new std::vector<float>;
+    rp_tracks_x_ = new std::vector<float>;
+    rp_tracks_xi_ = new std::vector<float>;
+    rp_tracks_detId_ = new std::vector<float>;
+    //mumu_mass_ = new float;
+    //mumu_rapidity_ = new float;
+  }
 
   ev_ = new uint;
   run_ = new uint;
   lumiblock_ = new uint;
 
-  Tnpv_ = new float;
+  //Tnpv_ = new float;
   pileupWeight_ = new float;
-  mumu_mass_ = new float;
-  mumu_rapidity_ = new float;
 
   edm::Service<TFileService> fs; 
   tree_=fs->make<TTree>("SlimmedNtuple","SlimmedNtuple");
+
+  h_trueNumInteractions = fs->make<TH1F>("h_trueNumInteractions" , "PU" , 200 , 0 , 100 );
   
   if(isMC){
-    LumiWeights = new edm::LumiReWeighting("MCPileup.root","MyDataPileupHistogramNotMu.root","h1","pileup");
+    //LumiWeights = new edm::LumiReWeighting("MCPileup.root","MyDataPileupHistogramNotMu.root","h1","pileup");
+    LumiWeights = new edm::LumiReWeighting("MCPileupHighStats.root","MyDataPileupHistogram0to75_MuonPhys.root","h_trueNumInter","pileup");
   }
   
   tree_->Branch("muon_pt",&muon_pt_);
@@ -309,20 +319,22 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   tree_->Branch("fvertex_tkdist",&fvertex_tkdist_);
   tree_->Branch("fvertex_tkpt",&fvertex_tkpt_);
   tree_->Branch("fvertex_tketa",&fvertex_tketa_);
-  tree_->Branch("rp_tracks_xraw",&rp_tracks_xraw_);
-  tree_->Branch("rp_tracks_y",&rp_tracks_y_);
-  tree_->Branch("rp_tracks_x",&rp_tracks_x_);
-  tree_->Branch("rp_tracks_xi",&rp_tracks_xi_);
-  tree_->Branch("rp_tracks_detId",&rp_tracks_detId_);
-  
+
+  if(isPPS){
+    tree_->Branch("rp_tracks_xraw",&rp_tracks_xraw_);
+    tree_->Branch("rp_tracks_y",&rp_tracks_y_);
+    tree_->Branch("rp_tracks_x",&rp_tracks_x_);
+    tree_->Branch("rp_tracks_xi",&rp_tracks_xi_);
+    tree_->Branch("rp_tracks_detId",&rp_tracks_detId_);
+    //tree_->Branch("mumu_mass",mumu_mass_,"mumu_mass/f");
+    //tree_->Branch("mumu_rapidity",mumu_rapidity_,"mumu_rapidity/f");
+  }
   tree_->Branch("run",run_,"run/i");
   tree_->Branch("event",ev_,"event/i");
   tree_->Branch("lumiblock",lumiblock_,"lumiblock/i");
 
-  tree_->Branch("Tnpv",Tnpv_,"Tnpv/f");
+  //tree_->Branch("Tnpv",Tnpv_,"Tnpv/f");
   tree_->Branch("pileupWeight",pileupWeight_,"pileupWeight/f");
-  tree_->Branch("mumu_mass",mumu_mass_,"mumu_mass/f");
-  tree_->Branch("mumu_rapidity",mumu_rapidity_,"mumu_rapidity/f");
 
 }
 
@@ -366,20 +378,21 @@ Ntupler::~Ntupler()
   delete fvertex_tkpt_;
   delete fvertex_tketa_;
 
-  delete rp_tracks_xraw_;
-  delete rp_tracks_y_;
-  delete rp_tracks_x_;
-  delete rp_tracks_xi_;
-  delete rp_tracks_detId_;
-  
+  if(isPPS){
+    delete rp_tracks_xraw_;
+    delete rp_tracks_y_;
+    delete rp_tracks_x_;
+    delete rp_tracks_xi_;
+    delete rp_tracks_detId_;
+    //delete mumu_mass_;
+    //delete mumu_rapidity_;
+  }
 
   delete run_;
   delete ev_;
   delete lumiblock_;
-  delete Tnpv_;
+  //delete Tnpv_;
   delete pileupWeight_;
-  delete mumu_mass_;
-  delete mumu_rapidity_;
 
 }
 
@@ -396,16 +409,27 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    using namespace edm;
    using namespace std;
-   //if(iEvent.id().event()==883153054||iEvent.id().event()==814088551){
-     //cout<<"iEvent.id().run()"<<iEvent.id().run()<<endl;
-     //cout<<"iEvent.id().luminosityBlock"<<iEvent.luminosityBlock()<<endl;
-     //cout<<"iEvent.id().event()"<<iEvent.id().event()<<endl;
+
+   float trueInteractions=0;
+   if(isMC){
+	 edm::InputTag PileupSrc_("addPileupInfo");
+	 Handle<std::vector< PileupSummaryInfo > >  PupInfo;
+	 iEvent.getByLabel(PileupSrc_, PupInfo);
+	 std::vector<PileupSummaryInfo>::const_iterator PVI;
+	 //cout<<"True num interactions is: "<<PupInfo->begin()->getTrueNumInteractions()<<endl;
+	 trueInteractions=PupInfo->begin()->getTrueNumInteractions();
+	 h_trueNumInteractions->Fill(trueInteractions);
+   }
+
+
+
+
    bool passTrigger=false;
    edm::Handle<TriggerResults> hltResults;
    iEvent.getByLabel(InputTag("TriggerResults","","HLT"),hltResults);
    const TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
    for(unsigned int i=0; i<trigNames.size();i++){
-     cout<<"Trigger_name: "<<trigNames.triggerName(i)<<endl;
+     //cout<<"Trigger_name: "<<trigNames.triggerName(i)<<endl;
      //cout<<"Trigger decision: "<<hltResults->accept(i)<<endl;
      //int prescale_set = hltPrescaleProvider_.prescaleSet(iEvent, iSetup);
      int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
@@ -505,26 +529,11 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     //cout<<", MC id is: "<<mcIter->pdgId()<<endl;
 	     //cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
 	   }
-	   
-	 }
+	 }//end of looking at GEN
 	 
-	 edm::InputTag PileupSrc_("addPileupInfo");
-	 Handle<std::vector< PileupSummaryInfo > >  PupInfo;
-	 iEvent.getByLabel(PileupSrc_, PupInfo);
-	 std::vector<PileupSummaryInfo>::const_iterator PVI;
-	 //cout<<"I get here pileup 0"<<endl;
-	 for(PVI = PupInfo->begin(); PVI != PupInfo->end(); ++PVI) {
-	   //cout<<"I get here pileup 1"<<endl;
-	   //std::cout << " Pileup Information: bunchXing, nvtx: " << PVI->getBunchCrossing() << " " << PVI->getPU_NumInteractions() << std::endl;
-	   //std::cout << " True Num Interactions: " << PVI->getTrueNumInteractions() << endl;
-	   //h_trueNumInteractions->Fill(PVI->getTrueNumInteractions());
-	   if(PVI->getBunchCrossing()==0){     
-	     //h_trueNumInteractions0->Fill(PVI->getTrueNumInteractions());
-	     *Tnpv_=PVI->getTrueNumInteractions();
-	     *pileupWeight_ = LumiWeights->weight( PVI->getTrueNumInteractions() );
-	   }
-	 }
-	 //cout<<"I get here pileup 2"<<endl;
+	 
+	 *pileupWeight_ = LumiWeights->weight( trueInteractions );
+
        }//end of looking at MC
 
        edm::Handle< std::vector<reco::Vertex> > vtxs;
@@ -535,7 +544,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        for (vtxIt = vtxs->begin(); vtxIt != vtxs->end(); ++vtxIt) {
 	 //cout<<"Vertex track size: "<<vtxIt->tracksSize()<<endl;
 	 //cout<<"Vertex z position: "<<vtxIt->position().z()<<endl;
-	(*allvertices_z_).push_back(vtxIt->position().z());
+	 (*allvertices_z_).push_back(vtxIt->position().z());
        }
 
        edm::Handle< std::vector<reco::Muon> > muonHandle;
@@ -592,8 +601,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }//end of looking at muons
        if(numMuTight==2){
 	 TLorentzVector mumu = mu1+mu2;
-	 *mumu_mass_=mumu.M();
-	 *mumu_rapidity_=mumu.Rapidity();
+	 //*mumu_mass_=mumu.M();
+	 //*mumu_rapidity_=mumu.Rapidity();
 	 //cout<<"Invariant mass: "<<mumu.M()<<endl;
 	 //cout<<"Rapidity: "<<mumu.Rapidity()<<endl;
        }
@@ -736,43 +745,52 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 
 	 //}//end of looking at one specific event
 	 
-	 
 	 *run_ = iEvent.id().run();
 	 *ev_ = iEvent.id().event();
 	 *lumiblock_ = iEvent.luminosityBlock();
-       
+	 
+	 
 	 tree_->Fill();
+   
+	 
 	 
        }//end of looking at passing trigger
 
-     (*muon_pt_).clear();
-     (*muon_eta_).clear();
-     (*muon_px_).clear();
-     (*muon_py_).clear();
-     (*muon_pz_).clear();
-     (*muon_e_).clear();
-     (*muon_charge_).clear();
+   //cout<<"event: "<<iEvent.id().event()<<endl;
+   //cout<<"event in ntuple: "<<*ev_<<endl;
 
-     (*electron_pt_).clear();
-     (*electron_eta_).clear();
-     (*electron_px_).clear();
-     (*electron_py_).clear();
-     (*electron_pz_).clear();
-     (*electron_e_).clear();
-     (*electron_charge_).clear();
 
-     (*allvertices_z_).clear();
 
-     (*fvertex_tkdist_).clear();
-     (*fvertex_tkpt_).clear();
-     (*fvertex_tketa_).clear();
+   (*muon_pt_).clear();
+   (*muon_eta_).clear();
+   (*muon_px_).clear();
+   (*muon_py_).clear();
+   (*muon_pz_).clear();
+   (*muon_e_).clear();
+   (*muon_charge_).clear();
+   
+   (*electron_pt_).clear();
+   (*electron_eta_).clear();
+   (*electron_px_).clear();
+   (*electron_py_).clear();
+   (*electron_pz_).clear();
+   (*electron_e_).clear();
+   (*electron_charge_).clear();
+   
+   (*allvertices_z_).clear();
+   
+   (*fvertex_tkdist_).clear();
+   (*fvertex_tkpt_).clear();
+   (*fvertex_tketa_).clear();
+
+
+   if(isPPS){
      (*rp_tracks_xraw_).clear();
      (*rp_tracks_y_).clear();
      (*rp_tracks_x_).clear();
      (*rp_tracks_xi_).clear();
      (*rp_tracks_detId_).clear();
-
-
+   }
 
 }
 
