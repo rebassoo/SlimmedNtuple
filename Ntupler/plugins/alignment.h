@@ -1,24 +1,34 @@
-using namespace std;
+#ifndef _alignment_h_
+#define _alignment_h_
+
+#include <string>
+#include <map>
+#include <cstring>
+
+#include "track_lite.h"
+
 
 //----------------------------------------------------------------------------------------------------
 
 struct AlignmentResult
 {
-	double sh_x = 0.;		// mm
+	double sh_x, sh_x_unc;		// mm
+	double sh_y, sh_y_unc;		// mm
 
-	AlignmentResult(double _sh_x=0.) : sh_x(_sh_x)
+	AlignmentResult(double _sh_x=0., double _sh_x_unc=0., double _sh_y=0., double _sh_y_unc=0.) :
+		sh_x(_sh_x), sh_x_unc(_sh_x_unc), sh_y(_sh_y), sh_y_unc(_sh_y_unc)
 	{
 	}
 
 	void Write(FILE *f) const
 	{
-		fprintf(f, "sh_x=%.3f\n", sh_x);
+		fprintf(f, "sh_x=%.3f,sh_x_unc=%.3f,sh_y=%.3f,sh_y_unc=%.3f\n", sh_x, sh_x_unc, sh_y, sh_y_unc);
 	}
 };
 
 //----------------------------------------------------------------------------------------------------
 
-struct AlignmentResults : public map<unsigned int, AlignmentResult>
+struct AlignmentResults : public std::map<unsigned int, AlignmentResult>
 {
 	void Write(FILE *f) const
 	{
@@ -69,6 +79,24 @@ struct AlignmentResults : public map<unsigned int, AlignmentResult>
 				continue;
 			}
 
+			if (strcmp(s_key, "sh_x_unc") == 0)
+			{
+				result.sh_x_unc = atof(s_val);
+				continue;
+			}
+
+			if (strcmp(s_key, "sh_y") == 0)
+			{
+				result.sh_y = atof(s_val);
+				continue;
+			}
+
+			if (strcmp(s_key, "sh_y_unc") == 0)
+			{
+				result.sh_y_unc = atof(s_val);
+				continue;
+			}
+
 			printf("ERROR in AlignmentResults::Add > unknown key: %s.\n", s_key);
 			return 3;
 		}
@@ -98,6 +126,7 @@ struct AlignmentResults : public map<unsigned int, AlignmentResult>
 			}
 
 			it.second.x += ait->second.sh_x;
+			it.second.y -= ait->second.sh_y;
 		}
 
 		return output;
@@ -106,9 +135,9 @@ struct AlignmentResults : public map<unsigned int, AlignmentResult>
 
 //----------------------------------------------------------------------------------------------------
 
-struct AlignmentResultsCollection : public map<string, AlignmentResults>
+struct AlignmentResultsCollection : public std::map<std::string, AlignmentResults>
 {
-	int Write(const string &fn) const
+	int Write(const std::string &fn) const
 	{
 		FILE *f = fopen(fn.c_str(), "w");
 		if (!f)
@@ -130,7 +159,7 @@ struct AlignmentResultsCollection : public map<string, AlignmentResults>
 		}
 	}
 
-	int Load(const string &fn)
+	int Load(const std::string &fn)
 	{
 		FILE *f = fopen(fn.c_str(), "r");
 		if (!f)
@@ -143,7 +172,7 @@ struct AlignmentResultsCollection : public map<string, AlignmentResults>
 
 	int Load(FILE *f)
 	{
-		string label = "unknown";
+		std::string label = "unknown";
 		AlignmentResults block;
 
 		while (!feof(f))
@@ -188,3 +217,5 @@ struct AlignmentResultsCollection : public map<string, AlignmentResults>
 		return 0;
 	}
 };
+
+#endif
