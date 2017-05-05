@@ -14,6 +14,7 @@
 <use name="DataFormats/CTPPSDigi"/>
 <use name="DataFormats/CTPPSDetId"/>
 <use name="RecoVertex/AdaptiveVertexFit"/>
+<use name="RecoVertex/KalmanVertexFit"/>
 <use name="TrackingTools/TransientTrack"/>
 <use name="TrackingTools/Records"/>
 <use name="TrackingTools/TrajectoryState"/>
