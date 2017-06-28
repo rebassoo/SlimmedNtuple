@@ -151,6 +151,7 @@ private:
   std::vector<float> * muon_pz_;
   std::vector<float> * muon_e_;
   std::vector<float> * muon_charge_;
+  std::vector<float> * muon_iso_;
 
   std::vector<float> * electron_pt_;
   std::vector<float> * electron_eta_;
@@ -233,8 +234,10 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   consumes<reco::ConversionCollection>(edm::InputTag("allConversions"));
   consumes<std::vector< PileupSummaryInfo > >(edm::InputTag("addPileupInfo"));
   beamSpotToken_= consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
-  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
-  eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
+  //  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
+  //eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
+  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
+  eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
 
   fp0 = iConfig.getParameter<string>("particleFile");
   fp1 = iConfig.getParameter<string>("particleFile2");
@@ -271,6 +274,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   muon_pz_ = new std::vector<float>;
   muon_e_ = new std::vector<float>;
   muon_charge_ = new std::vector<float>;
+  muon_iso_ = new std::vector<float>;
 
   electron_pt_ = new std::vector<float>;
   electron_eta_ = new std::vector<float>;
@@ -345,6 +349,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   tree_->Branch("muon_pz",&muon_pz_);
   tree_->Branch("muon_e",&muon_e_);
   tree_->Branch("muon_charge",&muon_charge_);
+  tree_->Branch("muon_iso",&muon_iso_);
 
   tree_->Branch("electron_pt",&electron_pt_);
   tree_->Branch("electron_eta",&electron_eta_);
@@ -409,6 +414,7 @@ Ntupler::~Ntupler()
   delete muon_pz_;
   delete muon_e_;
   delete muon_charge_;
+  delete muon_iso_;
 
   delete electron_px_;
   delete electron_pt_;
@@ -430,6 +436,7 @@ Ntupler::~Ntupler()
   delete fvertex_y_;
   delete fvertex_z_;
   delete fvertex_chi2ndof_;
+  delete fvertex_ntracks_;
   delete fvertex_tkdist_;
   delete fvertex_tkpt_;
   delete fvertex_tketa_;
@@ -510,6 +517,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      
      std::string TriggerName = trigNames.triggerName(i);
      std::string TriggerDoubleMu="HLT_DoubleMu38NoFiltersNoVtx_v";
+     /*
      std::vector<std::string> TriggersMuE = {"HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v",
 					     "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v",
 					     "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v",
@@ -520,20 +528,69 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 					     "HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v",
 					     "HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v",
 					     "HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v"};
+     */
+     std::vector<std::string> TriggersMuE = {"HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v","HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v","HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v","HLT_Mu33_Ele33_CaloIdL_GsfTrkIdVL_v"};
+     std::vector<std::string> TriggersEE = {"HLT_DoubleEle33_CaloIdL_MW_v","HLT_Ele27_HighEta_Ele20_Mass55_v","HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v"};
 
      //if(trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v2"&&hltResults->accept(i)>0&&prescale_value==1){
      //cout<<"Trigger Name: "<<TriggerName<<endl;
      //cout<<"Comparison: "<<TriggerName.compare(0,28,TriggerDoubleMu)<<endl;
      //cout<<"Comparison: "
+     //cout<<"Trigger Name: "<<TriggerName<<endl;
+     //cout<<"Prescale value: "<<prescale_value<<endl;
+     //cout<<"Trigger accept: "<<hltResults->accept(i)<<endl;
+
+
      if(channel=="mumu"&&TriggerName.compare(0,TriggerDoubleMu.length(),TriggerDoubleMu,0,TriggerDoubleMu.length())==0&&hltResults->accept(i)>0&&prescale_value==1){
        passTrigger=true;
        //cout<<"Trigger Name: "<<TriggerName<<endl;
      }
 
+     if(channel=="ee"){
+       if((trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v1"||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v2"||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v3"||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v4")&&hltResults->accept(i)>0&&prescale_value==1){
+	 passTrigger=true;
+       }
+       /*
+       for(uint i = 0; i<TriggersEE.size();i++){
+	 if(TriggerName.compare(0,TriggersEE[i].length(),TriggersEE[i],0,TriggersEE[i].length())==0&&hltResults->accept(i)>0){
+	   //if(TriggerName.compare(0,TriggersMuE[i].length(),TriggersMuE[i],0,TriggersMuE[i].length())==0){
+	   passTrigger=true;
+	   //cout<<"Trigger Name: "<<TriggerName<<endl;
+	   //cout<<"Prescale value: "<<prescale_value<<endl;
+	   //cout<<"Trigger accept: "<<hltResults->accept(i)<<endl;
+	 }
+       }//end of for loop over triggers
+       */
+     }//end of requirement of ee channel
+
+     if(channel=="mue"){
+       if((trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v3"||
+	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v4"||
+	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v5"||
+	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v6"||
+	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v1"||
+	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v2"||
+	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v3"||
+	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v4"||
+	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v6"||
+
+	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v1"||
+	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v2"||
+	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v3"||
+	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v4"||
+	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v6"||
+
+	   trigNames.triggerName(i)=="HLT_Mu33_Ele33_CaloIdL_GsfTrkIdVL_v1"||
+	   trigNames.triggerName(i)=="HLT_Mu33_Ele33_CaloIdL_GsfTrkIdVL_v3")
+	  &&hltResults->accept(i)>0&&prescale_value==1){
+       passTrigger=true;
+       }
+     }
+     /*
      if(channel=="mue"){
        for(uint i = 0; i<TriggersMuE.size();i++){
 	 if(TriggerName.compare(0,TriggersMuE[i].length(),TriggersMuE[i],0,TriggersMuE[i].length())==0&&hltResults->accept(i)>0){
-	 //if(TriggerName.compare(0,TriggersMuE[i].length(),TriggersMuE[i],0,TriggersMuE[i].length())==0){
+	   //if(TriggerName.compare(0,TriggersMuE[i].length(),TriggersMuE[i],0,TriggersMuE[i].length())==0){
 	   passTrigger=true;
 	   //cout<<"Trigger Name: "<<TriggerName<<endl;
 	   //cout<<"Prescale value: "<<prescale_value<<endl;
@@ -541,6 +598,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }
        }//end of for loop over triggers
      }//end of requirement of emu channel
+     */
 
    }//end of looping over triggers
    
@@ -549,91 +607,93 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    if(passTrigger){
      //cout<<"I pass trigger"<<endl;
 
+     int numMuTight=0;
+     int numETight = 0;
 
-     bool isPPSRun = false;
-     //Check if this run is the same as previous event. If so alignment doesn't need to be loaded again, but need set isPPSRun based on previous run
-     if(prev_run == iEvent.id().run())
-       {
+     if(isPPS){
+
+       bool isPPSRun = false;
+       //Check if this run is the same as previous event. If so alignment doesn't need to be loaded again, but need set isPPSRun based on previous run
+       if(prev_run == iEvent.id().run())
+	 {
 	 //cout<<"Previous pps boolean: "<<prev_pps<<endl;;
-	 isPPSRun=prev_pps;
-       }
-     //cout<<"prev_run: "<<prev_run<<endl;
-     //cout<<"this_run: "<<iEvent.id().run()<<endl;
-     //Load alignment if it hasn't bee loaded yet for this run
-     if (prev_run != iEvent.id().run() || alignments == NULL)
-       {
-	 const auto &fillInfo = fillInfoCollection.FindByRun(iEvent.id().run());
-	 if(fillInfo.fillNumber > 0){isPPSRun = true;}
-	 else{isPPSRun=false;}
-	 //For the time being need to say false for runs larger than 280385, this includes after TS2 data which hasn't been aligned yet
-	 if(iEvent.id().run()>280385){isPPSRun=false;}
-	 //cout<<"fillInfo.fillNumber"<<fillInfo.fillNumber<<endl;
-	 //cout<<"fillInfo.runMin"<<fillInfo.runMin<<endl;
-	 //cout<<"fillInfo.runMax"<<fillInfo.runMax<<endl;
-
-	 if(isPPSRun){
-	   prev_run = iEvent.id().run();
-	   prev_pps = true;
-	   const auto alignment_it = alignmentCollection.find(fillInfo.alignmentTag);
-	   if (alignment_it == alignmentCollection.end())
-	     {
-	       printf("ERROR: no alignment for tag '%s'.\n", fillInfo.alignmentTag.c_str());
-	       //return 1;
-	     }
+	   isPPSRun=prev_pps;
+	 }
+       //cout<<"prev_run: "<<prev_run<<endl;
+       //cout<<"this_run: "<<iEvent.id().run()<<endl;
+       //Load alignment if it hasn't bee loaded yet for this run
+       if (prev_run != iEvent.id().run() || alignments == NULL)
+	 {
+	   const auto &fillInfo = fillInfoCollection.FindByRun(iEvent.id().run());
+	   if(fillInfo.fillNumber > 0){isPPSRun = true;}
+	   else{isPPSRun=false;}
+	   //For the time being need to say false for runs larger than 280385, this includes after TS2 data which hasn't been aligned yet
+	   if(iEvent.id().run()>280385){isPPSRun=false;}
+	   //cout<<"fillInfo.fillNumber"<<fillInfo.fillNumber<<endl;
+	   //cout<<"fillInfo.runMin"<<fillInfo.runMin<<endl;
+	   //cout<<"fillInfo.runMax"<<fillInfo.runMax<<endl;
 	   
+	   if(isPPSRun){
+	     prev_run = iEvent.id().run();
+	     prev_pps = true;
+	     const auto alignment_it = alignmentCollection.find(fillInfo.alignmentTag);
+	     if (alignment_it == alignmentCollection.end())
+	       {
+		 printf("ERROR: no alignment for tag '%s'.\n", fillInfo.alignmentTag.c_str());
+		 //return 1;
+	       }
+	     
 	   //printf("INFO: loaded alignment with tag '%s'.\n", fillInfo.alignmentTag.c_str());                       
-	   
-	   alignments = &alignment_it->second;
-	 }
-	 else{prev_pps=false;}
-       }//end of loading alignement if it hasn't been loaded already
-     *ispps_=isPPSRun;
-     if(isPPSRun){
-
-
-       Handle< edm::DetSetVector<TotemRPLocalTrack> > aodTracks;
-       iEvent.getByLabel("totemRPLocalTrackFitter",aodTracks);
-       
-       // produce collection of lite tracks (in future this will be done in miniAOD)        
-       
-       TrackDataCollection liteTracks;
-       for (const auto &ds : *aodTracks)
-	 {
-	   const auto &rpId = ds.detId();
-	   
-	   for (const auto &tr : ds)
-	     {
-	       liteTracks[rpId] = tr;
-	     }
-	 }
-     
-       
-       
-       // apply alignment                                                                                                
-       TrackDataCollection liteTracksAligned = alignments->Apply(liteTracks);
-       
-       // proton reconstruction, RP by RP                                                                                
-       for (const auto it : liteTracksAligned)
-	 {
-	   ProtonData proton;
-	   ReconstructProtonFromOneRP(it.first, it.second, proton);
-	   
-	   if (proton.valid){
-	     printf("    RP %u : xi = %.3f +- %.4f\n", it.first, proton.xi, proton.xi_unc);
-	   (*rp_tracks_x_).push_back(it.second.x);   
-	   (*rp_tracks_y_).push_back(it.second.y); 
-	   (*rp_tracks_detId_).push_back(it.first);   
-	   (*rp_tracks_xi_).push_back(proton.xi);
-	   (*rp_tracks_xi_unc_).push_back(proton.xi_unc);
+	     
+	     alignments = &alignment_it->second;
 	   }
-	 }
+	   else{prev_pps=false;}
+	 }//end of loading alignement if it hasn't been loaded already
+       *ispps_=isPPSRun;
+       if(isPPSRun){
+
+	 
+	 Handle< edm::DetSetVector<TotemRPLocalTrack> > aodTracks;
+	 iEvent.getByLabel("totemRPLocalTrackFitter",aodTracks);
+	 
+	 // produce collection of lite tracks (in future this will be done in miniAOD)        
+	 
+	 TrackDataCollection liteTracks;
+	 for (const auto &ds : *aodTracks)
+	   {
+	     const auto &rpId = ds.detId();
+	   
+	     for (const auto &tr : ds)
+	       {
+		 liteTracks[rpId] = tr;
+	       }
+	   }
+	 
+	 // apply alignment                                                                                                
+	 TrackDataCollection liteTracksAligned = alignments->Apply(liteTracks);
+	 
+	 // proton reconstruction, RP by RP                                                                                
+	 for (const auto it : liteTracksAligned)
+	   {
+	     ProtonData proton;
+	     ReconstructProtonFromOneRP(it.first, it.second, proton);
+	     
+	     if (proton.valid){
+	       printf("    RP %u : xi = %.3f +- %.4f\n", it.first, proton.xi, proton.xi_unc);
+	       (*rp_tracks_x_).push_back(it.second.x);   
+	       (*rp_tracks_y_).push_back(it.second.y); 
+	       (*rp_tracks_detId_).push_back(it.first);   
+	       (*rp_tracks_xi_).push_back(proton.xi);
+	       (*rp_tracks_xi_unc_).push_back(proton.xi_unc);
+	     }
+	   }
+	 
+       }//end of if statement making sure it is a PPS run
        
-     }//end of if statement making sure it is a PPS run
-
-
-       *pileupWeight_=1;
-
-       if(isMC){
+     }//end of if statement making sure that we want to look at these runs
+     *pileupWeight_=1;
+       
+     if(isMC){
 	 //cout<<" I get into MC"<<endl;
 	 /*
 	 Handle<reco::GenParticleCollection> genP;
@@ -660,64 +720,73 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 
 	 *pileupWeight_ = LumiWeights->weight( trueInteractions );
 
-       }//end of looking at MC
+     }//end of looking at MC
 
-       edm::Handle< std::vector<reco::Vertex> > vtxs;
-       iEvent.getByLabel("offlinePrimaryVertices", vtxs);
-       std::vector<reco::Vertex>::const_iterator vtxIt ;
-       //cout<<"Number of vertices: "<<vtxs.product()->size();
-       *vertex_nvtxs_ = vtxs.product()->size();
-       for (vtxIt = vtxs->begin(); vtxIt != vtxs->end(); ++vtxIt) {
-	 //cout<<"Vertex track size: "<<vtxIt->tracksSize()<<endl;
-	 //cout<<"Vertex z position: "<<vtxIt->position().z()<<endl;
-	 (*allvertices_z_).push_back(vtxIt->position().z());
-       }
+     edm::Handle< std::vector<reco::Vertex> > vtxs;
+     iEvent.getByLabel("offlinePrimaryVertices", vtxs);
+     std::vector<reco::Vertex>::const_iterator vtxIt ;
+     //cout<<"Number of vertices: "<<vtxs.product()->size();
+     *vertex_nvtxs_ = vtxs.product()->size();
+     for (vtxIt = vtxs->begin(); vtxIt != vtxs->end(); ++vtxIt) {
+       //cout<<"Vertex track size: "<<vtxIt->tracksSize()<<endl;
+       //cout<<"Vertex z position: "<<vtxIt->position().z()<<endl;
+       (*allvertices_z_).push_back(vtxIt->position().z());
+     }
+     
+     edm::Handle< std::vector<reco::Muon> > muonHandle;
+     iEvent.getByLabel("muons",muonHandle);
+     std::vector<reco::Muon>::const_iterator MuonIt ;
+     
+     // get RECO tracks from the event
+     edm::Handle<reco::TrackCollection> tks;
+     iEvent.getByLabel("generalTracks", tks);
+     
+     //get the builder:
+     edm::ESHandle<TransientTrackBuilder> theB;
+     iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
+     //do the conversion:
+     vector<reco::TransientTrack> t_tks = (*theB).build(tks);
+     std::vector<reco::TransientTrack>::const_iterator ttrk_It;
+     //t_tks.setBeamSpot(beamSpot)
+     std::vector<reco::TransientTrack> ttrkC_mu;
+     std::vector<reco::TransientTrack> ttrkC_e;
+     std::vector<reco::TransientTrack> ttrkC;
+     
+     TLorentzVector mu1,mu2;
+     reco::VertexRef vtx(vtxs, 0);
+     *vertex_ntracks_ = vtx->tracksSize();
+     *vertex_x_ = vtx->position().x();
+     *vertex_y_ = vtx->position().y();
+     *vertex_z_ = vtx->position().z();
+     std::vector<uint> ttrkC_mu_it;
+     for (MuonIt = muonHandle->begin(); MuonIt != muonHandle->end(); ++MuonIt) {
+       //cout<<"Muon pt is: "<<MuonIt->pt()<<endl;
+       
+       bool tightId = muon::isTightMuon(*MuonIt,*vtx);
+       //cout<<"Tight Muon Id is: "<<tightId<<endl;
+       if(tightId&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
 
-       edm::Handle< std::vector<reco::Muon> > muonHandle;
-       iEvent.getByLabel("muons",muonHandle);
-       std::vector<reco::Muon>::const_iterator MuonIt ;
-
-       // get RECO tracks from the event
-       edm::Handle<reco::TrackCollection> tks;
-       iEvent.getByLabel("generalTracks", tks);
-
-       //get the builder:
-       edm::ESHandle<TransientTrackBuilder> theB;
-       iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
-       //do the conversion:
-       vector<reco::TransientTrack> t_tks = (*theB).build(tks);
-       std::vector<reco::TransientTrack>::const_iterator ttrk_It;
-       //t_tks.setBeamSpot(beamSpot)
-       std::vector<reco::TransientTrack> ttrkC_mu;
-       std::vector<reco::TransientTrack> ttrkC_e;
-       std::vector<reco::TransientTrack> ttrkC;
-
-       TLorentzVector mu1,mu2;
-       int numMuTight=0;
-       reco::VertexRef vtx(vtxs, 0);
-       *vertex_ntracks_ = vtx->tracksSize();
-       *vertex_x_ = vtx->position().x();
-       *vertex_y_ = vtx->position().y();
-       *vertex_z_ = vtx->position().z();
-       std::vector<uint> ttrkC_mu_it;
-       for (MuonIt = muonHandle->begin(); MuonIt != muonHandle->end(); ++MuonIt) {
-	 bool tightId = muon::isTightMuon(*MuonIt,*vtx);
-	 if(tightId&&MuonIt->pt()>20&&fabs(MuonIt->eta())<2.4){
-	   (*muon_px_).push_back(MuonIt->px());
-	   (*muon_py_).push_back(MuonIt->py());
-	   (*muon_pz_).push_back(MuonIt->pz());
-	   (*muon_e_).push_back(MuonIt->energy());
-	   (*muon_charge_).push_back(MuonIt->charge());
-	   (*muon_pt_).push_back(MuonIt->pt());
+	 double iso = (MuonIt->pfIsolationR04().sumChargedHadronPt + max(0., MuonIt->pfIsolationR04().sumNeutralHadronEt + MuonIt->pfIsolationR04().sumPhotonEt - 0.5*MuonIt->pfIsolationR04().sumPUPt))/MuonIt->pt();
+	 //cout<<"Muon Iso is: "<<iso<<endl;
+	 (*muon_px_).push_back(MuonIt->px());
+	 (*muon_py_).push_back(MuonIt->py());
+	 (*muon_pz_).push_back(MuonIt->pz());
+	 (*muon_e_).push_back(MuonIt->energy());
+	 (*muon_charge_).push_back(MuonIt->charge());
+	 (*muon_pt_).push_back(MuonIt->pt());
 	   (*muon_eta_).push_back(MuonIt->eta());
+	   (*muon_iso_).push_back(iso);
 	   //cout<<"Pt: "<<MuonIt->pt()<<endl;
 	   //cout<<"Vertex track size: "<<vtx->tracksSize()<<endl;
 	   
 	   //for(const auto at : t_tks){
 	   for (uint i=0; i < t_tks.size();i++){
 	     //  if(fabs(MuonIt->pt()-at.track().pt())<0.001&&fabs(MuonIt->eta()-at.track().eta())<0.001&&fabs(MuonIt->phi()-at.track().phi())<0.001){
-	     if(fabs(MuonIt->pt()-t_tks[i].track().pt())<0.001&&fabs(MuonIt->eta()-t_tks[i].track().eta())<0.001&&fabs(MuonIt->phi()-t_tks[i].track().phi())<0.001){
-	       //cout<<"This is the correct track, pt: "<<at.track().pt()<<endl;
+	     //if(fabs(MuonIt->pt()-t_tks[i].track().pt())<0.001&&fabs(MuonIt->eta()-t_tks[i].track().eta())<0.001&&fabs(MuonIt->phi()-t_tks[i].track().phi())<0.001){
+	     if(fabs(MuonIt->innerTrack()->pt()-t_tks[i].track().pt())<0.001&&fabs(MuonIt->innerTrack()->eta()-t_tks[i].track().eta())<0.001&&fabs(MuonIt->innerTrack()->phi()-t_tks[i].track().phi())<0.001){
+	       //cout<<"This is the correct track for muon, track pt, eta, phi: "<<MuonIt->innerTrack()->pt()<<", "<<MuonIt->innerTrack()->eta()<<", "<<MuonIt->innerTrack()->phi()<<endl;
+	       //cout<<"This is the correct track for muon, muon pt, eta, phi: "<<MuonIt->pt()<<", "<<MuonIt->eta()<<", "<<MuonIt->phi()<<endl;
+	       //cout<<"This is the correct track for muon, track pt, eta, phi: "<<at.track().pt()<<endl;
 	       //ttrkC_mu.push_back(at);
 	       ttrkC_mu.push_back(t_tks[i]);
 	       ttrkC_mu_it.push_back(i);
@@ -729,233 +798,246 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   if(numMuTight==1){	   mu1.SetPx(MuonIt->px());mu1.SetPy(MuonIt->py());mu1.SetPz(MuonIt->pz());mu1.SetE(MuonIt->energy());	 }
 	   if(numMuTight==2){	   mu2.SetPx(MuonIt->px());mu2.SetPy(MuonIt->py());mu2.SetPz(MuonIt->pz());mu2.SetE(MuonIt->energy());	 }
 	   if(numMuTight>2){cout<<"There are more than 3 tight muons in the event"<<endl;}
-	 }//end of looking at tightId
-       }//end of looking at muons
-       if(numMuTight==2){
-	 TLorentzVector mumu = mu1+mu2;
-	 //*mumu_mass_=mumu.M();
-	 //*mumu_rapidity_=mumu.Rapidity();
-	 //cout<<"Invariant mass: "<<mumu.M()<<endl;
+       }//end of looking at tightId
+     }//end of looking at muons
+     if(numMuTight==2){
+       TLorentzVector mumu = mu1+mu2;
+       //*mumu_mass_=mumu.M();
+       //*mumu_rapidity_=mumu.Rapidity();
+       //cout<<"Invariant mass: "<<mumu.M()<<endl;
 	 //cout<<"Rapidity: "<<mumu.Rapidity()<<endl;
-       }
-
-       //Electron information
-       //https://github.com/ikrav/EgammaWork/blob/ntupler_and_VID_demos_8.0.3/ElectronNtupler/plugins/ElectronNtuplerVIDDemo.cc       
-       edm::Handle<edm::ValueMap<bool> > ele_id_decisions;
-       iEvent.getByToken(eleIdMapToken_ ,ele_id_decisions);
-       // Full cut flow info for one of the working points:
-       edm::Handle<edm::ValueMap<vid::CutFlowResult> > ele_id_cutflow_data;
-       iEvent.getByToken(eleIdFullInfoMapToken_,ele_id_cutflow_data);
+     }
+     
+     //Electron information
+     //https://github.com/ikrav/EgammaWork/blob/ntupler_and_VID_demos_8.0.3/ElectronNtupler/plugins/ElectronNtuplerVIDDemo.cc       
+     edm::Handle<edm::ValueMap<bool> > ele_id_decisions;
+     iEvent.getByToken(eleIdMapToken_ ,ele_id_decisions);
+     // Full cut flow info for one of the working points:
+     edm::Handle<edm::ValueMap<vid::CutFlowResult> > ele_id_cutflow_data;
+     iEvent.getByToken(eleIdFullInfoMapToken_,ele_id_cutflow_data);
+     
+     
+     // beam spot                                                                                     
+     //edm::Handle<reco::BeamSpot> beamspot_h;
+     //iEvent.getByLabel(beamSpotInputTag_, beamspot_h);                                           
+     //iEvent.getByLabel("offlineBeamSpot", beamspot_h);
+     //const reco::BeamSpot &beamSpot = *(beamspot_h.product());
+     
+     edm::Handle<reco::BeamSpot> theBeamSpot;
+     iEvent.getByToken(beamSpotToken_,theBeamSpot);
+     
+     // conversions                                                             
+     edm::Handle<reco::ConversionCollection> conversions_h;
+     iEvent.getByLabel("allConversions", conversions_h);
+     
+     //Loop over electrons in event
+     edm::Handle<reco::GsfElectronCollection> els_h;
+     iEvent.getByLabel("gedGsfElectrons", els_h);
+     unsigned int n = els_h->size();
+     std::vector<uint> ttrkC_e_it;
+     for(unsigned int i = 0; i < n; ++i) {
+       reco::GsfElectronRef ele(els_h, i);
+       //reco::GsfTrackRef theTrack = el->gsfTrack();
+       //dz_.push_back( theTrack->dz( firstGoodVertex->position() ) );
+       //dxy_.push_back( theTrack->dxy( firstGoodVertex->position() ) );
+       bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,conversions_h,theBeamSpot->position());
+       bool isPassEleId = (*ele_id_decisions)[ele];
        
+       if(isPassEleId&&passConvVeto&&ele->pt()>30&&fabs(ele->superCluster()->eta())<2.4){
+	 numETight++;
+	 (*electron_pt_).push_back(ele->pt());
+	 //cout<<"Get Here 0:"<<endl;
+	 //cout<<"Electron pt, eta, phi: "<<ele->pt()<<", "<<ele->eta()<<", "<<ele->phi()<<endl;
+	 //cout<<"Electron px, py, pz: "<<ele->px()<<", "<<ele->py()<<", "<<ele->pz()<<endl;
+	 //cout<<"Electron pt from px, py: "<<sqrt(ele->px()*ele->px()+ele->py()*ele->py())<<endl;
+	 //cout<<"Electron energy: "<<ele->energy()<<endl;
+	 //if(ele->closestCtfTrackRef().isNonnull()){
+	 //cout<<"Electron Ctf track pt, eta, phi: "<<ele->closestCtfTrackRef()->pt()<<", "<<ele->closestCtfTrackRef()->eta()<<", "<<ele->closestCtfTrackRef()->phi()<<endl;
+	 //cout<<"Electron Ctf track px, py, pz: "<<ele->closestCtfTrackRef()->px()<<", "<<ele->closestCtfTrackRef()->py()<<", "<<ele->closestCtfTrackRef()->pz()<<endl;}
+	 //cout<<"Electron GSF track pt, eta, phi: "<<ele->gsfTrack()->pt()<<", "<<ele->gsfTrack()->eta()<<", "<<ele->gsfTrack()->phi()<<endl;
+	 (*electron_eta_).push_back(ele->superCluster()->eta());
+	 (*electron_px_).push_back(ele->px());
+	 (*electron_py_).push_back(ele->py());
+	 (*electron_pz_).push_back(ele->pz());
+	 (*electron_e_).push_back(ele->energy());
+	 (*electron_charge_).push_back(ele->charge());
+	 if(ele->closestCtfTrackRef().isNonnull()){
+	   //for(const auto at : t_tks){
+	   for (uint i=0; i < t_tks.size();i++){
+	     //cout<<"Track, pt, eta, phi: "<<at.track().pt()<<", "<<at.track().eta()<<", "<<at.track().phi()<<endl;}
+	     //if(fabs(ele->closestCtfTrackRef()->pt()-at.track().pt())<0.001&&fabs(ele->closestCtfTrackRef()->eta()-at.track().eta())<0.001&&fabs(ele->closestCtfTrackRef()->phi()-at.track().phi())<0.001){
+	     if(fabs(ele->closestCtfTrackRef()->pt()-t_tks[i].track().pt())<0.001&&fabs(ele->closestCtfTrackRef()->eta()-t_tks[i].track().eta())<0.001&&fabs(ele->closestCtfTrackRef()->phi()-t_tks[i].track().phi())<0.001){
+	       //cout<<"This is the correct electron track, pt: "<<at.track().pt()<<endl;
+	       //		   ttrkC_e.push_back(at);
+	       ttrkC_e.push_back(t_tks[i]);
+	       ttrkC_e_it.push_back(i);
+	     }
+	   }//end of looping over tracks to get track matching to electron
+	 }//making sure closest Ctf Track is non-null
+	 
+       }//requirement that electron pass id and conv veto
+       vid::CutFlowResult fullCutFlowData = (*ele_id_cutflow_data)[ele];
+       bool verbose_electron=false;
+       if(verbose_electron){
+	 printf("\nDEBUG CutFlow, full info for cand with pt=%f:\n", ele->pt());
+	 //printCutFlowResult(fullCutFlowData);
+	 printf("    CutFlow name= %s    decision is %d\n", 
+		fullCutFlowData.cutFlowName().c_str(),
+		(int) fullCutFlowData.cutFlowPassed());
+	 int ncuts = fullCutFlowData.cutFlowSize();
+	 printf(" Index                               cut name              isMasked    value-cut-upon     pass?\n");
+	 for(int icut = 0; icut<ncuts; icut++){
+	   printf("  %2d      %50s    %d        %f          %d\n", icut,
+		  fullCutFlowData.getNameAtIndex(icut).c_str(),
+		  (int)fullCutFlowData.isCutMasked(icut),
+		  fullCutFlowData.getValueCutUpon(icut),
+		  (int)fullCutFlowData.getCutResultByIndex(icut));
+	 }
+       }//end of looking at electrons cutflow
+     }//end of loop over electrons
+     
+     
+     bool fitVertex = false;
+     if(channel=="mue"){
+       if(ttrkC_mu.size()==1&&ttrkC_e.size()==1){fitVertex=true;}
+     }
+     if(channel=="mumu"){
+       if(ttrkC_mu.size()==2){fitVertex=true;}
+     }
+     if(channel=="ee"){
+       if(ttrkC_e.size()==2){fitVertex=true;}
+     }
+     
+     if(fitVertex){
        
-       // beam spot                                                                                     
-       //edm::Handle<reco::BeamSpot> beamspot_h;
-       //iEvent.getByLabel(beamSpotInputTag_, beamspot_h);                                           
-       //iEvent.getByLabel("offlineBeamSpot", beamspot_h);
-       //const reco::BeamSpot &beamSpot = *(beamspot_h.product());
-
-       edm::Handle<reco::BeamSpot> theBeamSpot;
-       iEvent.getByToken(beamSpotToken_,theBeamSpot);
-
-       // conversions                                                             
-       edm::Handle<reco::ConversionCollection> conversions_h;
-       iEvent.getByLabel("allConversions", conversions_h);
-
-       //Loop over electrons in event
-       edm::Handle<reco::GsfElectronCollection> els_h;
-       iEvent.getByLabel("gedGsfElectrons", els_h);
-       unsigned int n = els_h->size();
-       std::vector<uint> ttrkC_e_it;
-       for(unsigned int i = 0; i < n; ++i) {
-	 reco::GsfElectronRef ele(els_h, i);
-	 bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,conversions_h,theBeamSpot->position());
-	 bool isPassEleId = (*ele_id_decisions)[ele];
-
-	 if(isPassEleId&&passConvVeto&&ele->pt()>20&&fabs(ele->superCluster()->eta())<2.4){
-	   (*electron_pt_).push_back(ele->pt());
-	   //cout<<"Get Here 0:"<<endl;
-	   //cout<<"Electron pt, eta, phi: "<<ele->pt()<<", "<<ele->eta()<<", "<<ele->phi()<<endl;
-	   //cout<<"Electron px, py, pz: "<<ele->px()<<", "<<ele->py()<<", "<<ele->pz()<<endl;
-	   //cout<<"Electron pt from px, py: "<<sqrt(ele->px()*ele->px()+ele->py()*ele->py())<<endl;
-	   //cout<<"Electron energy: "<<ele->energy()<<endl;
-	   //if(ele->closestCtfTrackRef().isNonnull()){
-	     //cout<<"Electron Ctf track pt, eta, phi: "<<ele->closestCtfTrackRef()->pt()<<", "<<ele->closestCtfTrackRef()->eta()<<", "<<ele->closestCtfTrackRef()->phi()<<endl;
-	     //cout<<"Electron Ctf track px, py, pz: "<<ele->closestCtfTrackRef()->px()<<", "<<ele->closestCtfTrackRef()->py()<<", "<<ele->closestCtfTrackRef()->pz()<<endl;}
-	     //cout<<"Electron GSF track pt, eta, phi: "<<ele->gsfTrack()->pt()<<", "<<ele->gsfTrack()->eta()<<", "<<ele->gsfTrack()->phi()<<endl;
-	   (*electron_eta_).push_back(ele->superCluster()->eta());
-	   (*electron_px_).push_back(ele->px());
-	   (*electron_py_).push_back(ele->py());
-	   (*electron_pz_).push_back(ele->pz());
-	   (*electron_e_).push_back(ele->energy());
-	   (*electron_charge_).push_back(ele->charge());
-	   if(ele->closestCtfTrackRef().isNonnull()){
-	     //for(const auto at : t_tks){
-	     for (uint i=0; i < t_tks.size();i++){
-	       //cout<<"Track, pt, eta, phi: "<<at.track().pt()<<", "<<at.track().eta()<<", "<<at.track().phi()<<endl;}
-	       //if(fabs(ele->closestCtfTrackRef()->pt()-at.track().pt())<0.001&&fabs(ele->closestCtfTrackRef()->eta()-at.track().eta())<0.001&&fabs(ele->closestCtfTrackRef()->phi()-at.track().phi())<0.001){
-	       if(fabs(ele->closestCtfTrackRef()->pt()-t_tks[i].track().pt())<0.001&&fabs(ele->closestCtfTrackRef()->eta()-t_tks[i].track().eta())<0.001&&fabs(ele->closestCtfTrackRef()->phi()-t_tks[i].track().phi())<0.001){
-		 //cout<<"This is the correct electron track, pt: "<<at.track().pt()<<endl;
-		   //		   ttrkC_e.push_back(at);
-		   ttrkC_e.push_back(t_tks[i]);
-		   ttrkC_e_it.push_back(i);
-	       }
-	     }//end of looping over tracks to get track matching to electron
-	   }//making sure closest Ctf Track is non-null
-
-	 }//requirement that electron pass id and conv veto
-	 vid::CutFlowResult fullCutFlowData = (*ele_id_cutflow_data)[ele];
-	 bool verbose_electron=false;
-	 if(verbose_electron){
-	   printf("\nDEBUG CutFlow, full info for cand with pt=%f:\n", ele->pt());
-	   //printCutFlowResult(fullCutFlowData);
-	   printf("    CutFlow name= %s    decision is %d\n", 
-		  fullCutFlowData.cutFlowName().c_str(),
-		  (int) fullCutFlowData.cutFlowPassed());
-	   int ncuts = fullCutFlowData.cutFlowSize();
-	   printf(" Index                               cut name              isMasked    value-cut-upon     pass?\n");
-	   for(int icut = 0; icut<ncuts; icut++){
-	     printf("  %2d      %50s    %d        %f          %d\n", icut,
-		    fullCutFlowData.getNameAtIndex(icut).c_str(),
-		    (int)fullCutFlowData.isCutMasked(icut),
-		    fullCutFlowData.getValueCutUpon(icut),
-		    (int)fullCutFlowData.getCutResultByIndex(icut));
-	   }
-	 }//end of looking at electrons cutflow
-       }//end of loop over electrons
-      
-       
-       bool fitVertex = false;
-       if(channel=="mue"){
-	 if(ttrkC_mu.size()==1&&ttrkC_e.size()==1){fitVertex=true;}
-       }
-       if(channel=="mumu"){
-	 if(ttrkC_mu.size()==2){fitVertex=true;}
-       }
-       if(channel=="ee"){
-	 if(ttrkC_e.size()==2){fitVertex=true;}
-       }
-       
-       if(fitVertex){
-
-	 int pass_muon_assoc=0;
-	 int pass_electron_assoc=0;
-	 //Look at primary vertex and loop to see if muon and electron match it
-	 for(reco::Vertex::trackRef_iterator vertex_Tracks = vtx->tracks_begin();vertex_Tracks<vtx->tracks_end(); vertex_Tracks++){
-	   for(uint it = 0; it<ttrkC_mu.size();it++){
+       int pass_muon_assoc=0;
+       int pass_electron_assoc=0;
+       //Look at primary vertex and loop to see if muon and electron match it
+       for(reco::Vertex::trackRef_iterator vertex_Tracks = vtx->tracks_begin();vertex_Tracks<vtx->tracks_end(); vertex_Tracks++){
+	 for(uint it = 0; it<ttrkC_mu.size();it++){
 	     if( fabs((*vertex_Tracks)->pt()-ttrkC_mu[it].track().pt())<0.001 && 
 		 fabs((*vertex_Tracks)->eta()-ttrkC_mu[it].track().eta())<0.001 && 
 		 fabs((*vertex_Tracks)->phi()-ttrkC_mu[it].track().phi())<0.001){
 	       pass_muon_assoc++;
 	     }
-	   }
-	   for(uint it = 0; it<ttrkC_e.size();it++){
-	     if (fabs((*vertex_Tracks)->pt()-ttrkC_e[it].track().pt())<0.001 && 
-		 fabs((*vertex_Tracks)->eta()-ttrkC_e[it].track().eta())<0.001 && 
+	 }
+	 for(uint it = 0; it<ttrkC_e.size();it++){
+	   if (fabs((*vertex_Tracks)->pt()-ttrkC_e[it].track().pt())<0.001 && 
+	       fabs((*vertex_Tracks)->eta()-ttrkC_e[it].track().eta())<0.001 && 
 	       fabs((*vertex_Tracks)->phi()-ttrkC_e[it].track().phi())<0.001){
-	       pass_electron_assoc++;
-	     }
-	   }//end of for loop over electrons
-	 }
-	 
-	 //Do fit to two lepton tracks
-	 //AdaptiveVertexFitter fitter;
-	 KalmanVertexFitter fitter;
-	 TransientVertex myVertex;
-	 //if two leptons not associated to the pv than don't use primary vertex, set ntracks to 1001
-	 if(channel=="mue"){
-	   if(!(pass_muon_assoc==1&&pass_electron_assoc==1)){*vertex_ntracks_=1001;}
-	   ttrkC.push_back(ttrkC_mu[0]);
-	   ttrkC.push_back(ttrkC_e[0]);
-	   myVertex = fitter.vertex(ttrkC);
-	 }
-	 if(channel=="mumu"){
-	   if(pass_muon_assoc!=2){*vertex_ntracks_=1001;}
-	   myVertex = fitter.vertex(ttrkC_mu);
-	 }
-	 if(channel=="ee"){
-	   myVertex = fitter.vertex(ttrkC_e);
-	   if(pass_electron_assoc!=2){*vertex_ntracks_=1001;}
-	 }
-	   //cout<<"Get Before valid vertex"<<endl;
-	 if(myVertex.isValid()){
-	   *fvertex_x_=myVertex.position().x();
-	   *fvertex_y_=myVertex.position().y();
-	   *fvertex_z_=myVertex.position().z();
-	   *fvertex_chi2ndof_=myVertex.normalisedChiSquared();
-	   //if(myVertex.normalisedChiSquared()<0){
-	   //cout<<"Position: "<<myVertex.position().x()<<", "<<myVertex.position().y()<<", "<<myVertex.position().z()<<endl;
-	   //cout<<"Ndof: "<<myVertex.degreesOfFreedom()<<endl;
-	   //cout<<"Normalized ChiSquared: "<<myVertex.normalisedChiSquared()<<endl;
-	   //cout<<"ChiSquared: "<<myVertex.totalChiSquared()<<endl;
-	   //}
-	     uint num_close_tracks=-1;
-	     //for (ttrk_It=t_tks->begin();ttrk_It != t_tks->end(); ++ttrk_It){
-	     for (uint i=0; i < t_tks.size();i++){
-	       //if(t_tks[i].track().pt()>6){
-	       //	 cout<<"Track pt: "<<t_tks[i].track().pt()<<endl;}
-	       //cout<<"Track eta: "<<t_tks[i].track().eta()<<endl;
-	       TrajectoryStateClosestToPoint tS=t_tks[i].trajectoryStateClosestToPoint(myVertex.position());
-	       //cout<<"Closest position on track: "<<tS.position().x()<<", "<<tS.position().y()<<", "<<tS.position().z()<<endl;
-	       //believe this is all in cm
-	       if(tS.isValid()){
-		 float closest_pos = sqrt( pow(myVertex.position().x()-tS.position().x(),2)+pow(myVertex.position().y()-tS.position().y(),2)+pow(myVertex.position().z()-tS.position().z(),2));
-		 //if(t_tks[i].track().pt()>6){cout<<"Closest position: "<<closest_pos<<endl;}
-
-		 if(closest_pos<0.2){
-		   (*fvertex_tkdist_).push_back(closest_pos);
-		   //(*fvertex_tkpt_).push_back(t_tks[i].track().pt());
-		   //(*fvertex_tketa_).push_back(t_tks[i].track().eta());
-		 }//fill ntuple with tracks within 0.2 mm
-
-		 for(uint att=0;att<ttrkC_mu_it.size();att++){
-		   if(ttrkC_mu_it[att]==i){
-		     h_mu_closest->Fill(closest_pos);
-		     (*muon_tkdist_).push_back(closest_pos);
-		     (*muon_tkpt_).push_back(t_tks[i].track().pt());
-		     if(myVertex.normalisedChiSquared()<10){h_mu_closest_chi2_10->Fill(closest_pos);}
-		     h_mu_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
-		     if(closest_pos<0.1){ num_close_tracks++;}
-		   }
-		 }
-		 
-		 for(uint att=0;att<ttrkC_e_it.size();att++){
-		   if(ttrkC_e_it[att]==i){
-		     h_e_closest->Fill(closest_pos);
-		     (*electron_tkdist_).push_back(closest_pos);
-		     (*electron_tkpt_).push_back(t_tks[i].track().pt());
-		     if(myVertex.normalisedChiSquared()<10){h_e_closest_chi2_10->Fill(closest_pos);}
-		     h_e_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
-		     if(closest_pos<0.1){ num_close_tracks++;}
-		   }
-		 }
-
-	       }//end of making sure Trajectory state is valid
-	       else{cout<<"TrajectoryStateClosestToPoint is not valid"<<endl;}
-	     }//end of looping over tracks
-	     //Add one here because initially start with value of num_close_tracks of -1, see above
-	     *fvertex_ntracks_=num_close_tracks+1;
-	     //cout<<"Num close tracks: "<<num_close_tracks+1<<endl;
-	 }//end of requiring valid vertex
-	 else{cout<<"Fitted vertex is not valid"<<endl;
-	   *fvertex_x_=-999.;
-	   *fvertex_y_=-999.;
-	   *fvertex_z_=-999.;
-	   *fvertex_chi2ndof_=999.;
-	   *fvertex_ntracks_=1000.;
-	   //cout<<"Number tracks at dimuon vertex: "<<*vertex_ntracks_<<endl;
-	 }
-
-	 *run_ = iEvent.id().run();
-	 *ev_ = iEvent.id().event();
-	 *lumiblock_ = iEvent.luminosityBlock();
-	 tree_->Fill();
-
-	 
-       }//end of requirement of two tracks
+	     pass_electron_assoc++;
+	   }
+	 }//end of for loop over electrons
+       }
        
+       //Do fit to two lepton tracks
+       //AdaptiveVertexFitter fitter;
+       KalmanVertexFitter fitter;
+       TransientVertex myVertex;
+       //if two leptons not associated to the pv than don't use primary vertex, set ntracks to 1001
+       if(channel=="mue"){
+	 if(!(pass_muon_assoc==1&&pass_electron_assoc==1)){*vertex_ntracks_=1001;}
+	 ttrkC.push_back(ttrkC_mu[0]);
+	 ttrkC.push_back(ttrkC_e[0]);
+	 myVertex = fitter.vertex(ttrkC);
+       }
+       if(channel=="mumu"){
+	 if(pass_muon_assoc!=2){*vertex_ntracks_=1001;}
+	 myVertex = fitter.vertex(ttrkC_mu);
+       }
+       if(channel=="ee"){
+	 myVertex = fitter.vertex(ttrkC_e);
+	 if(pass_electron_assoc!=2){*vertex_ntracks_=1001;}
+       }
+       //cout<<"Get Before valid vertex"<<endl;
+       if(myVertex.isValid()){
+	 *fvertex_x_=myVertex.position().x();
+	 *fvertex_y_=myVertex.position().y();
+	 *fvertex_z_=myVertex.position().z();
+	 *fvertex_chi2ndof_=myVertex.normalisedChiSquared();
+	 //if(myVertex.normalisedChiSquared()<0){
+	 //cout<<"Position: "<<myVertex.position().x()<<", "<<myVertex.position().y()<<", "<<myVertex.position().z()<<endl;
+	 //cout<<"Ndof: "<<myVertex.degreesOfFreedom()<<endl;
+	 //cout<<"Normalized ChiSquared: "<<myVertex.normalisedChiSquared()<<endl;
+	 //cout<<"ChiSquared: "<<myVertex.totalChiSquared()<<endl;
+	   //}
+	 uint num_close_tracks=-1;
+	 //for (ttrk_It=t_tks->begin();ttrk_It != t_tks->end(); ++ttrk_It){
+	 for (uint i=0; i < t_tks.size();i++){
+	   //if(t_tks[i].track().pt()>6){
+	   //	 cout<<"Track pt: "<<t_tks[i].track().pt()<<endl;}
+	   //cout<<"Track eta: "<<t_tks[i].track().eta()<<endl;
+	   TrajectoryStateClosestToPoint tS=t_tks[i].trajectoryStateClosestToPoint(myVertex.position());
+	   //cout<<"Closest position on track: "<<tS.position().x()<<", "<<tS.position().y()<<", "<<tS.position().z()<<endl;
+	   //believe this is all in cm
+	   if(tS.isValid()){
+	     float closest_pos = sqrt( pow(myVertex.position().x()-tS.position().x(),2)+pow(myVertex.position().y()-tS.position().y(),2)+pow(myVertex.position().z()-tS.position().z(),2));
+	     //if(t_tks[i].track().pt()>6){cout<<"Closest position: "<<closest_pos<<endl;}
+	     
+	     if(closest_pos<0.2){
+	       (*fvertex_tkdist_).push_back(closest_pos);
+	       //(*fvertex_tkpt_).push_back(t_tks[i].track().pt());
+	       //(*fvertex_tketa_).push_back(t_tks[i].track().eta());
+	     }//fill ntuple with tracks within 0.2 mm
+	     
+	     for(uint att=0;att<ttrkC_mu_it.size();att++){
+	       if(ttrkC_mu_it[att]==i){
+		 h_mu_closest->Fill(closest_pos);
+		 (*muon_tkdist_).push_back(closest_pos);
+		 (*muon_tkpt_).push_back(t_tks[i].track().pt());
+		 if(myVertex.normalisedChiSquared()<10){h_mu_closest_chi2_10->Fill(closest_pos);}
+		 h_mu_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
+		 if(closest_pos<0.05){ num_close_tracks++;}
+	       }
+	     }
+	     
+	     for(uint att=0;att<ttrkC_e_it.size();att++){
+	       if(ttrkC_e_it[att]==i){
+		 h_e_closest->Fill(closest_pos);
+		 (*electron_tkdist_).push_back(closest_pos);
+		 (*electron_tkpt_).push_back(t_tks[i].track().pt());
+		 if(myVertex.normalisedChiSquared()<10){h_e_closest_chi2_10->Fill(closest_pos);}
+		 h_e_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
+		 if(closest_pos<0.05){ num_close_tracks++;}
+	       }
+	     }
+	     
+	   }//end of making sure Trajectory state is valid
+	   else{cout<<"TrajectoryStateClosestToPoint is not valid"<<endl;}
+	 }//end of looping over tracks
+	 //Add one here because initially start with value of num_close_tracks of -1, see above
+	 *fvertex_ntracks_=num_close_tracks+1;
+	 //cout<<"Num close tracks: "<<num_close_tracks+1<<endl;
+       }//end of requiring valid vertex
+       else{cout<<"Fitted vertex is not valid"<<endl;
+	 *fvertex_x_=-999.;
+	 *fvertex_y_=-999.;
+	 *fvertex_z_=-999.;
+	 *fvertex_chi2ndof_=999.;
+	 *fvertex_ntracks_=1000.;
+	 //cout<<"Number tracks at dimuon vertex: "<<*vertex_ntracks_<<endl;
+       }
+   
+       /*    
+       *run_ = iEvent.id().run();
+       *ev_ = iEvent.id().event();
+       *lumiblock_ = iEvent.luminosityBlock();
+       tree_->Fill();
+       */
+       
+     }//end of requirement of two tracks
+     
+     //if((numMuTight>0&&numETight>0)){
+     if((numMuTight+numETight>1)){
+       //cout<<"Fill tree"<<endl;
+       *run_ = iEvent.id().run();
+       *ev_ = iEvent.id().event();
+       *lumiblock_ = iEvent.luminosityBlock();
+       tree_->Fill();
+     }
    }//end of looking at passing trigger
-
-
+   
+   
    (*muon_pt_).clear();
    (*muon_eta_).clear();
    (*muon_px_).clear();
@@ -963,6 +1045,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*muon_pz_).clear();
    (*muon_e_).clear();
    (*muon_charge_).clear();
+   (*muon_iso_).clear();
    
    (*electron_pt_).clear();
    (*electron_eta_).clear();
