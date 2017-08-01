@@ -50,7 +50,9 @@
 #include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
 #include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
 
+
 #include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
+//#include "TrackingTools/TransientTrack/interface/GsfTransientTrack.h"
 #include "TrackingTools/Records/interface/TransientTrackRecord.h"
 #include "TrackingTools/TrajectoryState/interface/TrajectoryStateClosestToPoint.h"
 
@@ -160,6 +162,7 @@ private:
   std::vector<float> * electron_pz_;
   std::vector<float> * electron_e_;
   std::vector<float> * electron_charge_;
+  std::vector<bool> *electron_passip_;
 
   std::vector<float> * allvertices_z_;
 
@@ -234,10 +237,10 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   consumes<reco::ConversionCollection>(edm::InputTag("allConversions"));
   consumes<std::vector< PileupSummaryInfo > >(edm::InputTag("addPileupInfo"));
   beamSpotToken_= consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
-  //  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
-  //eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
-  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
-  eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
+  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
+  eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
+  //eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
+  //eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
 
   fp0 = iConfig.getParameter<string>("particleFile");
   fp1 = iConfig.getParameter<string>("particleFile2");
@@ -283,7 +286,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   electron_pz_ = new std::vector<float>;
   electron_e_ = new std::vector<float>;
   electron_charge_ = new std::vector<float>;
-
+  electron_passip_ = new std::vector<bool>;
   allvertices_z_ = new std::vector<float>;
 
   vertex_ntracks_ = new uint;
@@ -358,6 +361,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   tree_->Branch("electron_pz",&electron_pz_);
   tree_->Branch("electron_e",&electron_e_);
   tree_->Branch("electron_charge",&electron_charge_);
+  tree_->Branch("electron_passip",&electron_passip_);
 
   tree_->Branch("allvertices_z",&allvertices_z_);
 
@@ -423,6 +427,7 @@ Ntupler::~Ntupler()
   delete electron_pz_;
   delete electron_e_;
   delete electron_charge_;
+  delete electron_passip_;
 
   delete allvertices_z_;
 
@@ -540,27 +545,46 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      //cout<<"Prescale value: "<<prescale_value<<endl;
      //cout<<"Trigger accept: "<<hltResults->accept(i)<<endl;
 
-
+     /*
      if(channel=="mumu"&&TriggerName.compare(0,TriggerDoubleMu.length(),TriggerDoubleMu,0,TriggerDoubleMu.length())==0&&hltResults->accept(i)>0&&prescale_value==1){
        passTrigger=true;
        //cout<<"Trigger Name: "<<TriggerName<<endl;
      }
-
-     if(channel=="ee"){
-       if((trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v1"||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v2"||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v3"||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v4")&&hltResults->accept(i)>0&&prescale_value==1){
+     */
+     if(channel=="mumu"){
+       if((trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v2"
+	   ||trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v3"
+	   ||trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v5")
+	  &&hltResults->accept(i)>0&&prescale_value==1){
 	 passTrigger=true;
        }
-       /*
-       for(uint i = 0; i<TriggersEE.size();i++){
-	 if(TriggerName.compare(0,TriggersEE[i].length(),TriggersEE[i],0,TriggersEE[i].length())==0&&hltResults->accept(i)>0){
-	   //if(TriggerName.compare(0,TriggersMuE[i].length(),TriggersMuE[i],0,TriggersMuE[i].length())==0){
-	   passTrigger=true;
-	   //cout<<"Trigger Name: "<<TriggerName<<endl;
-	   //cout<<"Prescale value: "<<prescale_value<<endl;
-	   //cout<<"Trigger accept: "<<hltResults->accept(i)<<endl;
-	 }
-       }//end of for loop over triggers
-       */
+     }//end of requirement of mumu channel
+
+
+     if(channel=="ee"){
+       if((trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v1"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v2"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v3"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v4"
+	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v1"
+	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v2"
+	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v3"
+	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v4"
+	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v5"
+	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v6"
+	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v7"
+	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v8"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v3"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v4"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v5"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v6"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v7"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v8"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v9"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v10")
+	  &&hltResults->accept(i)>0&&prescale_value==1){
+	 passTrigger=true;
+       }
      }//end of requirement of ee channel
 
      if(channel=="mue"){
@@ -586,24 +610,9 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        passTrigger=true;
        }
      }
-     /*
-     if(channel=="mue"){
-       for(uint i = 0; i<TriggersMuE.size();i++){
-	 if(TriggerName.compare(0,TriggersMuE[i].length(),TriggersMuE[i],0,TriggersMuE[i].length())==0&&hltResults->accept(i)>0){
-	   //if(TriggerName.compare(0,TriggersMuE[i].length(),TriggersMuE[i],0,TriggersMuE[i].length())==0){
-	   passTrigger=true;
-	   //cout<<"Trigger Name: "<<TriggerName<<endl;
-	   //cout<<"Prescale value: "<<prescale_value<<endl;
-	   //cout<<"Trigger accept: "<<hltResults->accept(i)<<endl;
-	 }
-       }//end of for loop over triggers
-     }//end of requirement of emu channel
-     */
-
    }//end of looping over triggers
    
    //passTrigger=true;
-   //if(passTrigger&&(iEvent.id().event()==627711||iEvent.id().event()==693495||iEvent.id().event()==693599||iEvent.id().event()==705881||iEvent.id().event()==1211424||iEvent.id().event()==860474)){
    if(passTrigger){
      //cout<<"I pass trigger"<<endl;
 
@@ -695,19 +704,19 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        
      if(isMC){
 	 //cout<<" I get into MC"<<endl;
-	 /*
+       /*
 	 Handle<reco::GenParticleCollection> genP;
 	 iEvent.getByLabel("genParticles",genP);
 	 for (reco::GenParticleCollection::const_iterator mcIter=genP->begin(); mcIter != genP->end(); mcIter++ ) {
-	   //cout<<"MC id is: "<<mcIter->pdgId()<<endl;
-	   //cout<<"MC status is: "<<mcIter->status()<<endl;
-	   //cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
-	   //int n = mcIter->numberOfDaughters();
-	   //for(int j = 0; j < n; ++ j) {
-	   //  const reco::Candidate * d = mcIter->daughter( j );
-	   //  int dauId = d->pdgId();
-	   //  cout<<"Daughter pdg Id: "<<dauId<<endl;
-	   //}
+	   cout<<"MC id is: "<<mcIter->pdgId()<<endl;
+	   cout<<"MC status is: "<<mcIter->status()<<endl;
+	   cout<<"Pz, energy, pt is: "<<mcIter->pz()<<", "<<mcIter->energy()<<", "<<mcIter->pt()<<endl;
+	   int n = mcIter->numberOfDaughters();
+	   for(int j = 0; j < n; ++ j) {
+	    const reco::Candidate * d = mcIter->daughter( j );
+	     int dauId = d->pdgId();
+	     cout<<"Daughter pdg Id: "<<dauId<<endl;
+	   }
 
 	   //	     cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
 	   //if ( (fabs(mcIter->pdgId())==11|| fabs(mcIter->pdgId())==12 || fabs(mcIter->pdgId())==13 || fabs(mcIter->pdgId())==14 || fabs(mcIter->pdgId())==15 || fabs(mcIter->pdgId())==16 ) && mcIter->status() == 3 ){
@@ -716,7 +725,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     //cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
 	   }
 	 }//end of looking at GEN
-*/	 
+       */	 
 	 
 	 *pileupWeight_ = LumiWeights->weight( trueInteractions );
 
@@ -746,10 +755,10 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      iSetup.get<TransientTrackRecord>().get("TransientTrackBuilder",theB);
      //do the conversion:
      vector<reco::TransientTrack> t_tks = (*theB).build(tks);
-     std::vector<reco::TransientTrack>::const_iterator ttrk_It;
      //t_tks.setBeamSpot(beamSpot)
      std::vector<reco::TransientTrack> ttrkC_mu;
-     std::vector<reco::TransientTrack> ttrkC_e;
+     std::vector<reco::TransientTrack> ttrkC_e_gsf;
+     std::vector<reco::TransientTrack> ttrkC_e_ctf;
      std::vector<reco::TransientTrack> ttrkC;
      
      TLorentzVector mu1,mu2;
@@ -774,22 +783,21 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 (*muon_e_).push_back(MuonIt->energy());
 	 (*muon_charge_).push_back(MuonIt->charge());
 	 (*muon_pt_).push_back(MuonIt->pt());
-	   (*muon_eta_).push_back(MuonIt->eta());
-	   (*muon_iso_).push_back(iso);
-	   //cout<<"Pt: "<<MuonIt->pt()<<endl;
-	   //cout<<"Vertex track size: "<<vtx->tracksSize()<<endl;
-	   
-	   //for(const auto at : t_tks){
-	   for (uint i=0; i < t_tks.size();i++){
-	     //  if(fabs(MuonIt->pt()-at.track().pt())<0.001&&fabs(MuonIt->eta()-at.track().eta())<0.001&&fabs(MuonIt->phi()-at.track().phi())<0.001){
-	     //if(fabs(MuonIt->pt()-t_tks[i].track().pt())<0.001&&fabs(MuonIt->eta()-t_tks[i].track().eta())<0.001&&fabs(MuonIt->phi()-t_tks[i].track().phi())<0.001){
-	     if(fabs(MuonIt->innerTrack()->pt()-t_tks[i].track().pt())<0.001&&fabs(MuonIt->innerTrack()->eta()-t_tks[i].track().eta())<0.001&&fabs(MuonIt->innerTrack()->phi()-t_tks[i].track().phi())<0.001){
-	       //cout<<"This is the correct track for muon, track pt, eta, phi: "<<MuonIt->innerTrack()->pt()<<", "<<MuonIt->innerTrack()->eta()<<", "<<MuonIt->innerTrack()->phi()<<endl;
-	       //cout<<"This is the correct track for muon, muon pt, eta, phi: "<<MuonIt->pt()<<", "<<MuonIt->eta()<<", "<<MuonIt->phi()<<endl;
-	       //cout<<"This is the correct track for muon, track pt, eta, phi: "<<at.track().pt()<<endl;
-	       //ttrkC_mu.push_back(at);
-	       ttrkC_mu.push_back(t_tks[i]);
-	       ttrkC_mu_it.push_back(i);
+	 (*muon_eta_).push_back(MuonIt->eta());
+	 (*muon_iso_).push_back(iso);
+	 //cout<<"Pt: "<<MuonIt->pt()<<endl;
+	 //cout<<"Vertex track size: "<<vtx->tracksSize()<<endl;
+	 //cout<<"Get right before track muon"<<endl;
+	 //ttrkC_mu.push_back((*theB).build(*MuonIt->innerTrack()));
+	 const reco::TransientTrack b = (*theB).build(*MuonIt->innerTrack());
+	 ttrkC_mu.push_back(b);
+	 //cout<<"Get right after track muon"<<endl;
+	 //ttrkC_mu_it.push_back(i);
+	 //for(const auto at : t_tks){
+	 for (uint i=0; i < t_tks.size();i++){
+	   if(fabs(MuonIt->innerTrack()->pt()-t_tks[i].track().pt())<0.001&&fabs(MuonIt->innerTrack()->eta()-t_tks[i].track().eta())<0.001&&fabs(MuonIt->innerTrack()->phi()-t_tks[i].track().phi())<0.001){
+	     //ttrkC_mu.push_back(t_tks[i]);
+	     ttrkC_mu_it.push_back(i);
 	     }
 	   }
 	   //reco::TrackRef mutrk = MuonIt->innerTrack();
@@ -842,10 +850,34 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        //dxy_.push_back( theTrack->dxy( firstGoodVertex->position() ) );
        bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,conversions_h,theBeamSpot->position());
        bool isPassEleId = (*ele_id_decisions)[ele];
+              
+       
+       //See if electron passes
        
        if(isPassEleId&&passConvVeto&&ele->pt()>30&&fabs(ele->superCluster()->eta())<2.4){
+	 reco::VertexRef vtx(vtxs, 0);
+	 /*
+	 cout<<"The privary vertex position: "<<vtx->position()<<endl;
+	 cout<<"The beamspot position: "<<theBeamSpot->position()<<endl;
+	 cout<<"electron d0: "<<ele->gsfTrack()->d0()<<endl;
+	 cout<<"electron d0,bs: "<<ele->gsfTrack()->dxy(theBeamSpot->position())<<endl;
+	 cout<<"electron d0,pv: "<<ele->gsfTrack()->dxy(vtx->position())<<endl;
+	 cout<<"electron dz: "<<ele->gsfTrack()->dz()<<endl;
+	 cout<<"electron dz,bs: "<<ele->gsfTrack()->dz(theBeamSpot->position())<<endl;
+	 cout<<"electron dz,pv: "<<ele->gsfTrack()->dz(vtx->position())<<endl;
+	 cout<<"electron vertex z: "<<ele->vertex().z();
+	 */
+	 bool passIPcuts=false;
+	 if(fabs(ele->superCluster()->eta())<=1.479){
+	   if(fabs(ele->gsfTrack()->dz(vtx->position()))<0.10&&fabs(ele->gsfTrack()->dxy(vtx->position()))<0.05){passIPcuts=true;}
+	 }
+	 if(fabs(ele->superCluster()->eta())>1.479){
+	   if(fabs(ele->gsfTrack()->dz(vtx->position()))<0.20&&fabs(ele->gsfTrack()->dxy(vtx->position()))<0.10){passIPcuts=true;}
+	 }
+	 //cout<<"Does it pass IP cuts: "<<passIPcuts<<endl;
 	 numETight++;
 	 (*electron_pt_).push_back(ele->pt());
+	 (*electron_passip_).push_back(passIPcuts);
 	 //cout<<"Get Here 0:"<<endl;
 	 //cout<<"Electron pt, eta, phi: "<<ele->pt()<<", "<<ele->eta()<<", "<<ele->phi()<<endl;
 	 //cout<<"Electron px, py, pz: "<<ele->px()<<", "<<ele->py()<<", "<<ele->pz()<<endl;
@@ -861,21 +893,28 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 (*electron_pz_).push_back(ele->pz());
 	 (*electron_e_).push_back(ele->energy());
 	 (*electron_charge_).push_back(ele->charge());
+	 //cout<<"electron gsf pt"<<ele->gsfTrack()->pt()<<endl;
+	 const reco::TransientTrack b = (*theB).build(*ele->gsfTrack());
+	 //cout<<"Valid?: "<<b.isValid()<<endl;
+	 ttrkC_e_gsf.push_back(b);
+	 //ttrkC_e.push_back((*theB).build(*ele->gsfTrack()));
+	 //ttrkC_e.push_back((*theB).build(ele->track()));
+	 //cout<<(*theB).build(*ele->gsfTrack()).track().pt()<<endl;
+	 //cout<<"Get right after track electron"<<endl;
 	 if(ele->closestCtfTrackRef().isNonnull()){
 	   //for(const auto at : t_tks){
 	   for (uint i=0; i < t_tks.size();i++){
-	     //cout<<"Track, pt, eta, phi: "<<at.track().pt()<<", "<<at.track().eta()<<", "<<at.track().phi()<<endl;}
-	     //if(fabs(ele->closestCtfTrackRef()->pt()-at.track().pt())<0.001&&fabs(ele->closestCtfTrackRef()->eta()-at.track().eta())<0.001&&fabs(ele->closestCtfTrackRef()->phi()-at.track().phi())<0.001){
 	     if(fabs(ele->closestCtfTrackRef()->pt()-t_tks[i].track().pt())<0.001&&fabs(ele->closestCtfTrackRef()->eta()-t_tks[i].track().eta())<0.001&&fabs(ele->closestCtfTrackRef()->phi()-t_tks[i].track().phi())<0.001){
 	       //cout<<"This is the correct electron track, pt: "<<at.track().pt()<<endl;
 	       //		   ttrkC_e.push_back(at);
-	       ttrkC_e.push_back(t_tks[i]);
+	       //ttrkC_e.push_back(t_tks[i]);
 	       ttrkC_e_it.push_back(i);
+	       ttrkC_e_ctf.push_back(t_tks[i]);
 	     }
 	   }//end of looping over tracks to get track matching to electron
 	 }//making sure closest Ctf Track is non-null
 	 
-       }//requirement that electron pass id and conv veto
+     }//requirement that electron pass id and conv veto
        vid::CutFlowResult fullCutFlowData = (*ele_id_cutflow_data)[ele];
        bool verbose_electron=false;
        if(verbose_electron){
@@ -899,36 +938,38 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      
      bool fitVertex = false;
      if(channel=="mue"){
-       if(ttrkC_mu.size()==1&&ttrkC_e.size()==1){fitVertex=true;}
+       if(ttrkC_mu.size()==1&&ttrkC_e_gsf.size()==1){fitVertex=true;}
      }
      if(channel=="mumu"){
        if(ttrkC_mu.size()==2){fitVertex=true;}
      }
      if(channel=="ee"){
-       if(ttrkC_e.size()==2){fitVertex=true;}
+       if(ttrkC_e_gsf.size()==2){fitVertex=true;}
      }
-     
+
      if(fitVertex){
-       
        int pass_muon_assoc=0;
        int pass_electron_assoc=0;
        //Look at primary vertex and loop to see if muon and electron match it
        for(reco::Vertex::trackRef_iterator vertex_Tracks = vtx->tracks_begin();vertex_Tracks<vtx->tracks_end(); vertex_Tracks++){
 	 for(uint it = 0; it<ttrkC_mu.size();it++){
-	     if( fabs((*vertex_Tracks)->pt()-ttrkC_mu[it].track().pt())<0.001 && 
-		 fabs((*vertex_Tracks)->eta()-ttrkC_mu[it].track().eta())<0.001 && 
-		 fabs((*vertex_Tracks)->phi()-ttrkC_mu[it].track().phi())<0.001){
-	       pass_muon_assoc++;
-	     }
-	 }
-	 for(uint it = 0; it<ttrkC_e.size();it++){
-	   if (fabs((*vertex_Tracks)->pt()-ttrkC_e[it].track().pt())<0.001 && 
-	       fabs((*vertex_Tracks)->eta()-ttrkC_e[it].track().eta())<0.001 && 
-	       fabs((*vertex_Tracks)->phi()-ttrkC_e[it].track().phi())<0.001){
-	     pass_electron_assoc++;
+	   if( fabs((*vertex_Tracks)->pt()-ttrkC_mu[it].track().pt())<0.001 && 
+	       fabs((*vertex_Tracks)->eta()-ttrkC_mu[it].track().eta())<0.001 && 
+	       fabs((*vertex_Tracks)->phi()-ttrkC_mu[it].track().phi())<0.001){
+	     pass_muon_assoc++;
 	   }
+	 }
+	 for(uint it = 0; it<ttrkC_e_ctf.size();it++){
+	 if (fabs((*vertex_Tracks)->pt()-ttrkC_e_ctf[it].track().pt())<0.001 && 
+	     fabs((*vertex_Tracks)->eta()-ttrkC_e_ctf[it].track().eta())<0.001 && 
+	     fabs((*vertex_Tracks)->phi()-ttrkC_e_ctf[it].track().phi())<0.001){
+	   pass_electron_assoc++;
+	 }
 	 }//end of for loop over electrons
        }
+       
+       //cout<<"Pass_muon_assoc: "<<pass_muon_assoc<<endl;
+       //cout<<"Pass_electron_assoc: "<<pass_electron_assoc<<endl;
        
        //Do fit to two lepton tracks
        //AdaptiveVertexFitter fitter;
@@ -938,7 +979,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        if(channel=="mue"){
 	 if(!(pass_muon_assoc==1&&pass_electron_assoc==1)){*vertex_ntracks_=1001;}
 	 ttrkC.push_back(ttrkC_mu[0]);
-	 ttrkC.push_back(ttrkC_e[0]);
+	 ttrkC.push_back(ttrkC_e_gsf[0]);
 	 myVertex = fitter.vertex(ttrkC);
        }
        if(channel=="mumu"){
@@ -946,7 +987,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 myVertex = fitter.vertex(ttrkC_mu);
        }
        if(channel=="ee"){
-	 myVertex = fitter.vertex(ttrkC_e);
+	 myVertex = fitter.vertex(ttrkC_e_gsf);
 	 if(pass_electron_assoc!=2){*vertex_ntracks_=1001;}
        }
        //cout<<"Get Before valid vertex"<<endl;
@@ -955,58 +996,76 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 *fvertex_y_=myVertex.position().y();
 	 *fvertex_z_=myVertex.position().z();
 	 *fvertex_chi2ndof_=myVertex.normalisedChiSquared();
-	 //if(myVertex.normalisedChiSquared()<0){
-	 //cout<<"Position: "<<myVertex.position().x()<<", "<<myVertex.position().y()<<", "<<myVertex.position().z()<<endl;
-	 //cout<<"Ndof: "<<myVertex.degreesOfFreedom()<<endl;
-	 //cout<<"Normalized ChiSquared: "<<myVertex.normalisedChiSquared()<<endl;
-	 //cout<<"ChiSquared: "<<myVertex.totalChiSquared()<<endl;
-	   //}
-	 uint num_close_tracks=-1;
-	 //for (ttrk_It=t_tks->begin();ttrk_It != t_tks->end(); ++ttrk_It){
+	 uint num_close_tracks=0;
+	 //calculate muon distance
+	 for(uint att=0;att<ttrkC_mu.size();att++){
+	   TrajectoryStateClosestToPoint tS_muon=ttrkC_mu[att].trajectoryStateClosestToPoint(myVertex.position());
+	   if(tS_muon.isValid()){
+	     //float closest_pos = sqrt( pow(myVertex.position().x()-ttrkC_mu[att].track().vertex().x(),2)+pow(myVertex.position().y()-ttrkC_mu[att].track().vertex().y(),2)+pow(myVertex.position().z()-ttrkC_mu[att].track().vertex().z(),2));
+	     float closest_pos = sqrt( pow(myVertex.position().x()-tS_muon.position().x(),2)+pow(myVertex.position().y()-tS_muon.position().y(),2)+pow(myVertex.position().z()-tS_muon.position().z(),2));
+	     h_mu_closest->Fill(closest_pos);
+	     (*muon_tkdist_).push_back(closest_pos);
+	     //cout<<"muon track dist:"<<closest_pos<<endl;
+	     (*muon_tkpt_).push_back(ttrkC_mu[att].track().pt());
+	     //cout<<"muon track pt:"<<ttrkC_mu[att].track().pt()<<endl;
+	     if(myVertex.normalisedChiSquared()<10){h_mu_closest_chi2_10->Fill(closest_pos);}
+	     h_mu_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
+	     //if(closest_pos<0.05){ num_close_tracks++;}	   
+	   }
+	 }//end of muon distance
+
+	 //calculate electron distance
+	 for(uint att=0;att<ttrkC_e_gsf.size();att++){
+	   //cout<<"Get in electrons"<<endl;
+	   float closest_pos = sqrt( pow(myVertex.position().x()-ttrkC_e_gsf[att].track().vertex().x(),2)+pow(myVertex.position().y()-ttrkC_e_gsf[att].track().vertex().y(),2)+pow(myVertex.position().z()-ttrkC_e_gsf[att].track().vertex().z(),2));
+	   //cout<<"electron track dist:"<<closest_pos<<endl;
+	   //TrajectoryStateClosestToPoint tS_e=ttrkC_e[att].trajectoryStateClosestToPoint(myVertex.position());
+	   //cout<<"Get after traj."<<endl;
+	   //if(tS_e.isValid()){
+	   //cout<<"tS is valid."<<endl;
+	   //float closest_pos = sqrt( pow(myVertex.position().x()-tS_e.position().x(),2)+pow(myVertex.position().y()-tS_e.position().y(),2)+pow(myVertex.position().z()-tS_e.position().z(),2));
+	   h_e_closest->Fill(closest_pos);
+	   (*electron_tkdist_).push_back(closest_pos);
+	   (*electron_tkpt_).push_back(ttrkC_e_gsf[att].track().pt());
+	   if(myVertex.normalisedChiSquared()<10){h_e_closest_chi2_10->Fill(closest_pos);}
+	   h_e_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
+	 }//end of electron distance
+
+	 //calculate track distance
 	 for (uint i=0; i < t_tks.size();i++){
-	   //if(t_tks[i].track().pt()>6){
-	   //	 cout<<"Track pt: "<<t_tks[i].track().pt()<<endl;}
-	   //cout<<"Track eta: "<<t_tks[i].track().eta()<<endl;
 	   TrajectoryStateClosestToPoint tS=t_tks[i].trajectoryStateClosestToPoint(myVertex.position());
 	   //cout<<"Closest position on track: "<<tS.position().x()<<", "<<tS.position().y()<<", "<<tS.position().z()<<endl;
+
 	   //believe this is all in cm
 	   if(tS.isValid()){
 	     float closest_pos = sqrt( pow(myVertex.position().x()-tS.position().x(),2)+pow(myVertex.position().y()-tS.position().y(),2)+pow(myVertex.position().z()-tS.position().z(),2));
 	     //if(t_tks[i].track().pt()>6){cout<<"Closest position: "<<closest_pos<<endl;}
-	     
-	     if(closest_pos<0.2){
+
+	     bool isEorMu=false;
+	     for(uint att=0;att<ttrkC_mu_it.size();att++){
+	       if(ttrkC_mu_it[att]==i){
+		 isEorMu=true;
+		 if(closest_pos<0.05){ num_close_tracks++;}
+	       }
+	     }
+	     for(uint att=0;att<ttrkC_e_it.size();att++){
+	       if(ttrkC_e_it[att]==i){
+		 isEorMu=true;
+		 if(closest_pos<0.05){ num_close_tracks++;}
+	       }
+	     }
+
+	     if(closest_pos<0.2&&!isEorMu){
 	       (*fvertex_tkdist_).push_back(closest_pos);
 	       //(*fvertex_tkpt_).push_back(t_tks[i].track().pt());
 	       //(*fvertex_tketa_).push_back(t_tks[i].track().eta());
 	     }//fill ntuple with tracks within 0.2 mm
-	     
-	     for(uint att=0;att<ttrkC_mu_it.size();att++){
-	       if(ttrkC_mu_it[att]==i){
-		 h_mu_closest->Fill(closest_pos);
-		 (*muon_tkdist_).push_back(closest_pos);
-		 (*muon_tkpt_).push_back(t_tks[i].track().pt());
-		 if(myVertex.normalisedChiSquared()<10){h_mu_closest_chi2_10->Fill(closest_pos);}
-		 h_mu_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
-		 if(closest_pos<0.05){ num_close_tracks++;}
-	       }
-	     }
-	     
-	     for(uint att=0;att<ttrkC_e_it.size();att++){
-	       if(ttrkC_e_it[att]==i){
-		 h_e_closest->Fill(closest_pos);
-		 (*electron_tkdist_).push_back(closest_pos);
-		 (*electron_tkpt_).push_back(t_tks[i].track().pt());
-		 if(myVertex.normalisedChiSquared()<10){h_e_closest_chi2_10->Fill(closest_pos);}
-		 h_e_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
-		 if(closest_pos<0.05){ num_close_tracks++;}
-	       }
-	     }
-	     
+
 	   }//end of making sure Trajectory state is valid
 	   else{cout<<"TrajectoryStateClosestToPoint is not valid"<<endl;}
 	 }//end of looping over tracks
 	 //Add one here because initially start with value of num_close_tracks of -1, see above
-	 *fvertex_ntracks_=num_close_tracks+1;
+	 *fvertex_ntracks_=num_close_tracks;
 	 //cout<<"Num close tracks: "<<num_close_tracks+1<<endl;
        }//end of requiring valid vertex
        else{cout<<"Fitted vertex is not valid"<<endl;
@@ -1054,6 +1113,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*electron_pz_).clear();
    (*electron_e_).clear();
    (*electron_charge_).clear();
+   (*electron_passip_).clear();
    
    (*allvertices_z_).clear();
    
