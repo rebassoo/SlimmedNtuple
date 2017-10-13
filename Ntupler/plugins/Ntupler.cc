@@ -145,6 +145,7 @@ private:
   TH1F * h_e_closest;
   TH1F * h_e_closest_chi2_10;
   TH2F * h_e_chi2_vs_closest;
+  TH1F * h_lepton_pt;
 
   std::vector<float> * muon_pt_;
   std::vector<float> * muon_eta_;
@@ -338,6 +339,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   h_e_closest = fs->make<TH1F>("h_e_closest" , ";Track Distance (cm);" , 500 , 0 , 10 );
   h_e_closest_chi2_10 = fs->make<TH1F>("h_e_closest_chi2_10" , "For #chi^2 < 10;Track Distance (cm);" , 500 , 0 , 10 );
   h_e_chi2_vs_closest = fs->make<TH2F>("h_e_chi2_vs_closest" , ";Track Distance (cm);#chi^{2}" , 500 , 0 , 10 , 200, 0, 50);
+  h_lepton_pt = fs->make<TH1F>("h_lepton_pt" , ";Lepton p_{T};" , 150, 0, 300);
 
   
   if(isMC){
@@ -708,24 +710,26 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 Handle<reco::GenParticleCollection> genP;
 	 iEvent.getByLabel("genParticles",genP);
 	 for (reco::GenParticleCollection::const_iterator mcIter=genP->begin(); mcIter != genP->end(); mcIter++ ) {
-	   cout<<"MC id is: "<<mcIter->pdgId()<<endl;
-	   cout<<"MC status is: "<<mcIter->status()<<endl;
-	   cout<<"Pz, energy, pt is: "<<mcIter->pz()<<", "<<mcIter->energy()<<", "<<mcIter->pt()<<endl;
+	   //cout<<"MC id is: "<<mcIter->pdgId()<<endl;
+	   //cout<<"MC status is: "<<mcIter->status()<<endl;
+	   //cout<<"Pz, energy, pt is: "<<mcIter->pz()<<", "<<mcIter->energy()<<", "<<mcIter->pt()<<endl;
 	   int n = mcIter->numberOfDaughters();
 	   for(int j = 0; j < n; ++ j) {
 	    const reco::Candidate * d = mcIter->daughter( j );
 	     int dauId = d->pdgId();
-	     cout<<"Daughter pdg Id: "<<dauId<<endl;
+	     //cout<<"Daughter pdg Id: "<<dauId<<endl;
 	   }
 
 	   //	     cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
 	   //if ( (fabs(mcIter->pdgId())==11|| fabs(mcIter->pdgId())==12 || fabs(mcIter->pdgId())==13 || fabs(mcIter->pdgId())==14 || fabs(mcIter->pdgId())==15 || fabs(mcIter->pdgId())==16 ) && mcIter->status() == 3 ){
-	   if ( (fabs(mcIter->pdgId())==11|| fabs(mcIter->pdgId())==12 || fabs(mcIter->pdgId())==13 || fabs(mcIter->pdgId())==14 || fabs(mcIter->pdgId())==15 || fabs(mcIter->pdgId())==16 )){
+	   //if ( (fabs(mcIter->pdgId())==11|| fabs(mcIter->pdgId())==12 || fabs(mcIter->pdgId())==13 || fabs(mcIter->pdgId())==14 || fabs(mcIter->pdgId())==15 || fabs(mcIter->pdgId())==16 )){
+	   if ( (fabs(mcIter->pdgId())==11 || fabs(mcIter->pdgId())==13 )){
+	     h_lepton_pt->Fill(mcIter->pt());
 	     //cout<<", MC id is: "<<mcIter->pdgId()<<endl;
 	     //cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
 	   }
 	 }//end of looking at GEN
-       */	 
+       */
 	 
 	 *pileupWeight_ = LumiWeights->weight( trueInteractions );
 
@@ -777,6 +781,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	 double iso = (MuonIt->pfIsolationR04().sumChargedHadronPt + max(0., MuonIt->pfIsolationR04().sumNeutralHadronEt + MuonIt->pfIsolationR04().sumPhotonEt - 0.5*MuonIt->pfIsolationR04().sumPUPt))/MuonIt->pt();
 	 //cout<<"Muon Iso is: "<<iso<<endl;
+	 //cout<<"Muon dz: "<<MuonIt->muonBestTrack()->dz(vtx->position())<<endl;
+	 //cout<<"Muon dxy: "<<MuonIt->muonBestTrack()->dxy(vtx->position())<<endl;
 	 (*muon_px_).push_back(MuonIt->px());
 	 (*muon_py_).push_back(MuonIt->py());
 	 (*muon_pz_).push_back(MuonIt->pz());
@@ -785,7 +791,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 (*muon_pt_).push_back(MuonIt->pt());
 	 (*muon_eta_).push_back(MuonIt->eta());
 	 (*muon_iso_).push_back(iso);
-	 //cout<<"Pt: "<<MuonIt->pt()<<endl;
+	 //cout<<"Muon Pt: "<<MuonIt->pt()<<endl;
+	 //cout<<"Muon charge: "<<MuonIt->charge()<<endl;
 	 //cout<<"Vertex track size: "<<vtx->tracksSize()<<endl;
 	 //cout<<"Get right before track muon"<<endl;
 	 //ttrkC_mu.push_back((*theB).build(*MuonIt->innerTrack()));
@@ -880,6 +887,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 (*electron_passip_).push_back(passIPcuts);
 	 //cout<<"Get Here 0:"<<endl;
 	 //cout<<"Electron pt, eta, phi: "<<ele->pt()<<", "<<ele->eta()<<", "<<ele->phi()<<endl;
+	 //cout<<"Electron charge: "<<ele->charge()<<endl;
 	 //cout<<"Electron px, py, pz: "<<ele->px()<<", "<<ele->py()<<", "<<ele->pz()<<endl;
 	 //cout<<"Electron pt from px, py: "<<sqrt(ele->px()*ele->px()+ele->py()*ele->py())<<endl;
 	 //cout<<"Electron energy: "<<ele->energy()<<endl;
@@ -960,11 +968,11 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   }
 	 }
 	 for(uint it = 0; it<ttrkC_e_ctf.size();it++){
-	 if (fabs((*vertex_Tracks)->pt()-ttrkC_e_ctf[it].track().pt())<0.001 && 
-	     fabs((*vertex_Tracks)->eta()-ttrkC_e_ctf[it].track().eta())<0.001 && 
-	     fabs((*vertex_Tracks)->phi()-ttrkC_e_ctf[it].track().phi())<0.001){
-	   pass_electron_assoc++;
-	 }
+	   if (fabs((*vertex_Tracks)->pt()-ttrkC_e_ctf[it].track().pt())<0.001 && 
+	       fabs((*vertex_Tracks)->eta()-ttrkC_e_ctf[it].track().eta())<0.001 && 
+	       fabs((*vertex_Tracks)->phi()-ttrkC_e_ctf[it].track().phi())<0.001){
+	     pass_electron_assoc++;
+	   }
 	 }//end of for loop over electrons
        }
        
@@ -1003,6 +1011,9 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   if(tS_muon.isValid()){
 	     //float closest_pos = sqrt( pow(myVertex.position().x()-ttrkC_mu[att].track().vertex().x(),2)+pow(myVertex.position().y()-ttrkC_mu[att].track().vertex().y(),2)+pow(myVertex.position().z()-ttrkC_mu[att].track().vertex().z(),2));
 	     float closest_pos = sqrt( pow(myVertex.position().x()-tS_muon.position().x(),2)+pow(myVertex.position().y()-tS_muon.position().y(),2)+pow(myVertex.position().z()-tS_muon.position().z(),2));
+	     //cout<<"Closest muon distance: "<<closest_pos<<", Run: "<<iEvent.id().run()<<", Event: "<<iEvent.id().event()<<endl;
+	     //closest_pos = sqrt( pow(myVertex.position().x()-ttrkC_mu[att].track().vertex().x(),2)+pow(myVertex.position().y()-ttrkC_mu[att].track().vertex().y(),2)+pow(myVertex.position().z()-ttrkC_mu[att].track().vertex().z(),2));
+	     //cout<<"Closest muon distance: "<<closest_pos<<", Run: "<<iEvent.id().run()<<", Event: "<<iEvent.id().event()<<endl;
 	     h_mu_closest->Fill(closest_pos);
 	     (*muon_tkdist_).push_back(closest_pos);
 	     //cout<<"muon track dist:"<<closest_pos<<endl;
@@ -1018,12 +1029,19 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 for(uint att=0;att<ttrkC_e_gsf.size();att++){
 	   //cout<<"Get in electrons"<<endl;
 	   float closest_pos = sqrt( pow(myVertex.position().x()-ttrkC_e_gsf[att].track().vertex().x(),2)+pow(myVertex.position().y()-ttrkC_e_gsf[att].track().vertex().y(),2)+pow(myVertex.position().z()-ttrkC_e_gsf[att].track().vertex().z(),2));
+	   /*
+	   if(closest_pos > 0.5){
+	     cout<<"GSF Track vertex"<<ttrkC_e_gsf[att].track().vertex()<<endl;
+	     cout<<"My vertex: "<<myVertex.position()<<endl;
+	     cout<<"Closest electon distance: "<<closest_pos<<", Run: "<<iEvent.id().run()<<", Event: "<<iEvent.id().event()<<endl;
+	   }
+	   */
 	   //cout<<"electron track dist:"<<closest_pos<<endl;
-	   //TrajectoryStateClosestToPoint tS_e=ttrkC_e[att].trajectoryStateClosestToPoint(myVertex.position());
+	   //TrajectoryStateClosestToPoint tS_e=ttrkC_e_gsf[att].trajectoryStateClosestToPoint(myVertex.position());
 	   //cout<<"Get after traj."<<endl;
 	   //if(tS_e.isValid()){
 	   //cout<<"tS is valid."<<endl;
-	   //float closest_pos = sqrt( pow(myVertex.position().x()-tS_e.position().x(),2)+pow(myVertex.position().y()-tS_e.position().y(),2)+pow(myVertex.position().z()-tS_e.position().z(),2));
+	   //closest_pos = sqrt( pow(myVertex.position().x()-tS_e.position().x(),2)+pow(myVertex.position().y()-tS_e.position().y(),2)+pow(myVertex.position().z()-tS_e.position().z(),2));
 	   h_e_closest->Fill(closest_pos);
 	   (*electron_tkdist_).push_back(closest_pos);
 	   (*electron_tkpt_).push_back(ttrkC_e_gsf[att].track().pt());
@@ -1086,6 +1104,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        
      }//end of requirement of two tracks
      
+     //cout<<"numMuTight: "<<numMuTight<<endl;
+     //cout<<"numETight: "<<numETight<<endl;
      //if((numMuTight>0&&numETight>0)){
      if((numMuTight+numETight>1)){
        //cout<<"Fill tree"<<endl;
