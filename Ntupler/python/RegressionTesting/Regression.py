@@ -16,24 +16,26 @@ if sys.argv[1] == 'compare':
     tfile1 = TFile(sample1)
     tfile2 = TFile(sample2)
     names1=[h.GetName() for h in tfile1.GetListOfKeys()]
+    print "names1: ",names1
     names2=[h.GetName() for h in tfile2.GetListOfKeys()]
+    print "names2: ",names2
     i=0
     c=TCanvas("c","",800,800)
     c.cd()
-    c.Print("Comparison-.pdf[".format(time))
+    c.Print("Comparison-{0}.pdf[".format(time))
     for hname in names1:
-        h=TH1F()
-        h=tfile1.Get(hname)
-        h.Draw()
-        if names2[i] == hname:
-            h2=TH1F()
-            h2=tfile2.Get(names2[i])
-            h2.SetLineColor(2)
-            h2.Draw("Same")
-        h.Write()
-        i=i+1
-        c.Print("Testing.pdf")
-    c.Print("Testing.pdf]")
+        if tfile1.Get(hname).ClassName() == "TH1F":
+            h=TH1F()
+            h=tfile1.Get(hname)
+            h.Draw()
+            if names2[i] == hname:
+                h2=TH1F()
+                h2=tfile2.Get(names2[i])
+                h2.SetLineColor(2)
+                h2.Draw("Same")
+            i=i+1
+            c.Print("Comparison-{0}.pdf".format(time))
+    c.Print("Comparison-{0}.pdf]".format(time))
 
 if sys.argv[1] == 'plot':
     chain=TChain()
