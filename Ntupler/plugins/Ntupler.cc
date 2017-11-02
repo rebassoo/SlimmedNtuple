@@ -881,17 +881,17 @@ Ntupler::beginJob()
   electron_passip_ = new std::vector<bool>;
   allvertices_z_ = new std::vector<float>;
 
-  vertex_ntracks_ = new uint;
+  vertex_ntracks_ = new int;
   vertex_x_ = new float;
   vertex_y_ = new float;
   vertex_z_ = new float;
-  vertex_nvtxs_ = new uint;
+  vertex_nvtxs_ = new int;
 
   fvertex_x_ = new float;
   fvertex_y_ = new float;
   fvertex_z_ = new float;
   fvertex_chi2ndof_ = new float;
-  fvertex_ntracks_ = new uint;
+  fvertex_ntracks_ = new int;
   fvertex_tkdist_ = new std::vector<float>;
   fvertex_tkpt_ = new std::vector<float>;
   fvertex_tketa_ = new std::vector<float>;
@@ -911,9 +911,9 @@ Ntupler::beginJob()
     //mumu_rapidity_ = new float;
   }
 
-  ev_ = new uint;
-  run_ = new uint;
-  lumiblock_ = new uint;
+  ev_ = new long int;
+  run_ = new int;
+  lumiblock_ = new int;
   ispps_ = new bool;
 
   //Tnpv_ = new float;
@@ -941,16 +941,16 @@ Ntupler::beginJob()
 
   tree_->Branch("allvertices_z",&allvertices_z_);
 
-  tree_->Branch("vertex_ntracks",vertex_ntracks_,"vertex_ntracks/i");
+  tree_->Branch("vertex_ntracks",vertex_ntracks_,"vertex_ntracks/I");
   tree_->Branch("vertex_x",vertex_x_,"vertex_x/f");
   tree_->Branch("vertex_y",vertex_y_,"vertex_y/f");
   tree_->Branch("vertex_z",vertex_z_,"vertex_z/f");
-  tree_->Branch("vertex_nvtxs",vertex_nvtxs_,"vertex_nvtxs/i");
+  tree_->Branch("vertex_nvtxs",vertex_nvtxs_,"vertex_nvtxs/I");
   tree_->Branch("fvertex_x",fvertex_x_,"fvertex_x/f");
   tree_->Branch("fvertex_y",fvertex_y_,"fvertex_y/f");
   tree_->Branch("fvertex_z",fvertex_z_,"fvertex_z/f");
   tree_->Branch("fvertex_chi2ndof",fvertex_chi2ndof_,"fvertex_chi2ndof/f");
-  tree_->Branch("fvertex_ntracks",fvertex_ntracks_,"fvertex_ntracks/i");
+  tree_->Branch("fvertex_ntracks",fvertex_ntracks_,"fvertex_ntracks/I");
   tree_->Branch("fvertex_tkdist",&fvertex_tkdist_);
   tree_->Branch("fvertex_tkpt",&fvertex_tkpt_);
   tree_->Branch("fvertex_tketa",&fvertex_tketa_);
@@ -969,9 +969,9 @@ Ntupler::beginJob()
     //tree_->Branch("mumu_mass",mumu_mass_,"mumu_mass/f");
     //tree_->Branch("mumu_rapidity",mumu_rapidity_,"mumu_rapidity/f");
   }
-  tree_->Branch("run",run_,"run/i");
-  tree_->Branch("event",ev_,"event/i");
-  tree_->Branch("lumiblock",lumiblock_,"lumiblock/i");
+  tree_->Branch("run",run_,"run/I");
+  tree_->Branch("event",ev_,"event/L");
+  tree_->Branch("lumiblock",lumiblock_,"lumiblock/I");
   tree_->Branch("ispps",ispps_,"ispps/O");
 
   //tree_->Branch("Tnpv",Tnpv_,"Tnpv/f");

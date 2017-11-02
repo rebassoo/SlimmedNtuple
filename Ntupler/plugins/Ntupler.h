@@ -175,17 +175,17 @@ private:
 
   std::vector<float> * allvertices_z_;
 
-  uint * vertex_ntracks_;
+  int * vertex_ntracks_;
   float * vertex_x_;
   float * vertex_y_;
   float * vertex_z_;
-  uint * vertex_nvtxs_;
+  int * vertex_nvtxs_;
 
   float * fvertex_x_;
   float * fvertex_y_;
   float * fvertex_z_;
   float * fvertex_chi2ndof_;
-  uint * fvertex_ntracks_;
+  int * fvertex_ntracks_;
   std::vector<float> * fvertex_tkdist_;
   std::vector<float> * fvertex_tkpt_;
   std::vector<float> * fvertex_tketa_;
@@ -203,9 +203,9 @@ private:
   //float * mumu_mass_;
   //float * mumu_rapidity_;
 
-  uint * run_;
-  uint * ev_;
-  uint * lumiblock_;
+  int * run_;
+  long int * ev_;
+  int * lumiblock_;
   bool * ispps_;
 
   //float * Tnpv_;

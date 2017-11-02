@@ -13,7 +13,7 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20000) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(5000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
@@ -56,10 +56,14 @@ process.source = cms.Source("PoolSource",
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-RunD_2649EE95-C388-E611-AAD1-3417EBE64402.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-Run2016H-v3-087BD90F-6B9F-E611-912F-02163E01448A.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-RunD-CE007154-EB88-E611-A13B-0025905C54DA.root'
-        'file:/hadoop/cms/store/user/rebassoo/TestFiles/WWTo2L2Nu_13TeV-powheg-herwigpp_02B67C54-09B2-E611-866F-6C3BE5B51168.root'
+        #'file:/hadoop/cms/store/user/rebassoo/TestFiles/WWTo2L2Nu_13TeV-powheg-herwigpp_02B67C54-09B2-E611-866F-6C3BE5B51168.root'
+        #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-AOD-Run2016G-Aug17-081723E8-AD93-E711-B74E-24BE05C68671.root'
+        'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-AOD-Run2016G-Sep23-EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
+        #'root://cms-xrd-global.cern.ch//store/data/Run2016G/DoubleMuon/AOD/23Sep2016-v1/80001/EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
+        #'file:/home/users/rebassoo/EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
         #'root://cmsxrootd.fnal.gov//store/data/Run2016F/DoubleMuon/AOD/23Sep2016-v1/50000/9E0F8266-0590-E611-A14E-0242AC130002.root'
-    )#,
-#                          skipEvents=cms.untracked.uint32(1247)
+        )#,
+         #                 skipEvents=cms.untracked.uint32(6000)
 )
 
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
@@ -69,8 +73,8 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('RecoMET.METFilters.badGlobalMuonTaggersAOD_cff')
 
 
-#ISMC = False
-ISMC = True
+ISMC = False
+#ISMC = True
 from Configuration.AlCa.GlobalTag import GlobalTag
 if ISMC:
     process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
