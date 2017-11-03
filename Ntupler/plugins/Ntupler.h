@@ -122,7 +122,7 @@ private:
   void GetTracksPrimaryVertex(reco::VertexRef,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>);
   void GetMuonDistance(TransientVertex,std::vector<reco::TransientTrack>);
   void GetElectronDistance(TransientVertex,std::vector<reco::TransientTrack>);
-  void GetTrackDistance(TransientVertex,std::vector<reco::TransientTrack>,std::vector<uint>,std::vector<uint>,uint&);
+  void GetTrackDistance(TransientVertex,std::vector<reco::TransientTrack>,std::vector<uint>,std::vector<uint>,int&);
   bool FitLeptonVertex(TransientVertex&,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>,string);
 
   // ----------member data ---------------------------

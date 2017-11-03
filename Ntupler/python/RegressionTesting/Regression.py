@@ -32,7 +32,7 @@ if sys.argv[1] == 'compare':
                 h2=TH1F()
                 h2=tfile2.Get(names2[i])
                 h2.SetLineColor(2)
-                h2.Draw("Same")
+                h2.Draw("Samee")
             i=i+1
             c.Print("Comparison-{0}.pdf".format(time))
     c.Print("Comparison-{0}.pdf]".format(time))

@@ -87,7 +87,15 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      GetMC(iEvent);
    }//end of looking at MC
 
-
+   //if(iEvent.id().run()==279841&&iEvent.id().event()==2974946501){
+   /*
+   if(iEvent.id().event()==2923441563){
+     cout<<"Get to the right event"<<endl;
+   }
+   else{
+     return;
+   }
+   */
    bool passTrigger=GetTrigger(iEvent,iSetup);
    //passTrigger=true;
    if(passTrigger){
@@ -129,24 +137,36 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      GetMuons(iEvent,vtx,theB,ttrkC_mu,ttrkC_mu_it,t_tks,numMuTight);
      GetElectrons(iEvent,vtx,theB,ttrkC_e_gsf,ttrkC_e_ctf,ttrkC_e_ctf_it,t_tks,numETight);
+     //if((numMuTight+numETight)<2){  return;     }
+     //cout<<"Run, event :"<<iEvent.id().run()<<", "<<iEvent.id().event()<<endl;
      GetTracksPrimaryVertex(vtx,ttrkC_mu,ttrkC_e_ctf);
-	 
+     
      TransientVertex myVertex;
      //If there is a good dilepton fit for this channel get lepton and track distances and track counting.
      if(FitLeptonVertex(myVertex,ttrkC,ttrkC_mu,ttrkC_e_gsf,channel)){
-       uint num_close_tracks=0;
+       int num_close_tracks=0;
        GetMuonDistance(myVertex,ttrkC_mu);
        GetElectronDistance(myVertex,ttrkC_e_gsf);
        //Need to pass ttrkC_mu_it and ttrkC_e_ctf_it so not to count electron and muon ctf tracks
        GetTrackDistance(myVertex,t_tks,ttrkC_mu_it,ttrkC_e_ctf_it,num_close_tracks);
        *fvertex_ntracks_=num_close_tracks;
-       //cout<<"Num close tracks: "<<num_close_tracks<<endl;
      }//end of requiring valid vertex
-     
+     else{
+       *fvertex_x_=-999.;
+       *fvertex_y_=-999.;
+       *fvertex_z_=-999.;
+       *fvertex_chi2ndof_=999.;
+       *fvertex_ntracks_=1000.;
+     }
      //cout<<"numMuTight: "<<numMuTight<<endl;
      //cout<<"numETight: "<<numETight<<endl;
      //if((numMuTight>0&&numETight>0)){
-     if((numMuTight+numETight>1)){
+
+     if(iEvent.id().event()==2974946501){
+       cout<<"Num Mu: "<<numMuTight;
+       cout<<"Num E: "<<numETight;
+     }
+     if((numMuTight+numETight)>1){
        //cout<<"Fill tree"<<endl;
        *run_ = iEvent.id().run();
        *ev_ = iEvent.id().event();
@@ -389,7 +409,7 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 	     ReconstructProtonFromOneRP(it.first, it.second, proton);
 	     
 	     if (proton.valid){
-	       printf("    RP %u : xi = %.3f +- %.4f\n", it.first, proton.xi, proton.xi_unc);
+	       //printf("    RP %u : xi = %.3f +- %.4f\n", it.first, proton.xi, proton.xi_unc);
 	       (*rp_tracks_x_).push_back(it.second.x);   
 	       (*rp_tracks_y_).push_back(it.second.y); 
 	       (*rp_tracks_detId_).push_back(it.first);   
@@ -639,6 +659,7 @@ Ntupler::GetTracksPrimaryVertex(reco::VertexRef vtx,std::vector<reco::TransientT
 {
 
   *vertex_ntracks_ = vtx->tracksSize();
+  //cout<<"vertex_ntracks_"<<vtx->tracksSize()<<endl;
   *vertex_x_ = vtx->position().x();
   *vertex_y_ = vtx->position().y();
   *vertex_z_ = vtx->position().z();
@@ -661,9 +682,10 @@ Ntupler::GetTracksPrimaryVertex(reco::VertexRef vtx,std::vector<reco::TransientT
 	  fabs((*vertex_Tracks)->phi()-ttrkC_e_ctf[it].track().phi())<0.001){
 	pass_electron_assoc++;
       }
-	 }//end of for loop over electrons
+    }//end of for loop over electrons
   }
-  
+  //cout<<"pass_muon_assoc: "<<pass_muon_assoc<<endl;
+  //cout<<"pass_electron_assoc: "<<pass_electron_assoc<<endl;
   if(channel=="mue"){ if(!(pass_muon_assoc==1&&pass_electron_assoc==1)){*vertex_ntracks_=1001;}      }
   if(channel=="mumu"){ if(pass_muon_assoc!=2){*vertex_ntracks_=1001;}       }
   if(channel=="ee"){ if(pass_electron_assoc!=2){*vertex_ntracks_=1001;}       }
@@ -729,9 +751,9 @@ Ntupler::GetElectronDistance(TransientVertex myVertex,std::vector<reco::Transien
 }
 
 void
-Ntupler::GetTrackDistance(TransientVertex myVertex,std::vector<reco::TransientTrack> t_tks,std::vector<uint> ttrkC_mu_it,std::vector<uint> ttrkC_e_ctf_it,uint& num_close_tracks)
+Ntupler::GetTrackDistance(TransientVertex myVertex,std::vector<reco::TransientTrack> t_tks,std::vector<uint> ttrkC_mu_it,std::vector<uint> ttrkC_e_ctf_it,int& num_close_tracks)
 {
-  
+
   //calculate track distance
   for (uint i=0; i < t_tks.size();i++){
     TrajectoryStateClosestToPoint tS=t_tks[i].trajectoryStateClosestToPoint(myVertex.position());
@@ -796,7 +818,7 @@ Ntupler::FitLeptonVertex(TransientVertex& myVertex,std::vector<reco::TransientTr
     }
     if(channel=="mumu"){
       myVertex = fitter.vertex(ttrkC_mu);
-       }
+    }
     if(channel=="ee"){
       myVertex = fitter.vertex(ttrkC_e_gsf);
     }
@@ -811,11 +833,6 @@ Ntupler::FitLeptonVertex(TransientVertex& myVertex,std::vector<reco::TransientTr
     }
     else{
       cout<<"Fitted vertex is not valid"<<endl;
-      *fvertex_x_=-999.;
-      *fvertex_y_=-999.;
-      *fvertex_z_=-999.;
-      *fvertex_chi2ndof_=999.;
-      *fvertex_ntracks_=1000.;
     }
     
   }//end of requirement of fitting vertex to two tracks
