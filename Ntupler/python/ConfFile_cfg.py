@@ -59,7 +59,7 @@ process.source = cms.Source("PoolSource",
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/WWTo2L2Nu_13TeV-powheg-herwigpp_02B67C54-09B2-E611-866F-6C3BE5B51168.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-AOD-Run2016G-Aug17-081723E8-AD93-E711-B74E-24BE05C68671.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-AOD-Run2016G-Sep23-EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
-        'file:485BAA4D-FA8B-E611-BAB7-0025905C54C6.root'
+        'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-AOD-Run2016-Sep16-485BAA4D-FA8B-E611-BAB7-0025905C54C6.root'
         #'root://cms-xrd-global.cern.ch//store/data/Run2016G/DoubleMuon/AOD/23Sep2016-v1/80001/EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
         #'file:/home/users/rebassoo/EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
         #'root://cmsxrootd.fnal.gov//store/data/Run2016F/DoubleMuon/AOD/23Sep2016-v1/50000/9E0F8266-0590-E611-A14E-0242AC130002.root'
