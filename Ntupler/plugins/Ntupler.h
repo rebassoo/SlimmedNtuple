@@ -122,7 +122,7 @@ private:
   void GetTracksPrimaryVertex(reco::VertexRef,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>);
   void GetMuonDistance(TransientVertex,std::vector<reco::TransientTrack>);
   void GetElectronDistance(TransientVertex,std::vector<reco::TransientTrack>);
-  void GetTrackDistance(TransientVertex,std::vector<reco::TransientTrack>,std::vector<uint>,std::vector<uint>,int&);
+  void GetTrackDistance(TransientVertex,std::vector<reco::TransientTrack>,std::vector<uint>,std::vector<uint>);
   bool FitLeptonVertex(TransientVertex&,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>,string);
 
   // ----------member data ---------------------------
@@ -163,6 +163,8 @@ private:
   std::vector<float> * muon_e_;
   std::vector<float> * muon_charge_;
   std::vector<float> * muon_iso_;
+  std::vector<float> * muon_dxy_;
+  std::vector<float> * muon_dz_;
 
   std::vector<float> * electron_pt_;
   std::vector<float> * electron_eta_;
@@ -172,6 +174,8 @@ private:
   std::vector<float> * electron_e_;
   std::vector<float> * electron_charge_;
   std::vector<bool> *electron_passip_;
+  std::vector<float> * electron_dxy_;
+  std::vector<float> * electron_dz_;
 
   std::vector<float> * allvertices_z_;
 
@@ -185,8 +189,15 @@ private:
   float * fvertex_y_;
   float * fvertex_z_;
   float * fvertex_chi2ndof_;
-  int * fvertex_ntracks_;
-  std::vector<float> * fvertex_tkdist_;
+  int * fvertex_nltracks_p5mm_;
+  int * fvertex_ntracks_cms_p5mm_;
+  int * fvertex_ntracks_ts_p5mm_;
+  int * fvertex_ntracks_cms_p3mm_;
+  int * fvertex_ntracks_ts_p3mm_;
+  float * fvertex_closest_trk_cms_;
+  float * fvertex_closest_trk_ts_;
+  std::vector<float> * fvertex_tkdist_ts_p3mm_to_1p5mm_;
+  std::vector<float> * fvertex_tkdist_cms_p3mm_to_1p5mm_;
   std::vector<float> * fvertex_tkpt_;
   std::vector<float> * fvertex_tketa_;
   std::vector<float> * muon_tkdist_;

@@ -135,6 +135,15 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      std::vector<uint> ttrkC_mu_it;
      std::vector<uint> ttrkC_e_ctf_it;
 
+     /*
+     reco::TrackCollection::const_iterator tciter;
+     for ( tciter=tks->begin(); tciter!=tks->end(); ++tciter){
+       cout<<"Track vx: "<<tciter->vx()<<endl;
+       cout<<"Track vy: "<<tciter->vy()<<endl;
+       cout<<"Track vz: "<<tciter->vz()<<endl;
+     }
+     */
+
      GetMuons(iEvent,vtx,theB,ttrkC_mu,ttrkC_mu_it,t_tks,numMuTight);
      GetElectrons(iEvent,vtx,theB,ttrkC_e_gsf,ttrkC_e_ctf,ttrkC_e_ctf_it,t_tks,numETight);
      //if((numMuTight+numETight)<2){  return;     }
@@ -144,19 +153,24 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      TransientVertex myVertex;
      //If there is a good dilepton fit for this channel get lepton and track distances and track counting.
      if(FitLeptonVertex(myVertex,ttrkC,ttrkC_mu,ttrkC_e_gsf,channel)){
-       int num_close_tracks=0;
        GetMuonDistance(myVertex,ttrkC_mu);
        GetElectronDistance(myVertex,ttrkC_e_gsf);
        //Need to pass ttrkC_mu_it and ttrkC_e_ctf_it so not to count electron and muon ctf tracks
-       GetTrackDistance(myVertex,t_tks,ttrkC_mu_it,ttrkC_e_ctf_it,num_close_tracks);
-       *fvertex_ntracks_=num_close_tracks;
+       GetTrackDistance(myVertex,t_tks,ttrkC_mu_it,ttrkC_e_ctf_it);
+       //This counts electron and muon ctf tracks within 0.05 cm
      }//end of requiring valid vertex
      else{
-       *fvertex_x_=-999.;
-       *fvertex_y_=-999.;
-       *fvertex_z_=-999.;
+       *fvertex_x_=999.;
+       *fvertex_y_=999.;
+       *fvertex_z_=999.;
        *fvertex_chi2ndof_=999.;
-       *fvertex_ntracks_=1000.;
+       *fvertex_nltracks_p5mm_=999.;
+       *fvertex_ntracks_cms_p5mm_=999.;
+       *fvertex_ntracks_ts_p5mm_=999.;
+       *fvertex_ntracks_cms_p3mm_=999.;
+       *fvertex_ntracks_ts_p3mm_=999.;
+       *fvertex_closest_trk_cms_=999.;
+       *fvertex_closest_trk_ts_=999.;
      }
      //cout<<"numMuTight: "<<numMuTight<<endl;
      //cout<<"numETight: "<<numETight<<endl;
@@ -184,6 +198,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*muon_e_).clear();
    (*muon_charge_).clear();
    (*muon_iso_).clear();
+   (*muon_dxy_).clear();
+   (*muon_dz_).clear();
    
    (*electron_pt_).clear();
    (*electron_eta_).clear();
@@ -193,10 +209,13 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*electron_e_).clear();
    (*electron_charge_).clear();
    (*electron_passip_).clear();
+   (*electron_dxy_).clear();
+   (*electron_dz_).clear();
    
    (*allvertices_z_).clear();
    
-   (*fvertex_tkdist_).clear();
+   (*fvertex_tkdist_ts_p3mm_to_1p5mm_).clear();
+   (*fvertex_tkdist_cms_p3mm_to_1p5mm_).clear();
    (*fvertex_tkpt_).clear();
    (*fvertex_tketa_).clear();
    (*muon_tkdist_).clear();
@@ -478,9 +497,20 @@ Ntupler::GetMuons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle<Tra
      for (MuonIt = muonHandle->begin(); MuonIt != muonHandle->end(); ++MuonIt) {
        //cout<<"Muon pt is: "<<MuonIt->pt()<<endl;
        
-       bool tightId = muon::isTightMuon(*MuonIt,*vtx);
+       //bool tightId = muon::isTightMuon(*MuonIt,*vtx);
+       
+       bool tightId_noIP=false;
+       bool muID = muon::isGoodMuon(*MuonIt,muon::GlobalMuonPromptTight) && (MuonIt->numberOfMatchedStations() > 1);
+       bool hits=false;
+       if(MuonIt->isGlobalMuon()){
+       	 hits = MuonIt->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5 && MuonIt->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;}
+       //bool ip = fabs(MuonIt->muonBestTrack()->dxy(vtx->position())) < 0.2 && fabs(MuonIt->muonBestTrack()->dz(vtx->position())) < 0.5;
+       if(MuonIt->isPFMuon() && MuonIt->isGlobalMuon() && muID && hits ){ tightId_noIP=true; }
+       
        //cout<<"Tight Muon Id is: "<<tightId<<endl;
-       if(tightId&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
+       //if(tightId&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
+       if(tightId_noIP&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
+
 
 	 double iso = (MuonIt->pfIsolationR04().sumChargedHadronPt + max(0., MuonIt->pfIsolationR04().sumNeutralHadronEt + MuonIt->pfIsolationR04().sumPhotonEt - 0.5*MuonIt->pfIsolationR04().sumPUPt))/MuonIt->pt();
 	 //cout<<"Muon Iso is: "<<iso<<endl;
@@ -494,6 +524,8 @@ Ntupler::GetMuons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle<Tra
 	 (*muon_pt_).push_back(MuonIt->pt());
 	 (*muon_eta_).push_back(MuonIt->eta());
 	 (*muon_iso_).push_back(iso);
+	 (*muon_dxy_).push_back(fabs(MuonIt->muonBestTrack()->dxy(vtx->position())));
+	 (*muon_dz_).push_back(fabs(MuonIt->muonBestTrack()->dz(vtx->position())));
 	 //cout<<"Muon Pt: "<<MuonIt->pt()<<endl;
 	 //cout<<"Muon charge: "<<MuonIt->charge()<<endl;
 	 //cout<<"Vertex track size: "<<vtx->tracksSize()<<endl;
@@ -592,6 +624,8 @@ Ntupler::GetElectrons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle
 	 numETight++;
 	 (*electron_pt_).push_back(ele->pt());
 	 (*electron_passip_).push_back(passIPcuts);
+	 (*electron_dxy_).push_back(fabs(ele->gsfTrack()->dxy(vtx->position())));
+	 (*electron_dz_).push_back(fabs(ele->gsfTrack()->dz(vtx->position())));
 	 //cout<<"Get Here 0:"<<endl;
 	 //cout<<"Electron pt, eta, phi: "<<ele->pt()<<", "<<ele->eta()<<", "<<ele->phi()<<endl;
 	 //cout<<"Electron charge: "<<ele->charge()<<endl;
@@ -698,24 +732,26 @@ Ntupler::GetMuonDistance(TransientVertex myVertex,std::vector<reco::TransientTra
 
   //calculate muon distance
   for(uint att=0;att<ttrkC_mu.size();att++){
-    TrajectoryStateClosestToPoint tS_muon=ttrkC_mu[att].trajectoryStateClosestToPoint(myVertex.position());
-    if(tS_muon.isValid()){
-      float closest_pos = sqrt( pow(myVertex.position().x()-tS_muon.position().x(),2)+pow(myVertex.position().y()-tS_muon.position().y(),2)+pow(myVertex.position().z()-tS_muon.position().z(),2));
+    //TrajectoryStateClosestToPoint tS_muon=ttrkC_mu[att].trajectoryStateClosestToPoint(myVertex.position());
+    //if(tS_muon.isValid()){
+
+      float closest_pos = sqrt( pow(myVertex.position().x()-ttrkC_mu[att].track().vertex().x(),2)+pow(myVertex.position().y()-ttrkC_mu[att].track().vertex().y(),2)+pow(myVertex.position().z()-ttrkC_mu[att].track().vertex().z(),2));  
+      //float closest_pos = sqrt( pow(myVertex.position().x()-tS_muon.position().x(),2)+pow(myVertex.position().y()-tS_muon.position().y(),2)+pow(myVertex.position().z()-tS_muon.position().z(),2));
       h_mu_closest->Fill(closest_pos);
       (*muon_tkdist_).push_back(closest_pos);
       (*muon_tkpt_).push_back(ttrkC_mu[att].track().pt());
       if(myVertex.normalisedChiSquared()<10){h_mu_closest_chi2_10->Fill(closest_pos);}
       h_mu_chi2_vs_closest->Fill(closest_pos,myVertex.normalisedChiSquared());
       
-      //float closest_pos = sqrt( pow(myVertex.position().x()-ttrkC_mu[att].track().vertex().x(),2)+pow(myVertex.position().y()-ttrkC_mu[att].track().vertex().y(),2)+pow(myVertex.position().z()-ttrkC_mu[att].track().vertex().z(),2));  
+
     //cout<<"Closest muon distance: "<<closest_pos<<", Run: "<<iEvent.id().run()<<", Event: "<<iEvent.id().event()<<endl;
       //closest_pos = sqrt( pow(myVertex.position().x()-ttrkC_mu[att].track().vertex().x(),2)+pow(myVertex.position().y()-ttrkC_mu[att].track().vertex().y(),2)+pow(myVertex.position().z()-ttrkC_mu[att].track().vertex().z(),2));
       //cout<<"Closest muon distance: "<<closest_pos<<", Run: "<<iEvent.id().run()<<", Event: "<<iEvent.id().event()<<endl;
       //cout<<"muon track dist:"<<closest_pos<<endl;
       //cout<<"muon track pt:"<<ttrkC_mu[att].track().pt()<<endl;
       //if(closest_pos<0.05){ num_close_tracks++;}	   
-    }
-  }//end of muon distance
+      //    }
+  }//end of loop over muons
   
 }
 
@@ -751,42 +787,76 @@ Ntupler::GetElectronDistance(TransientVertex myVertex,std::vector<reco::Transien
 }
 
 void
-Ntupler::GetTrackDistance(TransientVertex myVertex,std::vector<reco::TransientTrack> t_tks,std::vector<uint> ttrkC_mu_it,std::vector<uint> ttrkC_e_ctf_it,int& num_close_tracks)
+Ntupler::GetTrackDistance(TransientVertex myVertex,std::vector<reco::TransientTrack> t_tks,std::vector<uint> ttrkC_mu_it,std::vector<uint> ttrkC_e_ctf_it)
 {
-
+  
   //calculate track distance
+  float closest_track_cms=1000;
+  float closest_track_TrajState=1000;
+  int num_lepton_tracks_cms_p5mm=0;
+  int num_tracks_cms_p5mm=0;
+  int num_tracks_cms_p3mm=0;
+  int num_tracks_ts_p5mm=0;
+  int num_tracks_ts_p3mm=0;
   for (uint i=0; i < t_tks.size();i++){
+
+    float track_distance_cms = sqrt( pow(myVertex.position().x()-t_tks[i].track().vertex().x(),2)+pow(myVertex.position().y()-t_tks[i].track().vertex().y(),2)+pow(myVertex.position().z()-t_tks[i].track().vertex().z(),2));
+
+    bool isEorMu=false;
+    for(uint att=0;att<ttrkC_mu_it.size();att++){
+      if(ttrkC_mu_it[att]==i){
+	isEorMu=true;
+	if(track_distance_cms<0.05){ num_lepton_tracks_cms_p5mm++;}
+      }
+    }
+    for(uint att=0;att<ttrkC_e_ctf_it.size();att++){
+      if(ttrkC_e_ctf_it[att]==i){
+	isEorMu=true;
+	if(track_distance_cms<0.05){ num_lepton_tracks_cms_p5mm++;}
+      }
+    }
+
+    if(!isEorMu){
+      if(track_distance_cms<closest_track_cms){
+	closest_track_cms=track_distance_cms;
+      }
+      if(track_distance_cms<0.05){  num_tracks_cms_p5mm++; }
+      if(track_distance_cms<0.03){  num_tracks_cms_p3mm++; }
+      if(track_distance_cms<0.15&&track_distance_cms>0.03){
+	(*fvertex_tkdist_cms_p3mm_to_1p5mm_).push_back(track_distance_cms);
+      }
+    }//end of requirement excluding e or mu tracks
     TrajectoryStateClosestToPoint tS=t_tks[i].trajectoryStateClosestToPoint(myVertex.position());
-    //cout<<"Closest position on track: "<<tS.position().x()<<", "<<tS.position().y()<<", "<<tS.position().z()<<endl;
+    //cout<<"Closest positivon on track: "<<tS.position().x()<<", "<<tS.position().y()<<", "<<tS.position().z()<<endl;
     
     //believe this is all in cm
     if(tS.isValid()){
-      float closest_pos = sqrt( pow(myVertex.position().x()-tS.position().x(),2)+pow(myVertex.position().y()-tS.position().y(),2)+pow(myVertex.position().z()-tS.position().z(),2));
+      float track_distance_TrajState = sqrt( pow(myVertex.position().x()-tS.position().x(),2)+pow(myVertex.position().y()-tS.position().y(),2)+pow(myVertex.position().z()-tS.position().z(),2));
       //if(t_tks[i].track().pt()>6){cout<<"Closest position: "<<closest_pos<<endl;}
-      
-      bool isEorMu=false;
-      for(uint att=0;att<ttrkC_mu_it.size();att++){
-	if(ttrkC_mu_it[att]==i){
-	  isEorMu=true;
-	  if(closest_pos<0.05){ num_close_tracks++;}
+
+      if(!isEorMu){
+	if(track_distance_TrajState<closest_track_TrajState){
+	  closest_track_TrajState=track_distance_TrajState;
 	}
-      }
-      for(uint att=0;att<ttrkC_e_ctf_it.size();att++){
-	if(ttrkC_e_ctf_it[att]==i){
-	  isEorMu=true;
-	  if(closest_pos<0.05){ num_close_tracks++;}
-	}
-      }
-      
-      if(closest_pos<0.2&&!isEorMu){
-	(*fvertex_tkdist_).push_back(closest_pos);
-	//(*fvertex_tkpt_).push_back(t_tks[i].track().pt());
-	//(*fvertex_tketa_).push_back(t_tks[i].track().eta());
-      }//fill ntuple with tracks within 0.2 cm
-      
+	if(track_distance_TrajState<0.05){  num_tracks_ts_p5mm++; }
+	if(track_distance_TrajState<=0.03){  num_tracks_ts_p3mm++; }
+	if(track_distance_TrajState<0.15&&track_distance_TrajState>0.03){
+	  (*fvertex_tkdist_ts_p3mm_to_1p5mm_).push_back(track_distance_TrajState);
+	  //(*fvertex_tkpt_).push_back(t_tks[i].track().pt());
+	  //(*fvertex_tketa_).push_back(t_tks[i].track().eta());
+	}//fill ntuple with tracks within 0.2 cm
+      }//end of requirement excluding e or mu tracks
     }//end of making sure Trajectory state is valid
     else{cout<<"TrajectoryStateClosestToPoint is not valid"<<endl;}
   }//end of looping over tracks
+
+  *fvertex_closest_trk_cms_=closest_track_cms;
+  *fvertex_closest_trk_ts_=closest_track_TrajState;
+  *fvertex_ntracks_cms_p5mm_=num_tracks_cms_p5mm;
+  *fvertex_ntracks_ts_p5mm_=num_tracks_ts_p5mm;
+  *fvertex_ntracks_cms_p3mm_=num_tracks_cms_p3mm;
+  *fvertex_ntracks_ts_p3mm_=num_tracks_ts_p3mm;
+  *fvertex_nltracks_p5mm_=num_lepton_tracks_cms_p5mm;
 
 }
 
@@ -887,6 +957,8 @@ Ntupler::beginJob()
   muon_e_ = new std::vector<float>;
   muon_charge_ = new std::vector<float>;
   muon_iso_ = new std::vector<float>;
+  muon_dxy_ = new std::vector<float>;
+  muon_dz_ = new std::vector<float>;
 
   electron_pt_ = new std::vector<float>;
   electron_eta_ = new std::vector<float>;
@@ -896,6 +968,8 @@ Ntupler::beginJob()
   electron_e_ = new std::vector<float>;
   electron_charge_ = new std::vector<float>;
   electron_passip_ = new std::vector<bool>;
+  electron_dxy_ = new std::vector<float>;
+  electron_dz_ = new std::vector<float>;
   allvertices_z_ = new std::vector<float>;
 
   vertex_ntracks_ = new int;
@@ -908,8 +982,15 @@ Ntupler::beginJob()
   fvertex_y_ = new float;
   fvertex_z_ = new float;
   fvertex_chi2ndof_ = new float;
-  fvertex_ntracks_ = new int;
-  fvertex_tkdist_ = new std::vector<float>;
+  fvertex_nltracks_p5mm_ = new int;
+  fvertex_ntracks_cms_p5mm_ = new int;
+  fvertex_ntracks_ts_p5mm_ = new int;
+  fvertex_ntracks_cms_p3mm_ = new int;
+  fvertex_ntracks_ts_p3mm_ = new int;
+  fvertex_closest_trk_cms_ = new float;
+  fvertex_closest_trk_ts_ = new float;
+  fvertex_tkdist_ts_p3mm_to_1p5mm_ = new std::vector<float>;
+  fvertex_tkdist_cms_p3mm_to_1p5mm_ = new std::vector<float>;
   fvertex_tkpt_ = new std::vector<float>;
   fvertex_tketa_ = new std::vector<float>;
   muon_tkdist_ = new std::vector<float>;
@@ -946,6 +1027,8 @@ Ntupler::beginJob()
   tree_->Branch("muon_e",&muon_e_);
   tree_->Branch("muon_charge",&muon_charge_);
   tree_->Branch("muon_iso",&muon_iso_);
+  tree_->Branch("muon_dxy",&muon_dxy_);
+  tree_->Branch("muon_dz",&muon_dz_);
 
   tree_->Branch("electron_pt",&electron_pt_);
   tree_->Branch("electron_eta",&electron_eta_);
@@ -955,9 +1038,9 @@ Ntupler::beginJob()
   tree_->Branch("electron_e",&electron_e_);
   tree_->Branch("electron_charge",&electron_charge_);
   tree_->Branch("electron_passip",&electron_passip_);
-
+  tree_->Branch("electron_dxy",&electron_dxy_);
+  tree_->Branch("electron_dz",&electron_dz_);
   tree_->Branch("allvertices_z",&allvertices_z_);
-
   tree_->Branch("vertex_ntracks",vertex_ntracks_,"vertex_ntracks/I");
   tree_->Branch("vertex_x",vertex_x_,"vertex_x/f");
   tree_->Branch("vertex_y",vertex_y_,"vertex_y/f");
@@ -967,8 +1050,15 @@ Ntupler::beginJob()
   tree_->Branch("fvertex_y",fvertex_y_,"fvertex_y/f");
   tree_->Branch("fvertex_z",fvertex_z_,"fvertex_z/f");
   tree_->Branch("fvertex_chi2ndof",fvertex_chi2ndof_,"fvertex_chi2ndof/f");
-  tree_->Branch("fvertex_ntracks",fvertex_ntracks_,"fvertex_ntracks/I");
-  tree_->Branch("fvertex_tkdist",&fvertex_tkdist_);
+  tree_->Branch("fvertex_nltracks_p5mm",fvertex_nltracks_p5mm_,"fvertex_nltracks_p5mm/I");
+  tree_->Branch("fvertex_ntracks_cms_p5mm",fvertex_ntracks_cms_p5mm_,"fvertex_ntracks_cms_p5mm/I");
+  tree_->Branch("fvertex_ntracks_ts_p5mm",fvertex_ntracks_ts_p5mm_,"fvertex_ntracks_ts_p5mm/I");
+  tree_->Branch("fvertex_ntracks_cms_p3mm",fvertex_ntracks_cms_p3mm_,"fvertex_ntracks_cms_p3mm/I");
+  tree_->Branch("fvertex_ntracks_ts_p3mm",fvertex_ntracks_ts_p3mm_,"fvertex_ntracks_ts_p3mm/I");
+  tree_->Branch("fvertex_closest_trk_cms",fvertex_closest_trk_cms_,"fvertex_closest_trk_cms/f");
+  tree_->Branch("fvertex_closest_trk_ts",fvertex_closest_trk_ts_,"fvertex_closest_trk_ts/f");
+  tree_->Branch("fvertex_tkdist_ts_p3mm_to_1p5mm",&fvertex_tkdist_ts_p3mm_to_1p5mm_);
+  tree_->Branch("fvertex_tkdist_cms_p3mm_to_1p5mm",&fvertex_tkdist_cms_p3mm_to_1p5mm_);
   tree_->Branch("fvertex_tkpt",&fvertex_tkpt_);
   tree_->Branch("fvertex_tketa",&fvertex_tketa_);
   tree_->Branch("muon_tkdist",&muon_tkdist_);
@@ -1021,6 +1111,8 @@ Ntupler::endJob()
   delete muon_e_;
   delete muon_charge_;
   delete muon_iso_;
+  delete muon_dxy_;
+  delete muon_dz_;
 
   delete electron_px_;
   delete electron_pt_;
@@ -1030,6 +1122,8 @@ Ntupler::endJob()
   delete electron_e_;
   delete electron_charge_;
   delete electron_passip_;
+  delete electron_dxy_;
+  delete electron_dz_;
 
   delete allvertices_z_;
 
@@ -1043,8 +1137,15 @@ Ntupler::endJob()
   delete fvertex_y_;
   delete fvertex_z_;
   delete fvertex_chi2ndof_;
-  delete fvertex_ntracks_;
-  delete fvertex_tkdist_;
+  delete fvertex_nltracks_p5mm_;
+  delete fvertex_ntracks_cms_p5mm_;
+  delete fvertex_ntracks_ts_p5mm_;
+  delete fvertex_ntracks_cms_p3mm_;
+  delete fvertex_ntracks_ts_p3mm_;
+  delete fvertex_closest_trk_cms_;
+  delete fvertex_closest_trk_ts_;
+  delete fvertex_tkdist_ts_p3mm_to_1p5mm_;
+  delete fvertex_tkdist_cms_p3mm_to_1p5mm_;
   delete fvertex_tkpt_;
   delete fvertex_tketa_;
   delete muon_tkdist_;
