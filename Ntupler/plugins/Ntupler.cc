@@ -3,7 +3,6 @@
 //
 // constants, enums and typedefs
 //
-
 //
 // static data member definitions
 //
@@ -30,6 +29,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   consumes<reco::GenParticleCollection>(edm::InputTag("genParticles"));
   consumes<reco::GsfElectronCollection >(edm::InputTag("gedGsfElectrons"));
   consumes<reco::ConversionCollection>(edm::InputTag("allConversions"));
+  consumes<edm::View<pat::Jet>>(edm::InputTag("selectedPatJets"));
+  consumes<edm::View<pat::Jet>>(edm::InputTag("tightPatJetsPFlow"));
   consumes<std::vector< PileupSummaryInfo > >(edm::InputTag("addPileupInfo"));
   beamSpotToken_= consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
   eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
@@ -78,7 +79,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    using namespace edm;
    using namespace std;
-
+   
    //This is not optimal if storing a lot of MC variables. In that case need to put this after trigger requirement. 
    //But need to be careful because h_trueNumInteractions in GetMC() needs to be before passTrigger
    //Right now it is ok because not saving any MC variables
@@ -180,8 +181,10 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        cout<<"Num Mu: "<<numMuTight;
        cout<<"Num E: "<<numETight;
      }
+     
      if((numMuTight+numETight)>1){
-       //cout<<"Fill tree"<<endl;
+       //if(numMuTight==1&&numETight==1){
+       GetJets(iEvent);
        *run_ = iEvent.id().run();
        *ev_ = iEvent.id().event();
        *lumiblock_ = iEvent.luminosityBlock();
@@ -192,6 +195,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    
    (*muon_pt_).clear();
    (*muon_eta_).clear();
+   (*muon_phi_).clear();
    (*muon_px_).clear();
    (*muon_py_).clear();
    (*muon_pz_).clear();
@@ -203,6 +207,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    
    (*electron_pt_).clear();
    (*electron_eta_).clear();
+   (*electron_phi_).clear();
    (*electron_px_).clear();
    (*electron_py_).clear();
    (*electron_pz_).clear();
@@ -211,6 +216,11 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*electron_passip_).clear();
    (*electron_dxy_).clear();
    (*electron_dz_).clear();
+
+   (*jet_pt_).clear();
+   (*jet_energy_).clear();
+   (*jet_phi_).clear();
+   (*jet_eta_).clear();
    
    (*allvertices_z_).clear();
    
@@ -523,6 +533,7 @@ Ntupler::GetMuons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle<Tra
 	 (*muon_charge_).push_back(MuonIt->charge());
 	 (*muon_pt_).push_back(MuonIt->pt());
 	 (*muon_eta_).push_back(MuonIt->eta());
+	 (*muon_phi_).push_back(MuonIt->phi());
 	 (*muon_iso_).push_back(iso);
 	 (*muon_dxy_).push_back(fabs(MuonIt->muonBestTrack()->dxy(vtx->position())));
 	 (*muon_dz_).push_back(fabs(MuonIt->muonBestTrack()->dz(vtx->position())));
@@ -637,6 +648,7 @@ Ntupler::GetElectrons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle
 	 //cout<<"Electron Ctf track px, py, pz: "<<ele->closestCtfTrackRef()->px()<<", "<<ele->closestCtfTrackRef()->py()<<", "<<ele->closestCtfTrackRef()->pz()<<endl;}
 	 //cout<<"Electron GSF track pt, eta, phi: "<<ele->gsfTrack()->pt()<<", "<<ele->gsfTrack()->eta()<<", "<<ele->gsfTrack()->phi()<<endl;
 	 (*electron_eta_).push_back(ele->superCluster()->eta());
+	 (*electron_phi_).push_back(ele->superCluster()->phi());
 	 (*electron_px_).push_back(ele->px());
 	 (*electron_py_).push_back(ele->py());
 	 (*electron_pz_).push_back(ele->pz());
@@ -910,6 +922,95 @@ Ntupler::FitLeptonVertex(TransientVertex& myVertex,std::vector<reco::TransientTr
   
 }
 
+
+void
+Ntupler::GetJets(const edm::Event& iEvent)
+{
+
+       //cout<<"Muon phi, eta: "<<(*muon_phi_)[0]<<", "<<(*muon_eta_)[0]<<endl;
+       //cout<<"Electron phi, eta: "<<(*electron_phi_)[0]<<", "<<(*electron_eta_)[0]<<endl;
+       //GetJets(iEvent);
+       edm::Handle<edm::View<pat::Jet> > jetColl; // PAT      
+       //iEvent.getByToken(jetToken_, jetColl);
+       //iEvent.getByLabel("selectedPatJets", jetColl);
+       iEvent.getByLabel("tightPatJetsPFlow", jetColl);
+       int numJets_id=0;
+       int numJets_id_25=0;
+       int numJets_id_20=0;
+       for (unsigned int i=0; i<jetColl->size(); i++) {
+	 const edm::Ptr<pat::Jet> jet = jetColl->ptrAt(i);
+	 //cout<<"chargedHadronEnergyFraction(): "<<jet->chargedHadronEnergyFraction()<<endl;
+	 //cout<<"chargedHadronEnergyFraction(), 2nd method: "<<jet->chargedHadronEnergy()/jet->correctedP4(0).E()<<endl;
+	 
+	 if(jet->pt()>25){
+	   bool isLepton=isJetLepton(jet->eta(),jet->phi());
+	   if(!isLepton){
+	     numJets_id++;  
+	     (*jet_pt_).push_back(jet->pt());
+	     (*jet_energy_).push_back(jet->energy());
+	     (*jet_phi_).push_back(jet->phi());
+	     (*jet_eta_).push_back(jet->eta());
+	   }
+	   //cout<<"Jet energy, phi, eta: "<<jet->energy()<<", "<<jet->phi()<<", "<<jet->eta()<<endl;
+	 }
+	 if(jet->pt()>25){numJets_id_25++;       }
+	 if(jet->pt()>20){numJets_id_20++;       }
+	 //cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
+	 //cout<<"Uncorrected chargedHadronEnergyFraction(): "<<jet->correctedJet(0).chargedHadronEnergyFraction()<<endl;
+       }
+
+       /*       
+       edm::Handle<edm::View<pat::Jet> > jetSColl; // PAT      
+       iEvent.getByLabel("selectedPatJets", jetSColl);
+       int numJets=0;
+       for (unsigned int i=0; i<jetSColl->size(); i++) {
+	 const edm::Ptr<pat::Jet> jet = jetSColl->ptrAt(i);
+	 //cout<<"Jet energy, pt, eta: "<<jet->energy()<<", "<<jet->pt()<<", "<<jet->eta()<<endl;
+	 //cout<<"chargedHadronEnergyFraction(): "<<jet->chargedHadronEnergyFraction()<<endl;
+	 //cout<<"chargedHadronEnergyFraction(), 2nd method: "<<jet->chargedHadronEnergy()/jet->correctedP4(0).E()<<endl;
+	 if(jet->pt()>30)
+	   {numJets++;}
+	 //cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
+	 //cout<<"Uncorrected chargedHadronEnergyFraction(): "<<jet->correctedJet(0).chargedHadronEnergyFraction()<<endl;
+       }
+       //cout<<"Num jets with no id, with id: "<<numJets<<", "<<numJets_id<<endl;
+       */
+       h_jets_30->Fill(numJets_id);
+       h_jets_25->Fill(numJets_id_25);
+       h_jets_20->Fill(numJets_id_20);
+
+
+}
+
+
+bool
+Ntupler::isJetLepton(double jet_eta, double jet_phi)
+{
+  for(uint i=0;i<(*muon_eta_).size();i++){
+    double eta=(*muon_eta_)[i];
+    double phi=(*muon_phi_)[i];
+    double deltaR=sqrt((eta-jet_eta)*(eta-jet_eta)+(phi-jet_phi)*(phi-jet_phi));
+    if(deltaR<0.5){
+      return true;
+    }
+  }
+
+  for(uint i=0;i<(*electron_eta_).size();i++){
+    double eta=(*electron_eta_)[i];
+    double phi=(*electron_phi_)[i];
+    double deltaR=sqrt((eta-jet_eta)*(eta-jet_eta)+(phi-jet_phi)*(phi-jet_phi));
+    if(deltaR<0.5){
+      return true;
+    }
+  }
+
+
+
+  return false;
+
+}
+
+
 void
 Ntupler::endRun(edm::Run const & iRun, edm::EventSetup const& iSetup) {}
 
@@ -951,6 +1052,7 @@ Ntupler::beginJob()
 
   muon_pt_ = new std::vector<float>;
   muon_eta_ = new std::vector<float>;
+  muon_phi_ = new std::vector<float>;
   muon_px_ = new std::vector<float>;
   muon_py_ = new std::vector<float>;
   muon_pz_ = new std::vector<float>;
@@ -962,6 +1064,7 @@ Ntupler::beginJob()
 
   electron_pt_ = new std::vector<float>;
   electron_eta_ = new std::vector<float>;
+  electron_phi_ = new std::vector<float>;
   electron_px_ = new std::vector<float>;
   electron_py_ = new std::vector<float>;
   electron_pz_ = new std::vector<float>;
@@ -971,6 +1074,11 @@ Ntupler::beginJob()
   electron_dxy_ = new std::vector<float>;
   electron_dz_ = new std::vector<float>;
   allvertices_z_ = new std::vector<float>;
+
+  jet_pt_ = new std::vector<float>;
+  jet_energy_ = new std::vector<float>;
+  jet_phi_ = new std::vector<float>;
+  jet_eta_ = new std::vector<float>;
 
   vertex_ntracks_ = new int;
   vertex_x_ = new float;
@@ -1021,6 +1129,7 @@ Ntupler::beginJob()
   
   tree_->Branch("muon_pt",&muon_pt_);
   tree_->Branch("muon_eta",&muon_eta_);
+  tree_->Branch("muon_phi",&muon_phi_);
   tree_->Branch("muon_px",&muon_px_);
   tree_->Branch("muon_py",&muon_py_);
   tree_->Branch("muon_pz",&muon_pz_);
@@ -1032,6 +1141,7 @@ Ntupler::beginJob()
 
   tree_->Branch("electron_pt",&electron_pt_);
   tree_->Branch("electron_eta",&electron_eta_);
+  tree_->Branch("electron_phi",&electron_phi_);
   tree_->Branch("electron_px",&electron_px_);
   tree_->Branch("electron_py",&electron_py_);
   tree_->Branch("electron_pz",&electron_pz_);
@@ -1041,6 +1151,10 @@ Ntupler::beginJob()
   tree_->Branch("electron_dxy",&electron_dxy_);
   tree_->Branch("electron_dz",&electron_dz_);
   tree_->Branch("allvertices_z",&allvertices_z_);
+  tree_->Branch("jet_pt",&jet_pt_);
+  tree_->Branch("jet_energy",&jet_energy_);
+  tree_->Branch("jet_phi",&jet_phi_);
+  tree_->Branch("jet_eta",&jet_eta_);
   tree_->Branch("vertex_ntracks",vertex_ntracks_,"vertex_ntracks/I");
   tree_->Branch("vertex_x",vertex_x_,"vertex_x/f");
   tree_->Branch("vertex_y",vertex_y_,"vertex_y/f");
@@ -1094,6 +1208,9 @@ Ntupler::beginJob()
   h_e_closest_chi2_10 = fs->make<TH1F>("h_e_closest_chi2_10" , "For #chi^2 < 10;Track Distance (cm);" , 500 , 0 , 10 );
   h_e_chi2_vs_closest = fs->make<TH2F>("h_e_chi2_vs_closest" , ";Track Distance (cm);#chi^{2}" , 500 , 0 , 10 , 200, 0, 50);
   h_lepton_pt = fs->make<TH1F>("h_lepton_pt" , ";Lepton p_{T};" , 150, 0, 300);
+  h_jets_30 = fs->make<TH1F>("h_jets_30" , ";Num jets;" , 15, -0.5, 14.5);
+  h_jets_25 = fs->make<TH1F>("h_jets_25" , ";Num jets;" , 15, -0.5, 14.5);
+  h_jets_20 = fs->make<TH1F>("h_jets_20" , ";Num jets;" , 15, -0.5, 14.5);
 
 
 
@@ -1106,6 +1223,7 @@ Ntupler::endJob()
   delete muon_px_;
   delete muon_pt_;
   delete muon_eta_;
+  delete muon_phi_;
   delete muon_py_;
   delete muon_pz_;
   delete muon_e_;
@@ -1117,6 +1235,7 @@ Ntupler::endJob()
   delete electron_px_;
   delete electron_pt_;
   delete electron_eta_;
+  delete electron_phi_;
   delete electron_py_;
   delete electron_pz_;
   delete electron_e_;
@@ -1124,6 +1243,11 @@ Ntupler::endJob()
   delete electron_passip_;
   delete electron_dxy_;
   delete electron_dz_;
+
+  delete jet_pt_;
+  delete jet_energy_;
+  delete jet_phi_;
+  delete jet_eta_;
 
   delete allvertices_z_;
 

@@ -80,6 +80,7 @@
 #include "DataFormats/CTPPSDetId/interface/TotemRPDetId.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
 
 //#include "shared_track.h"
 //#include "shared_alignment.h"
@@ -123,6 +124,8 @@ private:
   void GetMuonDistance(TransientVertex,std::vector<reco::TransientTrack>);
   void GetElectronDistance(TransientVertex,std::vector<reco::TransientTrack>);
   void GetTrackDistance(TransientVertex,std::vector<reco::TransientTrack>,std::vector<uint>,std::vector<uint>);
+  void GetJets(const edm::Event&);
+  bool isJetLepton(double,double);
   bool FitLeptonVertex(TransientVertex&,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>,string);
 
   // ----------member data ---------------------------
@@ -154,9 +157,13 @@ private:
   TH1F * h_e_closest_chi2_10;
   TH2F * h_e_chi2_vs_closest;
   TH1F * h_lepton_pt;
+  TH1F * h_jets_30;
+  TH1F * h_jets_25;
+  TH1F * h_jets_20;
 
   std::vector<float> * muon_pt_;
   std::vector<float> * muon_eta_;
+  std::vector<float> * muon_phi_;
   std::vector<float> * muon_px_;
   std::vector<float> * muon_py_;
   std::vector<float> * muon_pz_;
@@ -168,6 +175,7 @@ private:
 
   std::vector<float> * electron_pt_;
   std::vector<float> * electron_eta_;
+  std::vector<float> * electron_phi_;
   std::vector<float> * electron_px_;
   std::vector<float> * electron_py_;
   std::vector<float> * electron_pz_;
@@ -176,6 +184,11 @@ private:
   std::vector<bool> *electron_passip_;
   std::vector<float> * electron_dxy_;
   std::vector<float> * electron_dz_;
+
+  std::vector<float> * jet_pt_;
+  std::vector<float> * jet_energy_;
+  std::vector<float> * jet_phi_;
+  std::vector<float> * jet_eta_;
 
   std::vector<float> * allvertices_z_;
 
@@ -213,6 +226,8 @@ private:
   std::vector<float> * rp_tracks_detId_;
   //float * mumu_mass_;
   //float * mumu_rapidity_;
+
+
 
   int * run_;
   long int * ev_;
