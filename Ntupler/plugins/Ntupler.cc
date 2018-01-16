@@ -952,7 +952,16 @@ Ntupler::GetJets(const edm::Event& iEvent)
 	     (*jet_eta_).push_back(jet->eta());
 	   }
 	   //cout<<"Jet energy, phi, eta: "<<jet->energy()<<", "<<jet->phi()<<", "<<jet->eta()<<endl;
-	 }
+	   cout<<"Jet corrected energy: "<<jet->energy()<<endl;
+	   cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
+	   cout<<"Jet corrected pt: "<<jet->pt()<<endl;
+	   cout<<"Uncorrected pt: "<<jet->correctedP4(0).Pt()<<endl;
+	   std::vector< std::string > jec_levels = jet->availableJECLevels();
+	   int size = jec_levels.size();
+	   for(int i=0;i<size;i++){
+	     cout<<jec_levels[i]<<endl;
+	   }
+	 }//end of looping over jet pt > 25
 	 if(jet->pt()>25){numJets_id_25++;       }
 	 if(jet->pt()>20){numJets_id_20++;       }
 	 //cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
