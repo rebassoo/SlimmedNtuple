@@ -122,6 +122,9 @@ process.tightPatJetsPFlow = cms.EDFilter("PFJetIDSelectionFunctorFilter",
                                          #src = cms.InputTag("cleanPatJets")
                                          )
 
+if not ISMC:
+    process.patJetCorrFactors.levels = cms.vstring('L1FastJet','L2Relative','L3Absolute','L2L3Residual')
+
 #process.patJets.addGenJetMatch = cms.bool(False)
 #process.patJets.addGenPartonMatch = cms.bool(False)
 #process.patJets.getJetMCFlavour = cms.bool(False)
