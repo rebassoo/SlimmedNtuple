@@ -12,8 +12,8 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20000) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
-#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
@@ -53,7 +53,7 @@ process.source = cms.Source("PoolSource",
         #'root://se01.indiacms.res.in//store/mc/RunIISummer16DR80Premix/WWTo2L2Nu_13TeV-powheg/AODSIM/PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/120000/786ED34A-DAB0-E611-9FA4-001E674FB063.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/DoubleEG-RunB-A6C55E4E-E997-E611-A869-008CFA1111F4.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-PromptReco-v3_0C2205B1-A29F-E611-8E3F-02163E014472.root'
-        'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-RunD_2649EE95-C388-E611-AAD1-3417EBE64402.root'
+        #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-RunD_2649EE95-C388-E611-AAD1-3417EBE64402.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-Run2016H-v3-087BD90F-6B9F-E611-912F-02163E01448A.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-RunD-CE007154-EB88-E611-A13B-0025905C54DA.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/WWTo2L2Nu_13TeV-powheg-herwigpp_02B67C54-09B2-E611-866F-6C3BE5B51168.root'
@@ -64,12 +64,16 @@ process.source = cms.Source("PoolSource",
         #'root://cms-xrd-global.cern.ch//store/data/Run2016G/DoubleMuon/AOD/23Sep2016-v1/80001/EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
         #'file:/home/users/rebassoo/EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
         #'root://cmsxrootd.fnal.gov//store/data/Run2016F/DoubleMuon/AOD/23Sep2016-v1/50000/9E0F8266-0590-E611-A14E-0242AC130002.root'
+        'root://cms-xrd-global.cern.ch//store/data/Run2017B/DoubleMuon/AOD/17Nov2017-v1/30000/001137DB-26D6-E711-8E99-02163E014465.root'
+        #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17DRPremix/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/94X_mc2017_realistic_v10-v1/00000/003FC78E-80EC-E711-8B6A-008CFAC93D9C.root'
+        #'file:/hadoop/cms/store/user/rebassoo/TestFiles/DYJets2017-003FC78E-80EC-E711-8B6A-008CFAC93D9C.root'
         )#,
          #                   skipEvents=cms.untracked.uint32(169)
 )
 
 process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
-process.load("Configuration.Geometry.GeometryIdeal_cff")
+#process.load("Configuration.Geometry.GeometryIdeal_cff")
+process.load("Configuration.Geometry.GeometryRecoDB_cff")
 process.load("Configuration.StandardSequences.MagneticField_cff")
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 process.load('RecoMET.METFilters.badGlobalMuonTaggersAOD_cff')
@@ -81,13 +85,15 @@ from Configuration.AlCa.GlobalTag import GlobalTag
 if ISMC:
     process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
 else:
-    process.GlobalTag.globaltag = '80X_dataRun2_2016SeptRepro_v4'  #
+    process.GlobalTag.globaltag = '94X_dataRun2_ReReco_EOY17_v2'  #
+    #process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
+    #process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
 
 #CHANNEL="mue"
 process.load("SlimmedNtuple.Ntupler.CfiFile_cfi") 
 process.demo.ismc=ISMC
-process.demo.ispps=True
-process.demo.channel="mue"
+process.demo.ispps=False
+process.demo.channel="mumu"
 
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 # turn on VID producer, indicate data format  to be
