@@ -88,15 +88,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      GetMC(iEvent);
    }//end of looking at MC
 
-   //if(iEvent.id().run()==279841&&iEvent.id().event()==2974946501){
-   /*
-   if(iEvent.id().event()==2923441563){
-     cout<<"Get to the right event"<<endl;
-   }
-   else{
-     return;
-   }
-   */
    bool passTrigger=GetTrigger(iEvent,iSetup);
    //passTrigger=true;
    if(passTrigger){
@@ -136,19 +127,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      std::vector<uint> ttrkC_mu_it;
      std::vector<uint> ttrkC_e_ctf_it;
 
-     /*
-     reco::TrackCollection::const_iterator tciter;
-     for ( tciter=tks->begin(); tciter!=tks->end(); ++tciter){
-       cout<<"Track vx: "<<tciter->vx()<<endl;
-       cout<<"Track vy: "<<tciter->vy()<<endl;
-       cout<<"Track vz: "<<tciter->vz()<<endl;
-     }
-     */
-
      GetMuons(iEvent,vtx,theB,ttrkC_mu,ttrkC_mu_it,t_tks,numMuTight);
      GetElectrons(iEvent,vtx,theB,ttrkC_e_gsf,ttrkC_e_ctf,ttrkC_e_ctf_it,t_tks,numETight);
-     //if((numMuTight+numETight)<2){  return;     }
-     //cout<<"Run, event :"<<iEvent.id().run()<<", "<<iEvent.id().event()<<endl;
      GetTracksPrimaryVertex(vtx,ttrkC_mu,ttrkC_e_ctf);
      
      TransientVertex myVertex;
@@ -173,9 +153,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        *fvertex_closest_trk_cms_=999.;
        *fvertex_closest_trk_ts_=999.;
      }
-     //cout<<"numMuTight: "<<numMuTight<<endl;
-     //cout<<"numETight: "<<numETight<<endl;
-     //if((numMuTight>0&&numETight>0)){
 
      if(iEvent.id().event()==2974946501){
        cout<<"Num Mu: "<<numMuTight;
@@ -253,58 +230,10 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
    iEvent.getByLabel(edm::InputTag("TriggerResults","","HLT"),hltResults);
    const edm::TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
    for(unsigned int i=0; i<trigNames.size();i++){
-     //cout<<"Trigger_name: "<<trigNames.triggerName(i)<<endl;
-     //cout<<"Trigger decision: "<<hltResults->accept(i)<<endl;
-     //int prescale_set = hltPrescaleProvider_.prescaleSet(iEvent, iSetup);
      int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
-     //int prescale_value2 = hltConfig_.prescaleValue(prescale_set, trigNames.triggerNames().at(i));
-     //std::pair<int,int> test = hltPrescaleProvider_.prescaleValues(iEvent,iSetup,trigNames.triggerName(i));
-     //cout<<"PrescalesSet: "<<prescale_set<<endl;
-     //cout<<"Prescale: "<<prescale_value<<endl;
-     //cout<<"Prescale, v2: "<<prescale_value2<<endl;
-     //cout<<"Combined: "<<test.first<<", "<<test.second<<endl;
-     //const unsigned int prescaleSize = hltConfig_.prescaleSize();
-     //cout<<"Prescale size: "<<prescaleSize<<endl;
-     //for (unsigned int ps = 0; ps < prescaleSize; ps++) {
-     //  const unsigned int prescaleValue = hltConfig_.prescaleValue(ps,trigNames.triggerName(i));
-     //  cout<<"Prescale, 2nd method: "<<prescaleValue<<endl;
-     //}
      
-     std::string TriggerName = trigNames.triggerName(i);
-     std::string TriggerDoubleMu="HLT_DoubleMu38NoFiltersNoVtx_v";
-     /*
-     std::vector<std::string> TriggersMuE = {"HLT_Mu8_TrkIsoVVL_Ele17_CaloIdL_TrackIdL_IsoVL_v",
-					     "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v",
-					     "HLT_Mu8_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v",
-					     "HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_v",
-					     "HLT_Mu23_TrkIsoVVL_Ele8_CaloIdL_TrackIdL_IsoVL_DZ_v",
-					     "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v",
-					     "HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_DZ_v",
-					     "HLT_Mu17_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v",
-					     "HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_v",
-					     "HLT_Mu12_TrkIsoVVL_Ele23_CaloIdL_TrackIdL_IsoVL_DZ_v"};
-     */
-     std::vector<std::string> TriggersMuE = {"HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v","HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v","HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v","HLT_Mu33_Ele33_CaloIdL_GsfTrkIdVL_v"};
-     std::vector<std::string> TriggersEE = {"HLT_DoubleEle33_CaloIdL_MW_v","HLT_Ele27_HighEta_Ele20_Mass55_v","HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v"};
-
-     //if(trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v2"&&hltResults->accept(i)>0&&prescale_value==1){
-     //cout<<"Trigger Name: "<<TriggerName<<endl;
-     //cout<<"Comparison: "<<TriggerName.compare(0,28,TriggerDoubleMu)<<endl;
-     //cout<<"Comparison: "
-     //cout<<"Trigger Name: "<<TriggerName<<endl;
-     //cout<<"Prescale value: "<<prescale_value<<endl;
-     //cout<<"Trigger accept: "<<hltResults->accept(i)<<endl;
-
-     /*
-     if(channel=="mumu"&&TriggerName.compare(0,TriggerDoubleMu.length(),TriggerDoubleMu,0,TriggerDoubleMu.length())==0&&hltResults->accept(i)>0&&prescale_value==1){
-       passTrigger=true;
-       //cout<<"Trigger Name: "<<TriggerName<<endl;
-     }
-     */
+     //These triggers are for 2017 data
      if(channel=="mumu"){
-       //       if((trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v2"
-       //   ||trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v3"
-       //   ||trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v5")
        if((trigNames.triggerName(i)=="HLT_DoubleMu43NoFiltersNoVtx_v2"
 	   ||trigNames.triggerName(i)=="HLT_DoubleMu43NoFiltersNoVtx_v3"
 	   ||trigNames.triggerName(i)=="HLT_DoubleMu48NoFiltersNoVtx_v2"
@@ -316,7 +245,7 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
        }
      }//end of requirement of mumu channel
 
-
+     //These are for 2016 data
      if(channel=="ee"){
        if((trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v1"
 	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v2"
@@ -342,7 +271,8 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
 	 passTrigger=true;
        }
      }//end of requirement of ee channel
-
+     
+     //These are for 2016 data
      if(channel=="mue"){
        if((trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v3"||
 	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v4"||
@@ -515,18 +445,18 @@ Ntupler::GetMuons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle<Tra
        
        bool tightId = muon::isTightMuon(*MuonIt,*vtx);
        
-       //bool tightId_noIP=false;
+       bool tightId_noIP=false;
        
-       //bool muID = muon::isGoodMuon(*MuonIt,muon::GlobalMuonPromptTight) && (MuonIt->numberOfMatchedStations() > 1);
-       //bool hits=false;
-       //if(MuonIt->isGlobalMuon()){
-	 //	 hits = MuonIt->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5 && MuonIt->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;}
-       //bool ip = fabs(MuonIt->muonBestTrack()->dxy(vtx->position())) < 0.2 && fabs(MuonIt->muonBestTrack()->dz(vtx->position())) < 0.5;
-       //if(MuonIt->isPFMuon() && MuonIt->isGlobalMuon() && muID && hits ){ tightId_noIP=true; }
+       bool muID = muon::isGoodMuon(*MuonIt,muon::GlobalMuonPromptTight) && (MuonIt->numberOfMatchedStations() > 1);
+       bool hits=false;
+       if(MuonIt->isGlobalMuon()){
+	 	 hits = MuonIt->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5 && MuonIt->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;}
+       bool ip = fabs(MuonIt->muonBestTrack()->dxy(vtx->position())) < 0.2 && fabs(MuonIt->muonBestTrack()->dz(vtx->position())) < 0.5;
+       if(MuonIt->isPFMuon() && MuonIt->isGlobalMuon() && muID && hits ){ tightId_noIP=true; }
        
        //cout<<"Tight Muon Id is: "<<tightId<<endl;
-       if(tightId&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
-       //if(tightId_noIP&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
+       //if(tightId&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
+       if(tightId_noIP&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
 
 
 	 double iso = (MuonIt->pfIsolationR04().sumChargedHadronPt + max(0., MuonIt->pfIsolationR04().sumNeutralHadronEt + MuonIt->pfIsolationR04().sumPhotonEt - 0.5*MuonIt->pfIsolationR04().sumPUPt))/MuonIt->pt();
