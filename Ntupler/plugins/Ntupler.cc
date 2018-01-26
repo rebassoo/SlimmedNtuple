@@ -302,10 +302,16 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
      }
      */
      if(channel=="mumu"){
-       if((trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v2"
-	   ||trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v3"
-	   ||trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v5")
-	  &&hltResults->accept(i)>0&&prescale_value==1){
+       //       if((trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v2"
+       //   ||trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v3"
+       //   ||trigNames.triggerName(i)=="HLT_DoubleMu38NoFiltersNoVtx_v5")
+       if((trigNames.triggerName(i)=="HLT_DoubleMu43NoFiltersNoVtx_v2"
+	   ||trigNames.triggerName(i)=="HLT_DoubleMu43NoFiltersNoVtx_v3"
+	   ||trigNames.triggerName(i)=="HLT_DoubleMu48NoFiltersNoVtx_v2"
+	   ||trigNames.triggerName(i)=="HLT_DoubleMu48NoFiltersNoVtx_v3")
+	  //&&hltResults->accept(i)>0&&prescale_value==1){
+	  &&hltResults->accept(i)>0){
+	 //cout<<"Prescale value: "<<prescale_value<<endl;
 	 passTrigger=true;
        }
      }//end of requirement of mumu channel
@@ -507,19 +513,20 @@ Ntupler::GetMuons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle<Tra
      for (MuonIt = muonHandle->begin(); MuonIt != muonHandle->end(); ++MuonIt) {
        //cout<<"Muon pt is: "<<MuonIt->pt()<<endl;
        
-       //bool tightId = muon::isTightMuon(*MuonIt,*vtx);
+       bool tightId = muon::isTightMuon(*MuonIt,*vtx);
        
-       bool tightId_noIP=false;
-       bool muID = muon::isGoodMuon(*MuonIt,muon::GlobalMuonPromptTight) && (MuonIt->numberOfMatchedStations() > 1);
-       bool hits=false;
-       if(MuonIt->isGlobalMuon()){
-       	 hits = MuonIt->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5 && MuonIt->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;}
+       //bool tightId_noIP=false;
+       
+       //bool muID = muon::isGoodMuon(*MuonIt,muon::GlobalMuonPromptTight) && (MuonIt->numberOfMatchedStations() > 1);
+       //bool hits=false;
+       //if(MuonIt->isGlobalMuon()){
+	 //	 hits = MuonIt->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5 && MuonIt->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;}
        //bool ip = fabs(MuonIt->muonBestTrack()->dxy(vtx->position())) < 0.2 && fabs(MuonIt->muonBestTrack()->dz(vtx->position())) < 0.5;
-       if(MuonIt->isPFMuon() && MuonIt->isGlobalMuon() && muID && hits ){ tightId_noIP=true; }
+       //if(MuonIt->isPFMuon() && MuonIt->isGlobalMuon() && muID && hits ){ tightId_noIP=true; }
        
        //cout<<"Tight Muon Id is: "<<tightId<<endl;
-       //if(tightId&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
-       if(tightId_noIP&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
+       if(tightId&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
+       //if(tightId_noIP&&MuonIt->pt()>30&&fabs(MuonIt->eta())<2.4){
 
 
 	 double iso = (MuonIt->pfIsolationR04().sumChargedHadronPt + max(0., MuonIt->pfIsolationR04().sumNeutralHadronEt + MuonIt->pfIsolationR04().sumPhotonEt - 0.5*MuonIt->pfIsolationR04().sumPUPt))/MuonIt->pt();
@@ -555,10 +562,10 @@ Ntupler::GetMuons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle<Tra
 	   }
 	   //reco::TrackRef mutrk = MuonIt->innerTrack();
 	   
-	   numMuTight++;
-	   if(numMuTight==1){	   mu1.SetPx(MuonIt->px());mu1.SetPy(MuonIt->py());mu1.SetPz(MuonIt->pz());mu1.SetE(MuonIt->energy());	 }
-	   if(numMuTight==2){	   mu2.SetPx(MuonIt->px());mu2.SetPy(MuonIt->py());mu2.SetPz(MuonIt->pz());mu2.SetE(MuonIt->energy());	 }
-	   if(numMuTight>2){cout<<"There are more than 3 tight muons in the event"<<endl;}
+	 numMuTight++;
+	 if(numMuTight==1){	   mu1.SetPx(MuonIt->px());mu1.SetPy(MuonIt->py());mu1.SetPz(MuonIt->pz());mu1.SetE(MuonIt->energy());	 }
+	 if(numMuTight==2){	   mu2.SetPx(MuonIt->px());mu2.SetPy(MuonIt->py());mu2.SetPz(MuonIt->pz());mu2.SetE(MuonIt->energy());	 }
+	 if(numMuTight>2){cout<<"There are more than 3 tight muons in the event"<<endl;}
        }//end of looking at tightId
      }//end of looking at muons
      if(numMuTight==2){
@@ -952,15 +959,15 @@ Ntupler::GetJets(const edm::Event& iEvent)
 	     (*jet_eta_).push_back(jet->eta());
 	   }
 	   //cout<<"Jet energy, phi, eta: "<<jet->energy()<<", "<<jet->phi()<<", "<<jet->eta()<<endl;
-	   cout<<"Jet corrected energy: "<<jet->energy()<<endl;
-	   cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
-	   cout<<"Jet corrected pt: "<<jet->pt()<<endl;
-	   cout<<"Uncorrected pt: "<<jet->correctedP4(0).Pt()<<endl;
+	   //cout<<"Jet corrected energy: "<<jet->energy()<<endl;
+	   //cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
+	   //cout<<"Jet corrected pt: "<<jet->pt()<<endl;
+	   //cout<<"Uncorrected pt: "<<jet->correctedP4(0).Pt()<<endl;
 	   std::vector< std::string > jec_levels = jet->availableJECLevels();
 	   int size = jec_levels.size();
-	   for(int i=0;i<size;i++){
-	     cout<<jec_levels[i]<<endl;
-	   }
+	   //for(int i=0;i<size;i++){
+	   //  cout<<jec_levels[i]<<endl;
+	   //}
 	 }//end of looping over jet pt > 25
 	 if(jet->pt()>25){numJets_id_25++;       }
 	 if(jet->pt()>20){numJets_id_20++;       }
