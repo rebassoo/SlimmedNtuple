@@ -71,26 +71,14 @@
 #include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
 
 //TOTEM reco
-#include "DataFormats/Common/interface/DetSetVector.h"
+#include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
+#include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
+#include "DataFormats/CTPPSReco/interface/CTPPSDiamondLocalTrack.h"
+#include "DataFormats/CTPPSReco/interface/CTPPSPixelLocalTrack.h"
 #include "DataFormats/CTPPSReco/interface/TotemRPLocalTrack.h"
-#include "DataFormats/CTPPSReco/interface/TotemRPUVPattern.h"
-#include "DataFormats/CTPPSReco/interface/TotemRPCluster.h"
-#include "DataFormats/CTPPSDigi/interface/TotemRPDigi.h"
-#include "DataFormats/CTPPSDigi/interface/TotemVFATStatus.h"
-#include "DataFormats/CTPPSDetId/interface/TotemRPDetId.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
-
-//#include "shared_track.h"
-//#include "shared_alignment.h"
-//#include "shared_reconstruction.h"
-//#include "shared_fill_info.h"
-
-#include "track_lite.h"
-#include "alignment.h"
-#include "fill_info.h"
-#include "proton_reconstruction.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
@@ -132,8 +120,6 @@ private:
   
   string fp0;
   string fp1;
-  AlignmentResultsCollection alignmentCollection;
-  AlignmentResults *alignments;
   unsigned int prev_run;
   bool prev_pps;
   TTree * tree_;
@@ -150,6 +136,7 @@ private:
   HLTPrescaleProvider hltPrescaleProvider_;
 
   TH1F * h_trueNumInteractions;
+  TH1F * h_passTrigger;
   TH1F * h_mu_closest;
   TH1F * h_mu_closest_chi2_10;
   TH2F * h_mu_chi2_vs_closest;
@@ -224,6 +211,7 @@ private:
   std::vector<float> * rp_tracks_xi_;
   std::vector<float> * rp_tracks_xi_unc_;
   std::vector<float> * rp_tracks_detId_;
+  std::vector<float> * rp_tracks_time_;
   //float * mumu_mass_;
   //float * mumu_rapidity_;
 
