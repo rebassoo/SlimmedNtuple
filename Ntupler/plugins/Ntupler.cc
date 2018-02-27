@@ -24,7 +24,9 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   consumes<reco::TrackCollection>(edm::InputTag("generalTracks"));
   consumes<std::vector<reco::Muon>>(edm::InputTag("muons"));
   consumes<std::vector<reco::Vertex>>(edm::InputTag("offlinePrimaryVertices"));
-  consumes< edm::DetSetVector<TotemRPLocalTrack> >(edm::InputTag("totemRPLocalTrackFitter"));
+  consumes<edm::DetSetVector<TotemRPLocalTrack>>(edm::InputTag("totemRPLocalTrackFitter"));
+  consumes<edm::DetSetVector<CTPPSPixelLocalTrack>>(edm::InputTag("ctppsPixelLocalTracks"));
+  consumes<edm::DetSetVector<CTPPSDiamondLocalTrack> >(edm::InputTag("ctppsDiamondLocalTracks")); 
   consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","","HLT"));
   consumes<reco::GenParticleCollection>(edm::InputTag("genParticles"));
   consumes<reco::GsfElectronCollection >(edm::InputTag("gedGsfElectrons"));
@@ -38,20 +40,6 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   //eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
   //eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
 
-  //PPS initialization
-  fp0 = iConfig.getParameter<string>("alignment");
-  fp1 = iConfig.getParameter<string>("optics");
-  if(isPPS){
-    alignmentCollection.Load(fp0.c_str());
-    // load fill-alignment mapping                                                                                            
-    InitFillInfoCollection();
-    // load optical functions                                                                                                 
-    InitReconstruction();
-    // loop over the chain entries                                                                                            
-    alignments = NULL;
-    prev_run =0;
-    prev_pps=false;
-  }
 
   if(isMC){
     //LumiWeights = new edm::LumiReWeighting("MCPileup.root","MyDataPileupHistogramNotMu.root","h1","pileup");
@@ -92,7 +80,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    //passTrigger=true;
    if(passTrigger){
      //cout<<"I pass trigger"<<endl;
-
+     h_passTrigger->Fill(1);
      int numMuTight=0;
      int numETight = 0;
 
@@ -128,14 +116,15 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      std::vector<uint> ttrkC_e_ctf_it;
 
      GetMuons(iEvent,vtx,theB,ttrkC_mu,ttrkC_mu_it,t_tks,numMuTight);
-     GetElectrons(iEvent,vtx,theB,ttrkC_e_gsf,ttrkC_e_ctf,ttrkC_e_ctf_it,t_tks,numETight);
+     //GetElectrons(iEvent,vtx,theB,ttrkC_e_gsf,ttrkC_e_ctf,ttrkC_e_ctf_it,t_tks,numETight);
      GetTracksPrimaryVertex(vtx,ttrkC_mu,ttrkC_e_ctf);
      
      TransientVertex myVertex;
      //If there is a good dilepton fit for this channel get lepton and track distances and track counting.
      if(FitLeptonVertex(myVertex,ttrkC,ttrkC_mu,ttrkC_e_gsf,channel)){
+       
        GetMuonDistance(myVertex,ttrkC_mu);
-       GetElectronDistance(myVertex,ttrkC_e_gsf);
+       //GetElectronDistance(myVertex,ttrkC_e_gsf);
        //Need to pass ttrkC_mu_it and ttrkC_e_ctf_it so not to count electron and muon ctf tracks
        GetTrackDistance(myVertex,t_tks,ttrkC_mu_it,ttrkC_e_ctf_it);
        //This counts electron and muon ctf tracks within 0.05 cm
@@ -218,6 +207,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      (*rp_tracks_xi_).clear();
      (*rp_tracks_xi_unc_).clear();
      (*rp_tracks_detId_).clear();
+     (*rp_tracks_time_).clear();
    }
 
 }
@@ -231,13 +221,14 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
    const edm::TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
    for(unsigned int i=0; i<trigNames.size();i++){
      int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
-     
+     //cout<<"trigNames.triggerName(i)"<<trigNames.triggerName(i)<<endl;
      //These triggers are for 2017 data
      if(channel=="mumu"){
-       if((trigNames.triggerName(i)=="HLT_DoubleMu43NoFiltersNoVtx_v2"
-	   ||trigNames.triggerName(i)=="HLT_DoubleMu43NoFiltersNoVtx_v3"
-	   ||trigNames.triggerName(i)=="HLT_DoubleMu48NoFiltersNoVtx_v2"
-	   ||trigNames.triggerName(i)=="HLT_DoubleMu48NoFiltersNoVtx_v3")
+       if((trigNames.triggerName(i)=="HLT_IsoMu27_v10"
+	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v11"
+	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v12"
+	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v13"
+	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v14")
 	  //&&hltResults->accept(i)>0&&prescale_value==1){
 	  &&hltResults->accept(i)>0){
 	 //cout<<"Prescale value: "<<prescale_value<<endl;
@@ -307,83 +298,70 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 {
 
 
-       bool isPPSRun = false;
-       //Check if this run is the same as previous event. If so alignment doesn't need to be loaded again, but need set isPPSRun based on previous run
-       if(prev_run == iEvent.id().run())
-	 {
-	 //cout<<"Previous pps boolean: "<<prev_pps<<endl;;
-	   isPPSRun=prev_pps;
-	 }
-       //cout<<"prev_run: "<<prev_run<<endl;
-       //cout<<"this_run: "<<iEvent.id().run()<<endl;
-       //Load alignment if it hasn't bee loaded yet for this run
-       if (prev_run != iEvent.id().run() || alignments == NULL)
-	 {
-	   const auto &fillInfo = fillInfoCollection.FindByRun(iEvent.id().run());
-	   if(fillInfo.fillNumber > 0){isPPSRun = true;}
-	   else{isPPSRun=false;}
-	   //For the time being need to say false for runs larger than 280385, this includes after TS2 data which hasn't been aligned yet
-	   if(iEvent.id().run()>280385){isPPSRun=false;}
-	   //cout<<"fillInfo.fillNumber"<<fillInfo.fillNumber<<endl;
-	   //cout<<"fillInfo.runMin"<<fillInfo.runMin<<endl;
-	   //cout<<"fillInfo.runMax"<<fillInfo.runMax<<endl;
-	   
-	   if(isPPSRun){
-	     prev_run = iEvent.id().run();
-	     prev_pps = true;
-	     const auto alignment_it = alignmentCollection.find(fillInfo.alignmentTag);
-	     if (alignment_it == alignmentCollection.end())
-	       {
-		 printf("ERROR: no alignment for tag '%s'.\n", fillInfo.alignmentTag.c_str());
-		 //return 1;
-	       }
-	     
-	   //printf("INFO: loaded alignment with tag '%s'.\n", fillInfo.alignmentTag.c_str());                       
-	     
-	     alignments = &alignment_it->second;
-	   }
-	   else{prev_pps=false;}
-	 }//end of loading alignement if it hasn't been loaded already
-       *ispps_=isPPSRun;
-       if(isPPSRun){
 
-	 
 	 edm::Handle< edm::DetSetVector<TotemRPLocalTrack> > aodTracks;
 	 iEvent.getByLabel("totemRPLocalTrackFitter",aodTracks);
 	 
 	 // produce collection of lite tracks (in future this will be done in miniAOD)        
 	 
-	 TrackDataCollection liteTracks;
+	 //TrackDataCollection liteTracks;
 	 for (const auto &ds : *aodTracks)
 	   {
-	     const auto &rpId = ds.detId();
-	   
 	     for (const auto &tr : ds)
 	       {
-		 liteTracks[rpId] = tr;
+		 //liteTracks[rpId] = tr;
+		 //cout<<"I get to the RP tracks, output X0: "<<tr.getX0()<<endl;
+		 (*rp_tracks_x_).push_back(tr.getX0());   
+		 (*rp_tracks_y_).push_back(tr.getY0()); 
+		 //(*rp_tracks_tx_).push_back(tr.getTx());   
+		 //(*rp_tracks_ty_).push_back(tr.getTy()); 
+		 //liteTracks[rpId]=tr;
+		 //cout<<"ds.detID(): "<<ds.detId()<<endl;
+		 (*rp_tracks_detId_).push_back(ds.detId());   
+	       }
+	   }
+
+	 
+	 edm::Handle< edm::DetSetVector<CTPPSPixelLocalTrack> > pixLocalTracks;
+	 iEvent.getByLabel("ctppsPixelLocalTracks",pixLocalTracks);
+	 for (const auto &ds : *pixLocalTracks)
+	   {
+	     for (const auto &tr : ds)
+	       {
+		 //liteTracks[rpId] = tr;
+		 //cout<<"I get to the RP tracks, output X0: "<<tr.getX0()<<endl;
+		 (*rp_tracks_x_).push_back(tr.getX0());   
+		 (*rp_tracks_y_).push_back(tr.getY0()); 
+		 //(*rp_tracks_tx_).push_back(tr.getTx());   
+		 //(*rp_tracks_ty_).push_back(tr.getTy()); 
+		 //liteTracks[rpId]=tr;
+		 //cout<<"ds.detID(): "<<ds.detId()<<endl;
+		 (*rp_tracks_detId_).push_back(ds.detId());   
 	       }
 	   }
 	 
-	 // apply alignment                                                                                                
-	 TrackDataCollection liteTracksAligned = alignments->Apply(liteTracks);
-	 
-	 // proton reconstruction, RP by RP                                                                                
-	 for (const auto it : liteTracksAligned)
+	 edm::Handle< edm::DetSetVector<CTPPSDiamondLocalTrack> > diamondLocalTracks;
+	 iEvent.getByLabel("ctppsDiamondLocalTracks",diamondLocalTracks);
+	 for (const auto &ds : *diamondLocalTracks)
 	   {
-	     ProtonData proton;
-	     ReconstructProtonFromOneRP(it.first, it.second, proton);
-	     
-	     if (proton.valid){
-	       //printf("    RP %u : xi = %.3f +- %.4f\n", it.first, proton.xi, proton.xi_unc);
-	       (*rp_tracks_x_).push_back(it.second.x);   
-	       (*rp_tracks_y_).push_back(it.second.y); 
-	       (*rp_tracks_detId_).push_back(it.first);   
-	       (*rp_tracks_xi_).push_back(proton.xi);
-	       (*rp_tracks_xi_unc_).push_back(proton.xi_unc);
-	     }
+	     for (const auto &tr : ds)
+	       {
+		 //liteTracks[rpId] = tr;
+		 //cout<<"I get to the RP tracks, output X0: "<<tr.getX0()<<endl;
+		 (*rp_tracks_x_).push_back(tr.getX0());   
+		 (*rp_tracks_y_).push_back(tr.getY0()); 
+		 //(*rp_tracks_tx_).push_back(tr.getTx());   
+		 //(*rp_tracks_ty_).push_back(tr.getTy()); 
+		 //liteTracks[rpId]=tr;
+		 //cout<<"ds.detID(): "<<ds.detId()<<endl;
+		 (*rp_tracks_detId_).push_back(ds.detId());   
+		 (*rp_tracks_time_).push_back(tr.getT());   
+	       }
 	   }
+
 	 
-       }//end of if statement making sure it is a PPS run
+
+
 
 
 }
@@ -443,7 +421,7 @@ Ntupler::GetMuons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle<Tra
      for (MuonIt = muonHandle->begin(); MuonIt != muonHandle->end(); ++MuonIt) {
        //cout<<"Muon pt is: "<<MuonIt->pt()<<endl;
        
-       bool tightId = muon::isTightMuon(*MuonIt,*vtx);
+       //bool tightId = muon::isTightMuon(*MuonIt,*vtx);
        
        bool tightId_noIP=false;
        
@@ -451,7 +429,7 @@ Ntupler::GetMuons(const edm::Event& iEvent,reco::VertexRef vtx,edm::ESHandle<Tra
        bool hits=false;
        if(MuonIt->isGlobalMuon()){
 	 	 hits = MuonIt->innerTrack()->hitPattern().trackerLayersWithMeasurement() > 5 && MuonIt->innerTrack()->hitPattern().numberOfValidPixelHits() > 0;}
-       bool ip = fabs(MuonIt->muonBestTrack()->dxy(vtx->position())) < 0.2 && fabs(MuonIt->muonBestTrack()->dz(vtx->position())) < 0.5;
+       //bool ip = fabs(MuonIt->muonBestTrack()->dxy(vtx->position())) < 0.2 && fabs(MuonIt->muonBestTrack()->dz(vtx->position())) < 0.5;
        if(MuonIt->isPFMuon() && MuonIt->isGlobalMuon() && muID && hits ){ tightId_noIP=true; }
        
        //cout<<"Tight Muon Id is: "<<tightId<<endl;
@@ -1059,6 +1037,7 @@ Ntupler::beginJob()
     rp_tracks_xi_ = new std::vector<float>;
     rp_tracks_xi_unc_ = new std::vector<float>;
     rp_tracks_detId_ = new std::vector<float>;
+    rp_tracks_time_ = new std::vector<float>;
     //mumu_mass_ = new float;
     //mumu_rapidity_ = new float;
   }
@@ -1133,6 +1112,7 @@ Ntupler::beginJob()
     tree_->Branch("rp_tracks_xi",&rp_tracks_xi_);
     tree_->Branch("rp_tracks_xi_unc",&rp_tracks_xi_unc_);
     tree_->Branch("rp_tracks_detId",&rp_tracks_detId_);
+    tree_->Branch("rp_tracks_time",&rp_tracks_time_);
     //tree_->Branch("mumu_mass",mumu_mass_,"mumu_mass/f");
     //tree_->Branch("mumu_rapidity",mumu_rapidity_,"mumu_rapidity/f");
   }
@@ -1146,6 +1126,7 @@ Ntupler::beginJob()
 
 
   h_trueNumInteractions = fs->make<TH1F>("h_trueNumInteractions" , "PU" , 200 , 0 , 100 );
+  h_passTrigger = fs->make<TH1F>("h_passTrigger" , "PU" , 1 , 0.5 , 1.5 );
   h_mu_closest = fs->make<TH1F>("h_mu_closest" , ";Track Distance (cm);" , 500 , 0 , 10 );
   h_mu_closest_chi2_10 = fs->make<TH1F>("h_mu_closest_chi2_10" , "For #chi^2 < 10;Track Distance (cm);" , 500 , 0 , 10 );
   h_mu_chi2_vs_closest = fs->make<TH2F>("h_mu_chi2_vs_closest" , ";Track Distance (cm);#chi^{2}" , 500 , 0 , 10 , 200, 0, 50);
@@ -1230,6 +1211,7 @@ Ntupler::endJob()
     delete rp_tracks_xi_;
     delete rp_tracks_xi_unc_;
     delete rp_tracks_detId_;
+    delete rp_tracks_time_;
     //delete mumu_mass_;
     //delete mumu_rapidity_;
   }
