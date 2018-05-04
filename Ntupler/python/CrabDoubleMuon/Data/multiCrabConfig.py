@@ -38,7 +38,7 @@ config.section_('Site')
 config.Site.storageSite = 'T2_US_UCSD'
 config.Site.blacklist = ['T2_ES_IFCA']
 #config.Site.whitelist = ['T2_US_Florida','T2_US_MIT','T2_US_UCSD']
-config.Site.whitelist = ['T2_US_*']
+#config.Site.whitelist = ['T2_US_*']
 #config.Site.whitelist = ['T2_IT_*','T2_FR_*','T2_DE_*','T2_CH_*','T2_UK_*']
 
 
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # We want to put all the CRAB project directories from the tasks we submit here into one common directory.
     # That's why we need to set this parameter (here or above in the configuration file, it does not matter, we will not overwrite it).
-    config.General.workArea = 'crab_projects_2018_02_27_singlemu'
+    config.General.workArea = 'crab_projects_2018_02_28_singlemu'
 
     def submit(config):
         try:
@@ -73,7 +73,7 @@ if __name__ == '__main__':
     config.General.requestName = 'Run2017C'
     config.Data.inputDataset = '/DoubleMuon/Run2017C-17Nov2017-v1/AOD'
     config.Data.unitsPerJob = 50
-#    submit(config)
+    submit(config)
 
 
     config.General.requestName = 'Run2017D'
