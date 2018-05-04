@@ -238,28 +238,16 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
        }
      }//end of requirement of mumu channel
 
-     //These are for 2016 data
+     //These are for 2017 data
+     //Other triggers that are possible are: HLT Ele35 WPTight ,     HLT_Ele23_Ele12_CaloIdL_TrkIdL_IsoVL 
      if(channel=="ee"){
-       if((trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v1"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v2"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v3"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v4"
-	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v1"
-	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v2"
-	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v3"
-	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v4"
-	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v5"
-	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v6"
-	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v7"
-	   ||trigNames.triggerName(i)=="HLT_Ele27_HighEta_Ele20_Mass55_v8"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v3"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v4"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v5"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v6"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v7"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v8"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v9"
-	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_GsfTrkIdVL_MW_v10")
+       if((trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v9"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v10"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v11"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v12"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v13"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v14"
+	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v15")
 	  &&hltResults->accept(i)>0&&prescale_value==1){
 	 passTrigger=true;
        }
