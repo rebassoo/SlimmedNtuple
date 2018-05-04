@@ -35,8 +35,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   consumes<edm::View<pat::Jet>>(edm::InputTag("tightPatJetsPFlow"));
   consumes<std::vector< PileupSummaryInfo > >(edm::InputTag("addPileupInfo"));
   beamSpotToken_= consumes<reco::BeamSpot>(edm::InputTag("offlineBeamSpot"));
-  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
-  eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
+  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V1-medium"));
+  eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V1-medium"));
   //eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
   //eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
 
@@ -116,7 +116,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      std::vector<uint> ttrkC_e_ctf_it;
 
      GetMuons(iEvent,vtx,theB,ttrkC_mu,ttrkC_mu_it,t_tks,numMuTight);
-     //GetElectrons(iEvent,vtx,theB,ttrkC_e_gsf,ttrkC_e_ctf,ttrkC_e_ctf_it,t_tks,numETight);
+     GetElectrons(iEvent,vtx,theB,ttrkC_e_gsf,ttrkC_e_ctf,ttrkC_e_ctf_it,t_tks,numETight);
      GetTracksPrimaryVertex(vtx,ttrkC_mu,ttrkC_e_ctf);
      
      TransientVertex myVertex;
@@ -124,7 +124,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      if(FitLeptonVertex(myVertex,ttrkC,ttrkC_mu,ttrkC_e_gsf,channel)){
        
        GetMuonDistance(myVertex,ttrkC_mu);
-       //GetElectronDistance(myVertex,ttrkC_e_gsf);
+       GetElectronDistance(myVertex,ttrkC_e_gsf);
        //Need to pass ttrkC_mu_it and ttrkC_e_ctf_it so not to count electron and muon ctf tracks
        GetTrackDistance(myVertex,t_tks,ttrkC_mu_it,ttrkC_e_ctf_it);
        //This counts electron and muon ctf tracks within 0.05 cm
@@ -225,6 +225,8 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
      //These triggers are for 2017 data
      if(channel=="mumu"){
        if((trigNames.triggerName(i)=="HLT_IsoMu27_v10"
+	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v8"
+	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v9"
 	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v11"
 	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v12"
 	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v13"
@@ -263,26 +265,13 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
        }
      }//end of requirement of ee channel
      
-     //These are for 2016 data
+     //These are for 2017 data
      if(channel=="mue"){
-       if((trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v3"||
-	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v4"||
-	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v5"||
-	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v6"||
-	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v1"||
-	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v2"||
-	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v3"||
-	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v4"||
-	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v6"||
-
-	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v1"||
-	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v2"||
-	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v3"||
-	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v4"||
-	   trigNames.triggerName(i)=="HLT_Mu27_Ele37_CaloIdL_GsfTrkIdVL_v6"||
-
-	   trigNames.triggerName(i)=="HLT_Mu33_Ele33_CaloIdL_GsfTrkIdVL_v1"||
-	   trigNames.triggerName(i)=="HLT_Mu33_Ele33_CaloIdL_GsfTrkIdVL_v3")
+       if((trigNames.triggerName(i)=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1"||
+	   trigNames.triggerName(i)=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v2"||
+	   trigNames.triggerName(i)=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v3"||
+	   trigNames.triggerName(i)=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v4"||
+	   trigNames.triggerName(i)=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v5")
 	  &&hltResults->accept(i)>0&&prescale_value==1){
        passTrigger=true;
        }
