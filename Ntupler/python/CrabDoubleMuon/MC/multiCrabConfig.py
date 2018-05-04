@@ -15,7 +15,8 @@ config.section_('JobType')
 config.JobType.psetName = 'ConfFile_cfg.py'
 #config.JobType.pluginName = 'Analysis'
 #config.JobType.inputFiles  = ['alignment_collection.out','optics.root','shared_alignment.h','shared_fill_info.h','shared_reconstruction.h','shared_track.h']
-config.JobType.inputFiles  = ['alignment_collection.out','xi_as_a_function_of_x_graph_b1.root','xi_as_a_function_of_x_graph_b2.root','MCPileupHighStats.root','MyDataPileupHistogram0to75_MuonPhys.root']
+#config.JobType.inputFiles  = ['alignment_collection.out','xi_as_a_function_of_x_graph_b1.root','xi_as_a_function_of_x_graph_b2.root','MCPileupHighStats.root','MyDataPileupHistogram0to75_MuonPhys.root']
+config.JobType.inputFiles  = ['MCPileupHighStats.root','MyDataPileupHistogram0to75_MuonPhys.root']
 
 config.section_('Data')
 config.Data.inputDataset ='/DYJetsToLL_M-50_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16DR80Premix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6_ext1-v1/AODSIM'
@@ -46,7 +47,7 @@ if __name__ == '__main__':
 
     # We want to put all the CRAB project directories from the tasks we submit here into one common directory.
     # That's why we need to set this parameter (here or above in the configuration file, it does not matter, we will not overwrite it).
-    config.General.workArea = 'crab_projects_2018_02_21-SingleMuTrigger'
+    config.General.workArea = 'crab_projects_2018_05_04-SingleMuTrigger'
 
     def submit(config):
         try:
@@ -87,17 +88,17 @@ if __name__ == '__main__':
 #    submit(config)
 
 
-#6105137 events
-    config.General.requestName = 'TTJets_DiLept_TuneCUETP8M1_13TeV-madgraphMLM-pythia8-mumu'
-    config.Data.inputDataset = '/TTJets_DiLept_TuneCUETP8M1_13TeV-madgraphMLM-pythia8/RunIISummer16DR80Premix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/AODSIM'
+# events
+#    config.General.requestName = 'TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8'
+#    config.Data.inputDataset = '/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8/RunIIFall17DRPremix-94X_mc2017_realistic_v10-v1/AODSIM'
 #    config.Data.unitsPerJob = 900
 #    #config.Data.totalUnits = 8
 #    submit(config)
 
 
-#1999000 events
-    config.General.requestName = 'WWTo2L2Nu_13TeV-powheg-mumu'
-    config.Data.inputDataset = '/WWTo2L2Nu_13TeV-powheg/RunIISummer16DR80Premix-PUMoriond17_80X_mcRun2_asymptotic_2016_TrancheIV_v6-v1/AODSIM'
+# events
+#    config.General.requestName = 'WWTo2L2Nu_NNPDF31_TuneCP5_13TeV-powheg-pythia8'
+#    config.Data.inputDataset = '/WWTo2L2Nu_NNPDF31_TuneCP5_13TeV-powheg-pythia8/RunIIFall17DRPremix-94X_mc2017_realistic_v10-v1/AODSIM'
 ##    config.Data.unitsPerJob = 900
 ##    #config.Data.totalUnits = 8
 #    submit(config)

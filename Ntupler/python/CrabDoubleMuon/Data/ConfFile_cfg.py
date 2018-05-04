@@ -9,11 +9,11 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1001) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3000) )
-#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20000) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3000) )
+#process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3000) )
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use

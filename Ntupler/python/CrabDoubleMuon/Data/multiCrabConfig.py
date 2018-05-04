@@ -16,7 +16,7 @@ config.JobType.psetName = 'ConfFile_cfg.py'
 #config.JobType.pluginName = 'Analysis'
 #config.JobType.inputFiles  = ['alignment_collection.out','optics.root','shared_alignment.h','shared_fill_info.h','shared_reconstruction.h','shared_track.h']
 #config.JobType.inputFiles  = ['alignment_collection.out','optics.root']
-config.JobType.inputFiles  = ['alignment_collection.out','xi_as_a_function_of_x_graph_b1.root','xi_as_a_function_of_x_graph_b2.root']
+#config.JobType.inputFiles  = ['alignment_collection.out','xi_as_a_function_of_x_graph_b1.root','xi_as_a_function_of_x_graph_b2.root']
 
 config.section_('Data')
 #config.Data.inputDataset ='/DoubleMuon/Run2016B-01Jul2016-v1/AOD'
@@ -51,7 +51,7 @@ if __name__ == '__main__':
 
     # We want to put all the CRAB project directories from the tasks we submit here into one common directory.
     # That's why we need to set this parameter (here or above in the configuration file, it does not matter, we will not overwrite it).
-    config.General.workArea = 'crab_projects_2018_02_28_singlemu'
+    config.General.workArea = 'crab_projects_2018_05_04_singlemu'
 
     def submit(config):
         try:
