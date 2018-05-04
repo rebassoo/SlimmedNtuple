@@ -1,0 +1,15 @@
+https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3CheatSheet
+https://twiki.cern.ch/twiki/bin/view/CMSPublic/SWGuideCrab
+
+source /cvmfs/cms.cern.ch/crab3/crab.sh
+crab submit --config=crabConfig.py
+crab status --dir=crab_test1
+crab getlog --dir=crab_test3
+crab getoutput --dir=crab_test7 --jobids 11
+crab getoutput --dir=crab_test7
+crab resubmit --dir=crab_test7
+
+#For multicrab see this example: /home/users/rebassoo/work/2016_11_14_FinnNtupler/CMSSW_8_1_0/src/SlimmedNtuple/Ntupler/python/CrabAllDoubleMuon
+
+to submit do this:
+ python multiCrabConfig.py
