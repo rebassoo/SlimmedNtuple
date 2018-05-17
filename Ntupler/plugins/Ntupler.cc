@@ -36,6 +36,14 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-medium"));
   //eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
   //eleIdFullInfoMapToken_=consumes<edm::ValueMap<vid::CutFlowResult> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Summer16-80X-V1-tight"));
+  //protonsToken_=consumes<edm::HepMCProduct>(edm::InputTag("source"));
+  //protonsToken_=consumes<edm::HepMCProduct>(edm::InputTag("generator"));
+  //protonsToken_=consumes<edm::HepMCProduct>(edm::InputTag("VtxSmeared"));
+  protonsToken_=consumes<edm::HepMCProduct>(edm::InputTag("generatorSmeared"));
+  //protonsToken_=consumes<edm::HepMCProduct>(iConfig.getParameter<string>("hepmcCollection"));
+  genToken_=consumes<reco::GenParticleCollection>(edm::InputTag("genParticles"));
+  //spTracksToken_=consumes<edm::View<CTPPSLocalTrackLite> >( edm::InputTag( "ctppsLocalTrackLiteProducer" ) );
+  //recoTracksToken_=consumes<edm::View<CTPPSLocalTrackLite> >( edm::InputTag("ctppsFastProtonSimulation","scoringPlane"));
 
   //PPS initialization
   fp0 = iConfig.getParameter<string>("alignment");
@@ -53,8 +61,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   }
 
   if(isMC){
-    //LumiWeights = new edm::LumiReWeighting("MCPileup.root","MyDataPileupHistogramNotMu.root","h1","pileup");
-    LumiWeights = new edm::LumiReWeighting("MCPileupHighStats.root","MyDataPileupHistogram0to75_MuonPhys.root","h_trueNumInter","pileup");
+    //LumiWeights = new edm::LumiReWeighting("MCPileupHighStats.root","MyDataPileupHistogram0to75_MuonPhys.root","h_trueNumInter","pileup");
   }
 
 }
@@ -88,29 +95,31 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }//end of looking at MC
 
 
-   bool passTrigger=GetTrigger(iEvent,iSetup);
-   //passTrigger=true;
+   //bool passTrigger=GetTrigger(iEvent,iSetup);
+   bool passTrigger=true;
    if(passTrigger){
      //cout<<"I pass trigger"<<endl;
 
-     int numMuTight=0;
-     int numETight = 0;
+     //int numMuTight=0;
+     //int numETight = 0;
 
      if(isPPS){
        GetProtons(iEvent);
      }//end of if statement making sure that we want to look at these runs
      else{*ispps_=false;}
 
-       
+     /*   
      //Get Vertices
      edm::Handle< std::vector<reco::Vertex> > vtxs;
      iEvent.getByLabel("offlinePrimaryVertices", vtxs);
      std::vector<reco::Vertex>::const_iterator vtxIt ;
      *vertex_nvtxs_ = vtxs.product()->size();
-     for (vtxIt = vtxs->begin(); vtxIt != vtxs->end(); ++vtxIt) {
-       (*allvertices_z_).push_back(vtxIt->position().z());
-     }
+     //for (vtxIt = vtxs->begin(); vtxIt != vtxs->end(); ++vtxIt) {
+       //(*allvertices_z_).push_back(vtxIt->position().z());
+     //  (*allvertices_z_).push_back(vtxIt->position().x());
+     //}
      reco::VertexRef vtx(vtxs, 0);
+     (*allvertices_z_).push_back(vtx->position().x());
      
      // get RECO tracks from the event
      edm::Handle<reco::TrackCollection> tks;
@@ -142,20 +151,29 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        *fvertex_ntracks_=num_close_tracks;
        //cout<<"Num close tracks: "<<num_close_tracks<<endl;
      }//end of requiring valid vertex
-     
+
+     */
      //cout<<"numMuTight: "<<numMuTight<<endl;
      //cout<<"numETight: "<<numETight<<endl;
      //if((numMuTight>0&&numETight>0)){
-     if((numMuTight+numETight>1)){
+     //if((numMuTight+numETight>1)){
        //cout<<"Fill tree"<<endl;
        *run_ = iEvent.id().run();
        *ev_ = iEvent.id().event();
        *lumiblock_ = iEvent.luminosityBlock();
        tree_->Fill();
-     }
+       //}
    }//end of looking at passing trigger
    
    
+   (*hepmc_vx_).clear();
+   (*hepmc_vy_).clear();
+   (*hepmc_vz_).clear();
+   (*hepmc_px_).clear();
+   (*hepmc_py_).clear();
+   (*hepmc_pz_).clear();
+   (*hepmc_energy_).clear();
+
    (*muon_pt_).clear();
    (*muon_eta_).clear();
    (*muon_px_).clear();
@@ -189,6 +207,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      //(*rp_tracks_xraw_).clear();
      (*rp_tracks_y_).clear();
      (*rp_tracks_x_).clear();
+     (*rp_tracks_tx_).clear();
+     (*rp_tracks_ty_).clear();
      (*rp_tracks_xi_).clear();
      (*rp_tracks_xi_unc_).clear();
      (*rp_tracks_detId_).clear();
@@ -321,7 +341,7 @@ void
 Ntupler::GetProtons(const edm::Event& iEvent)
 {
 
-
+  //cout<<"Get to beginning of get protons"<<endl;
        bool isPPSRun = false;
        //Check if this run is the same as previous event. If so alignment doesn't need to be loaded again, but need set isPPSRun based on previous run
        if(prev_run == iEvent.id().run())
@@ -360,9 +380,41 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 	   else{prev_pps=false;}
 	 }//end of loading alignement if it hasn't been loaded already
        *ispps_=isPPSRun;
+       isPPSRun=true;
        if(isPPSRun){
 
-	 
+	 /*
+	 edm::Handle<edm::View<CTPPSLocalTrackLite> > sp_tracks, reco_tracks;
+	 iEvent.getByToken( spTracksToken_, sp_tracks );
+	 iEvent.getByToken( recoTracksToken_, reco_tracks );
+
+
+	 for ( const auto& trk : *sp_tracks ) {
+	   const CTPPSDetId det_id( trk.getRPId() );
+	   cout<<"Trk sim X: "<<trk.getX()<<endl;
+	   //m_rp_h_xpos_[0][det_id]->Fill( trk.getX() );
+	   //m_rp_h_ypos_[0][det_id]->Fill( trk.getY() );
+	 }
+	 for ( const auto& trk : *reco_tracks ) {
+	   const CTPPSDetId det_id( trk.getRPId() );
+	   cout<<"Trk reco X: "<<trk.getX()<<endl;
+	   //m_rp_h_xpos_[1][det_id]->Fill( trk.getX() );
+	   //m_rp_h_ypos_[1][det_id]->Fill( trk.getY() );
+
+	   //(*rp_tracks_x_).push_back(trk.getX());   
+	   //(*rp_tracks_y_).push_back(trk.getY()); 
+	   //(*rp_tracks_tx_).push_back(trk.getTx());   
+	   //(*rp_tracks_ty_).push_back(trk.getTy()); 
+	   //liteTracks[rpId]=tr;
+	   //cout<<"ds.detID(): "<<ds.detId()<<endl;
+	   //(*rp_tracks_detId_).push_back(trk.getRPId());   
+
+
+	 }
+	 */
+
+
+	 //cout<<"I get here in isPPSRun"<<endl;
 	 edm::Handle< edm::DetSetVector<TotemRPLocalTrack> > aodTracks;
 	 iEvent.getByLabel("totemRPLocalTrackFitter",aodTracks);
 	 
@@ -371,14 +423,38 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 	 TrackDataCollection liteTracks;
 	 for (const auto &ds : *aodTracks)
 	   {
+	     //cout<<"Looping over aod tracks"<<endl;
 	     const auto &rpId = ds.detId();
-	   
+	     //cout<<"ds.detID(): "<<ds.first<<endl;
+
+	     //(*rp_tracks_xi_unc_).push_back(proton.xi_unc);
+
+	     
 	     for (const auto &tr : ds)
 	       {
 		 liteTracks[rpId] = tr;
+		 //cout<<"I get to the RP tracks, output X0: "<<tr.getX0()<<endl;
+		 (*rp_tracks_x_).push_back(tr.getX0());   
+		 (*rp_tracks_y_).push_back(tr.getY0()); 
+		 (*rp_tracks_tx_).push_back(tr.getTx());   
+		 (*rp_tracks_ty_).push_back(tr.getTy()); 
+		 liteTracks[rpId]=tr;
+		 //cout<<"ds.detID(): "<<ds.detId()<<endl;
+		 (*rp_tracks_detId_).push_back(ds.detId());   
 	       }
 	   }
-	 
+	 for(const auto it : liteTracks){
+	   ProtonData proton;
+	   ReconstructProtonFromOneRP(it.first, it.second, proton);
+	   if(proton.valid){
+	     (*rp_tracks_xi_).push_back(proton.xi);
+	     //cout<<"It.first: "<<it.first<<endl;
+	     //cout<<"It.second.x: "<<it.second.x<<endl;
+	     //cout<<"Xi: "<<proton.xi<<endl;
+	   }
+	 }
+
+	 /*	 
 	 // apply alignment                                                                                                
 	 TrackDataCollection liteTracksAligned = alignments->Apply(liteTracks);
 	 
@@ -397,7 +473,7 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 	       (*rp_tracks_xi_unc_).push_back(proton.xi_unc);
 	     }
 	   }
-	 
+	 */
        }//end of if statement making sure it is a PPS run
 
 
@@ -407,6 +483,7 @@ void
 Ntupler::GetMC(const edm::Event& iEvent)
 {
   
+  /*
   //Need to fill this so can know total number of events in MC (since I don't keep every event  
   float trueInteractions=0;
   edm::InputTag PileupSrc_("addPileupInfo");
@@ -417,32 +494,71 @@ Ntupler::GetMC(const edm::Event& iEvent)
   trueInteractions=PupInfo->begin()->getTrueNumInteractions();
   h_trueNumInteractions->Fill(trueInteractions);
   *pileupWeight_ = LumiWeights->weight( trueInteractions );
-     
+  */
+ 
+  edm::Handle<edm::HepMCProduct> hepmc_prod;
+  //iEvent.getByToken( protonsToken_, hepmc_prod );
+  iEvent.getByToken( protonsToken_,hepmc_prod);
+  // loop over event vertices                                  
+  auto evt = new HepMC::GenEvent( *hepmc_prod->GetEvent() );
+  for ( auto it_vtx=evt->vertices_begin(); it_vtx!=evt->vertices_end(); ++it_vtx ) {
+    auto vtx = *( it_vtx );
+    
+    for ( auto it_part=vtx->particles_out_const_begin(); it_part!=vtx->particles_out_const_end(); ++it_part ) {
+      auto part = *( it_part );
+      // run simulation                        
+
+      //cout<<"Id, Status"<<part->pdg_id()<<", "<<part->status()<<endl;
+      //cout<<"HepMC Four momentum: E, px, py, pz"<<p4.e()<<", "<<p4.px()<<", "<<p4.py()<<", "<<p4.pz()<<endl;
+
+
+      if ( part->pdg_id()!=2212 ) continue; // only transport stable protons         
+      if ( part->status()!=1 && part->status()<83 ) continue;
+      HepMC::FourVector p4 = part->momentum();                                                                     
+      
+      //HepMC::FourVector out_vtx = vtx->position(); // in mm
+      //HepMC::FourVector p4 = part->momentum(); 
+      (*hepmc_vx_).push_back(vtx->position().x());
+      (*hepmc_vy_).push_back(vtx->position().y());
+      (*hepmc_vz_).push_back(vtx->position().z());
+      (*hepmc_px_).push_back(p4.px());
+      (*hepmc_py_).push_back(p4.py());
+      (*hepmc_pz_).push_back(p4.pz());
+      (*hepmc_energy_).push_back(p4.e());
+      //cout<<"Id, Status"<<part->pdg_id()<<", "<<part->status()<<endl;
+      //cout<<"HepMC Four momentum: E, px, py, pz"<<p4.e()<<", "<<p4.px()<<", "<<p4.py()<<", "<<p4.pz()<<endl;
+    }
+  }//end of loop over HepMCProduct
+
   //cout<<" I get into MC"<<endl;
-  /*
-    Handle<reco::GenParticleCollection> genP;
-    iEvent.getByLabel("genParticles",genP);
-    for (reco::GenParticleCollection::const_iterator mcIter=genP->begin(); mcIter != genP->end(); mcIter++ ) {
+    
+  edm::Handle<reco::GenParticleCollection> genP;
+  //iEvent.getByLabel("genParticles",genP);
+  iEvent.getByToken(genToken_,genP);
+  for (reco::GenParticleCollection::const_iterator mcIter=genP->begin(); mcIter != genP->end(); mcIter++ ) {
+    if ( mcIter->pdgId()!=2212 ) continue;
+    if ( mcIter->status()!=1 && mcIter->status()<83 ) continue;
     //cout<<"MC id is: "<<mcIter->pdgId()<<endl;
     //cout<<"MC status is: "<<mcIter->status()<<endl;
     //cout<<"Pz, energy, pt is: "<<mcIter->pz()<<", "<<mcIter->energy()<<", "<<mcIter->pt()<<endl;
+    //cout<<"GenP Four momentum: E, px, py, pz"<<mcIter->energy()<<", "<<mcIter->px()<<", "<<mcIter->py()<<", "<<mcIter->pz()<<endl;
     int n = mcIter->numberOfDaughters();
     for(int j = 0; j < n; ++ j) {
-    const reco::Candidate * d = mcIter->daughter( j );
-    int dauId = d->pdgId();
-    //cout<<"Daughter pdg Id: "<<dauId<<endl;
+      const reco::Candidate * d = mcIter->daughter( j );
+      int dauId = d->pdgId();
+      //cout<<"Daughter pdg Id: "<<dauId<<endl;
     }
     
     //	     cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
     //if ( (fabs(mcIter->pdgId())==11|| fabs(mcIter->pdgId())==12 || fabs(mcIter->pdgId())==13 || fabs(mcIter->pdgId())==14 || fabs(mcIter->pdgId())==15 || fabs(mcIter->pdgId())==16 ) && mcIter->status() == 3 ){
     //if ( (fabs(mcIter->pdgId())==11|| fabs(mcIter->pdgId())==12 || fabs(mcIter->pdgId())==13 || fabs(mcIter->pdgId())==14 || fabs(mcIter->pdgId())==15 || fabs(mcIter->pdgId())==16 )){
     if ( (fabs(mcIter->pdgId())==11 || fabs(mcIter->pdgId())==13 )){
-    h_lepton_pt->Fill(mcIter->pt());
+      h_lepton_pt->Fill(mcIter->pt());
     //cout<<", MC id is: "<<mcIter->pdgId()<<endl;
     //cout<<"Pt, eta, phi is: "<<mcIter->pt()<<", "<<mcIter->eta()<<", "<<mcIter->phi()<<endl;
     }
-    }//end of looking at GEN
-  */
+  }//end of looking at GEN
+  
 
 }
 
@@ -861,6 +977,13 @@ Ntupler::beginJob()
   edm::Service<TFileService> fs; 
   tree_=fs->make<TTree>("SlimmedNtuple","SlimmedNtuple");
 
+  hepmc_vx_ = new std::vector<float>;
+  hepmc_vy_ = new std::vector<float>;
+  hepmc_vz_ = new std::vector<float>;
+  hepmc_px_ = new std::vector<float>;
+  hepmc_py_ = new std::vector<float>;
+  hepmc_pz_ = new std::vector<float>;
+  hepmc_energy_ = new std::vector<float>;
 
   muon_pt_ = new std::vector<float>;
   muon_eta_ = new std::vector<float>;
@@ -904,6 +1027,8 @@ Ntupler::beginJob()
     //rp_tracks_xraw_ = new std::vector<float>;
     rp_tracks_y_ = new std::vector<float>;
     rp_tracks_x_ = new std::vector<float>;
+    rp_tracks_tx_ = new std::vector<float>;
+    rp_tracks_ty_ = new std::vector<float>;
     rp_tracks_xi_ = new std::vector<float>;
     rp_tracks_xi_unc_ = new std::vector<float>;
     rp_tracks_detId_ = new std::vector<float>;
@@ -919,7 +1044,13 @@ Ntupler::beginJob()
   //Tnpv_ = new float;
   pileupWeight_ = new float;
 
-
+  tree_->Branch("hepmc_vx",&hepmc_vx_);
+  tree_->Branch("hepmc_vy",&hepmc_vy_);
+  tree_->Branch("hepmc_vz",&hepmc_vz_);
+  tree_->Branch("hepmc_px",&hepmc_px_);
+  tree_->Branch("hepmc_py",&hepmc_py_);
+  tree_->Branch("hepmc_pz",&hepmc_pz_);
+  tree_->Branch("hepmc_energy",&hepmc_energy_);
   
   tree_->Branch("muon_pt",&muon_pt_);
   tree_->Branch("muon_eta",&muon_eta_);
@@ -963,6 +1094,8 @@ Ntupler::beginJob()
     //tree_->Branch("rp_tracks_xraw",&rp_tracks_xraw_);
     tree_->Branch("rp_tracks_y",&rp_tracks_y_);
     tree_->Branch("rp_tracks_x",&rp_tracks_x_);
+    tree_->Branch("rp_tracks_tx",&rp_tracks_tx_);
+    tree_->Branch("rp_tracks_ty",&rp_tracks_ty_);
     tree_->Branch("rp_tracks_xi",&rp_tracks_xi_);
     tree_->Branch("rp_tracks_xi_unc",&rp_tracks_xi_unc_);
     tree_->Branch("rp_tracks_detId",&rp_tracks_detId_);
@@ -996,6 +1129,13 @@ Ntupler::beginJob()
 void 
 Ntupler::endJob() 
 {
+  delete hepmc_vx_;
+  delete hepmc_vy_;
+  delete hepmc_vz_;
+  delete hepmc_px_;
+  delete hepmc_py_;
+  delete hepmc_pz_;
+  delete hepmc_energy_;
   delete muon_px_;
   delete muon_pt_;
   delete muon_eta_;
@@ -1039,6 +1179,8 @@ Ntupler::endJob()
     //delete rp_tracks_xraw_;
     delete rp_tracks_y_;
     delete rp_tracks_x_;
+    delete rp_tracks_tx_;
+    delete rp_tracks_ty_;
     delete rp_tracks_xi_;
     delete rp_tracks_xi_unc_;
     delete rp_tracks_detId_;
