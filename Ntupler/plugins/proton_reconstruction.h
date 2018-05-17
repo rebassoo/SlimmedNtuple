@@ -73,20 +73,34 @@ void InitReconstruction()
 
 	m_s_x_to_xi[102] = PrepareOneFunction("xi_as_a_function_of_x_graph_b1.root", "XRPH_C6R5_B1");
 	m_s_x_to_xi[103] = PrepareOneFunction("xi_as_a_function_of_x_graph_b1.root", "XRPH_D6R5_B1");
+
+	m_s_x_to_xi[1980760064] = PrepareOneFunction("xi_as_a_function_of_x_graph_b2.root", "XRPH_C6L5_B2");
+	m_s_x_to_xi[1981284352] = PrepareOneFunction("xi_as_a_function_of_x_graph_b2.root", "XRPH_D6L5_B2");
+
+	m_s_x_to_xi[1997537280] = PrepareOneFunction("xi_as_a_function_of_x_graph_b1.root", "XRPH_C6R5_B1");
+	m_s_x_to_xi[1998061568] = PrepareOneFunction("xi_as_a_function_of_x_graph_b1.root", "XRPH_D6R5_B1");
+
+
 }
 
 //----------------------------------------------------------------------------------------------------
 
 void ReconstructProtonFromOneRP(const unsigned int rpId, const TrackData &track, ProtonData &result)
 {
+  //cout<<"I get in reconstruct proton from one RP"<<endl;
 	// default result
 	result.valid = false;
 
 	// get x-to-xi spline
 	const auto s_it = m_s_x_to_xi.find(rpId);
+	//cout<<"I get here 0:"<<endl;
+	//cout<<"rpId: "<<rpId<<endl;
 	if (s_it == m_s_x_to_xi.end())
 		return;
+	//cout<<"I get here 1:"<<endl;
 	const TSpline3 *s_x_to_xi = s_it->second;
+	
+	//cout<<"Track x: "<<track.x<<endl;
 
 	// determine xi
 	result.xi = s_x_to_xi->Eval(track.x*1E-3);		// spline expects x in m
