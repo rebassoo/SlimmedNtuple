@@ -9,6 +9,7 @@ demo = cms.EDAnalyzer('Ntupler',
                       ismc=cms.bool(False),
                       ispps=cms.bool(False),
                       channel=cms.string("mue"),
-                      particleFile = cms.string("alignment_collection.out"),
-                      particleFile2 = cms.string('optics.root')
+                      alignment = cms.string("alignment_collection.out"),
+                      optics = cms.string('optics.root'),
+                      hepmcCollection = cms.string('generatorSmeared')
                       )
