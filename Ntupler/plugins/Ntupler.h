@@ -80,6 +80,11 @@
 #include "DataFormats/CTPPSDetId/interface/TotemRPDetId.h"
 
 #include "DataFormats/HepMCCandidate/interface/GenParticle.h"
+#include "SimDataFormats/GeneratorProducts/interface/HepMCProduct.h"
+
+#include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
+#include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
+
 
 //#include "shared_track.h"
 //#include "shared_alignment.h"
@@ -143,8 +148,11 @@ private:
   edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
   // One example of full information about the cut flow
   edm::EDGetTokenT<edm::ValueMap<vid::CutFlowResult> > eleIdFullInfoMapToken_;
+  edm::EDGetTokenT<edm::HepMCProduct> protonsToken_;
+  edm::EDGetTokenT<reco::GenParticleCollection> genToken_;
   HLTConfigProvider hltConfig_;
   HLTPrescaleProvider hltPrescaleProvider_;
+  //edm::EDGetTokenT<edm::View<CTPPSLocalTrackLite> > spTracksToken_, recoTracksToken_;
 
   TH1F * h_trueNumInteractions;
   TH1F * h_mu_closest;
@@ -154,6 +162,15 @@ private:
   TH1F * h_e_closest_chi2_10;
   TH2F * h_e_chi2_vs_closest;
   TH1F * h_lepton_pt;
+
+  std::vector<float> * hepmc_px_;
+  std::vector<float> * hepmc_py_;
+  std::vector<float> * hepmc_pz_;
+  std::vector<float> * hepmc_energy_;
+  std::vector<float> * hepmc_vx_;
+  std::vector<float> * hepmc_vy_;
+  std::vector<float> * hepmc_vz_;
+
 
   std::vector<float> * muon_pt_;
   std::vector<float> * muon_eta_;
@@ -197,6 +214,8 @@ private:
   //std::vector<float> * rp_tracks_xraw_;
   std::vector<float> * rp_tracks_y_;
   std::vector<float> * rp_tracks_x_;
+  std::vector<float> * rp_tracks_tx_;
+  std::vector<float> * rp_tracks_ty_;
   std::vector<float> * rp_tracks_xi_;
   std::vector<float> * rp_tracks_xi_unc_;
   std::vector<float> * rp_tracks_detId_;
