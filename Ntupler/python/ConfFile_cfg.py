@@ -4,14 +4,14 @@ process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+process.MessageLogger.cerr.FwkReport.reportEvery = 1
 #process.MessageLogger.cerr.FwkReport.reportEvery = 1
 
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1001) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(3000) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(200) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(20000) )
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(300) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 #process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
 
@@ -37,8 +37,9 @@ process.source = cms.Source("PoolSource",
         #'file:pickevents_2016B.root',
         #'file:pickevents_2016C.root',
         #'file:pickevents_2016G.root'
-        'file:readHepMC_cff_py_GEN_SIM_RECOBEFMIX_DIGI_RECO.root'
-        #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-PromptReco-v3_0C2205B1-A29F-E611-8E3F-02163E014472.root'
+        #'file:readHepMC_cff_py_GEN_SIM_RECOBEFMIX_DIGI_RECO.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIISummer17MiniAOD/GGToMuMu_Pt-50_Elastic_13TeV-lpair/MINIAODSIM/92X_upgrade2017_realistic_v10-v1/100000/16982001-77A2-E711-8575-A0369FC5EE94.root'
+        'file:/hadoop/cms/store/user/rebassoo/2018_02_20_FPMC-Reco/ExclWW-a0w-2e-5-FPMC-GENSIM-25ns-50jobs-XiCut/readHepMC_cff_py_GEN_SIM_FPMC-25ns-a0w5e-6-0.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-RunD_2649EE95-C388-E611-AAD1-3417EBE64402.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/MuonEG-RunD-CE007154-EB88-E611-A13B-0025905C54DA.root'
         #'file:/hadoop/cms/store/user/rebassoo/TestFiles/WWTo2L2Nu_13TeV-powheg-herwigpp_02B67C54-09B2-E611-866F-6C3BE5B51168.root'
@@ -65,8 +66,9 @@ else:
 #CHANNEL="mue"
 process.load("SlimmedNtuple.Ntupler.CfiFile_cfi") 
 process.demo.ismc=ISMC
-process.demo.ispps=True
+process.demo.ispps=False
 process.demo.channel="mumu"
+process.demo.hepmcCollection="source"
 
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 # turn on VID producer, indicate data format  to be
@@ -94,7 +96,8 @@ for idmod in my_id_modules:
 process.dump=cms.EDAnalyzer('EventContentAnalyzer')
 #process.p = cms.Path(process.demo*process.dump)
 if ISMC:
-    process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
+    #process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
+    process.p = cms.Path(process.demo)
 else:
     process.p = cms.Path(process.noBadGlobalMuons * process.egmGsfElectronIDSequence * process.demo)
     #process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
