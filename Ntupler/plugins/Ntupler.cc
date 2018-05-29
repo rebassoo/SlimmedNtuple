@@ -116,6 +116,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      iEvent.getByLabel("offlinePrimaryVertices", vtxs);
      std::vector<reco::Vertex>::const_iterator vtxIt ;
      *vertex_nvtxs_ = vtxs.product()->size();
+     //cout<<"Number of vertices: "<<vtxs.product()->size()<<endl;
      for (vtxIt = vtxs->begin(); vtxIt != vtxs->end(); ++vtxIt) {
        (*allvertices_z_).push_back(vtxIt->position().z());
      }
@@ -342,6 +343,7 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
 	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v4"||
 	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v5"||
 	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v6"||
+	   trigNames.triggerName(i)=="HLT_Mu30_Ele30_CaloIdL_GsfTrkIdVL_v8"||
 	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v1"||
 	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v2"||
 	   trigNames.triggerName(i)=="HLT_Mu37_Ele27_CaloIdL_GsfTrkIdVL_v3"||
@@ -952,15 +954,15 @@ Ntupler::GetJets(const edm::Event& iEvent)
 	     (*jet_eta_).push_back(jet->eta());
 	   }
 	   //cout<<"Jet energy, phi, eta: "<<jet->energy()<<", "<<jet->phi()<<", "<<jet->eta()<<endl;
-	   cout<<"Jet corrected energy: "<<jet->energy()<<endl;
-	   cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
-	   cout<<"Jet corrected pt: "<<jet->pt()<<endl;
-	   cout<<"Uncorrected pt: "<<jet->correctedP4(0).Pt()<<endl;
+	   //cout<<"Jet corrected energy: "<<jet->energy()<<endl;
+	   //cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
+	   //cout<<"Jet corrected pt: "<<jet->pt()<<endl;
+	   //cout<<"Uncorrected pt: "<<jet->correctedP4(0).Pt()<<endl;
 	   std::vector< std::string > jec_levels = jet->availableJECLevels();
 	   int size = jec_levels.size();
-	   for(int i=0;i<size;i++){
-	     cout<<jec_levels[i]<<endl;
-	   }
+	   //for(int i=0;i<size;i++){
+	   //  cout<<jec_levels[i]<<endl;
+	   // }
 	 }//end of looping over jet pt > 25
 	 if(jet->pt()>25){numJets_id_25++;       }
 	 if(jet->pt()>20){numJets_id_20++;       }
