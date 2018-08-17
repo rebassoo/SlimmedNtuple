@@ -223,7 +223,7 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
      int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
      //cout<<"trigNames.triggerName(i)"<<trigNames.triggerName(i)<<endl;
      //These triggers are for 2017 data
-     if(channel=="mumu"){
+     if(channel=="mumu" or channel=="mue"){
        if((trigNames.triggerName(i)=="HLT_IsoMu27_v10"
 	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v8"
 	   ||trigNames.triggerName(i)=="HLT_IsoMu27_v9"
@@ -239,7 +239,7 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
      }//end of requirement of mumu channel
 
      //These are for 2017 data
-     //Other triggers that are possible are: HLT Ele35 WPTight ,     HLT_Ele23_Ele12_CaloIdL_TrkIdL_IsoVL 
+     //Other triggers that are possible are: HLT_Ele35_WPTight (in MC it is v7) ,     HLT_Ele23_Ele12_CaloIdL_TrkIdL_IsoVL (in MC v17) 
      if(channel=="ee"){
        if((trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v9"
 	   ||trigNames.triggerName(i)=="HLT_DoubleEle33_CaloIdL_MW_v10"
@@ -254,6 +254,8 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
      }//end of requirement of ee channel
      
      //These are for 2017 data
+     //For MC it is v4
+     /*
      if(channel=="mue"){
        if((trigNames.triggerName(i)=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v1"||
 	   trigNames.triggerName(i)=="HLT_Mu23_TrkIsoVVL_Ele12_CaloIdL_TrackIdL_IsoVL_v2"||
@@ -263,7 +265,8 @@ bool Ntupler::GetTrigger(const edm::Event& iEvent,const edm::EventSetup& iSetup)
 	  &&hltResults->accept(i)>0&&prescale_value==1){
        passTrigger=true;
        }
-     }
+     }//end of mue
+     */
    }//end of looping over triggers
 
    return passTrigger;
@@ -278,9 +281,7 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 
 	 edm::Handle< edm::DetSetVector<TotemRPLocalTrack> > aodTracks;
 	 iEvent.getByLabel("totemRPLocalTrackFitter",aodTracks);
-	 
 	 // produce collection of lite tracks (in future this will be done in miniAOD)        
-	 
 	 //TrackDataCollection liteTracks;
 	 for (const auto &ds : *aodTracks)
 	   {
@@ -293,6 +294,11 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 		 //(*rp_tracks_tx_).push_back(tr.getTx());   
 		 //(*rp_tracks_ty_).push_back(tr.getTy()); 
 		 //liteTracks[rpId]=tr;
+		 //CTPPSDetId rpId1(ds.detId());
+		 //cout<<"Strip ds.detID(): "<<ds.detId()<<endl;
+		 //cout<<"Strip rpId1.arm():"<<rpId1.arm()<<endl;
+		 //cout<<"Strip rpId1.station():"<<rpId1.station()<<endl;
+		 //cout<<"Strip rpId1.rp():"<<rpId1.rp()<<endl;
 		 //cout<<"ds.detID(): "<<ds.detId()<<endl;
 		 (*rp_tracks_detId_).push_back(ds.detId());   
 	       }
@@ -312,7 +318,11 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 		 //(*rp_tracks_tx_).push_back(tr.getTx());   
 		 //(*rp_tracks_ty_).push_back(tr.getTy()); 
 		 //liteTracks[rpId]=tr;
-		 //cout<<"ds.detID(): "<<ds.detId()<<endl;
+		 //CTPPSDetId rpId1(ds.detId());
+		 //cout<<"Pixel ds.detID(): "<<ds.detId()<<endl;
+		 //cout<<"Pixel rpId1.arm():"<<rpId1.arm()<<endl;
+		 //cout<<"Pixel rpId1.station():"<<rpId1.station()<<endl;
+		 //cout<<"Pixel rpId1.rp():"<<rpId1.rp()<<endl;
 		 (*rp_tracks_detId_).push_back(ds.detId());   
 	       }
 	   }
@@ -330,7 +340,11 @@ Ntupler::GetProtons(const edm::Event& iEvent)
 		 //(*rp_tracks_tx_).push_back(tr.getTx());   
 		 //(*rp_tracks_ty_).push_back(tr.getTy()); 
 		 //liteTracks[rpId]=tr;
-		 //cout<<"ds.detID(): "<<ds.detId()<<endl;
+		 //CTPPSDetId rpId1(ds.detId());
+		 //cout<<"Diamond ds.detID(): "<<ds.detId()<<endl;
+		 //cout<<"Diamond rpId1.arm():"<<rpId1.arm()<<endl;
+		 //cout<<"Diamond rpId1.station():"<<rpId1.station()<<endl;
+		 //cout<<"Diamond rpId1.rp():"<<rpId1.rp()<<endl;
 		 (*rp_tracks_detId_).push_back(ds.detId());   
 		 (*rp_tracks_time_).push_back(tr.getT());   
 	       }
