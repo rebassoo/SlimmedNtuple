@@ -4,96 +4,58 @@ process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
-#process.MessageLogger.cerr.FwkReport.reportEvery = 500
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
-
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
-    # replace 'myfile.root' with the source file you want to use
     fileNames = cms.untracked.vstring(
-        #'file:/home/users/rebassoo/EED9C2D8-BF8F-E611-B8CE-A0369F7FE9FC.root'
-        #'root://cmsxrootd.fnal.gov//store/data/Run2016F/DoubleMuon/AOD/23Sep2016-v1/50000/9E0F8266-0590-E611-A14E-0242AC130002.root'
-        #'root://cms-xrd-global.cern.ch//store/data/Run2017B/DoubleMuon/AOD/17Nov2017-v1/30000/001137DB-26D6-E711-8E99-02163E014465.root'
-        #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17DRPremix/DYJetsToLL_M-50_TuneCP5_13TeV-amcatnloFXFX-pythia8/AODSIM/94X_mc2017_realistic_v10-v1/00000/003FC78E-80EC-E711-8B6A-008CFAC93D9C.root'
-        'file:/hadoop/cms/store/user/rebassoo/TestFiles/DYJets2017-003FC78E-80EC-E711-8B6A-008CFAC93D9C.root'
-        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/DoubleMuon/AOD/17Nov2017-v1/30000/507F651E-CCD8-E711-8022-00259020084C.root'
-        #'root://cms-xrd-global.cern.ch//store/data/Run2017F/DoubleMuon/AOD/17Nov2017-v1/70000/BAF4959F-7BDE-E711-A6CD-02163E0138BD.root'
-        )#,
-         #                   skipEvents=cms.untracked.uint32(169)
+        #        'file:/tmp/jjhollar/0C08DB9E-3543-E811-BB4D-0CC47A4D75F4.root'
+        #        'file:/tmp/jjhollar/BulkGravToWW_narrow_M-1000_3A7945FC-1704-E811-9B66-008CFA110C5C.root'
+        #        'file:/tmp/jjhollar/QCD_HT700to1000_F6F5131E-CCF9-E711-B15F-0242AC130002.root'
+        'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/BulkGravToWW_narrow_M-1000_13TeV-madgraph/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/90000/B8CED1AB-4D46-E811-B3F9-24BE05BDAE61.root'
+    )
 )
 
-process.load("TrackingTools/TransientTrack/TransientTrackBuilder_cfi")
-#process.load("Configuration.Geometry.GeometryIdeal_cff")
-process.load("Configuration.Geometry.GeometryRecoDB_cff")
-process.load("Configuration.StandardSequences.MagneticField_cff")
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-process.load('RecoMET.METFilters.badGlobalMuonTaggersAOD_cff')
+process.load("SlimmedNtuple.Ntupler.CfiFile_cfi")
 
-
-ISMC = False
-#ISMC = True
-from Configuration.AlCa.GlobalTag import GlobalTag
-if ISMC:
-    process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_mc', '')
-else:
-    process.GlobalTag.globaltag = '94X_dataRun2_ReReco_EOY17_v2'  #
-    #process.GlobalTag = GlobalTag(process.GlobalTag, 'auto:run2_data', '')
-
-process.load("SlimmedNtuple.Ntupler.CfiFile_cfi") 
-process.demo.ismc=ISMC
-process.demo.ispps=True
-process.demo.channel="mumu"
-
-from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
-# turn on VID producer, indicate data format  to be
-# DataFormat.AOD or DataFormat.MiniAOD, as appropriate 
-useAOD = True
-if useAOD == True :
-    dataFormat = DataFormat.AOD
-else :
-    dataFormat = DataFormat.MiniAOD
-
-switchOnVIDElectronIdProducer(process, dataFormat)
-
-process.load("PhysicsTools.PatAlgos.patSequences_cff")
-#from Configuration.EventContent.EventContent_cff import *
-
-# define which IDs we want to produce
-my_id_modules = [
-#'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronHLTPreselecition_Summer16_V1_cff'
-#'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Summer16_80X_V1_cff',
-'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V1_cff',
-#'RecoEgamma.ElectronIdentification.Identification.cutBasedElectronHLTPreselecition_Summer16_V1_cff',
-    ]
-
-#add them to the VID producer
-for idmod in my_id_modules:
-    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
-
+process.load("SlimmedNtuple.Ntupler.HLTFilter_cfi")
+process.hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
 
 from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
-process.tightPatJetsPFlow = cms.EDFilter("PFJetIDSelectionFunctorFilter",
-                                         filterParams = pfJetIDSelector.clone(quality=cms.string("TIGHT")),
-                                         src = cms.InputTag("selectedPatJets")
-                                         #src = cms.InputTag("cleanPatJets")
-                                         )
+process.slimmedJetsAK8JetId = cms.EDFilter("PFJetIDSelectionFunctorFilter",
+                                           filterParams = pfJetIDSelector.clone(),
+                                           src = cms.InputTag("slimmedJetsAK8"),
+                                           filter = cms.bool(True)
+                                           )
+from PhysicsTools.SelectorUtils.pfJetIDSelector_cfi import pfJetIDSelector
+process.slimmedJetsJetId = cms.EDFilter("PFJetIDSelectionFunctorFilter",
+                                           filterParams = pfJetIDSelector.clone(),
+                                           src = cms.InputTag("slimmedJets"),
+                                           filter = cms.bool(True)
+                                           )
 
-if not ISMC:
-    process.patJetCorrFactors.levels = cms.vstring('L1FastJet','L2Relative','L3Absolute','L2L3Residual')
+process.demo = cms.EDAnalyzer('Ntupler')
+# Select data or MC - this controls which jet corrections are used and whether PU reweighting info is filled                                                          
+# Currently the only year+era options are 2017 for MC, and 2017B for data.                                                                                            
+process.demo.isMC = cms.bool(True)
+#process.demo.isMC = cms.bool(False)
+process.demo.year = cms.int32(2017)
+process.demo.era = cms.string("C")
+
+process.p = cms.Path(#process.hltFilter
+                     process.slimmedJetsAK8JetId
+                     process.slimmedJetsJetId
+                     *process.demo)
 
 
-process.dump=cms.EDAnalyzer('EventContentAnalyzer')
-#process.p = cms.Path(process.demo*process.dump)
-if ISMC:
-    #process.p = cms.Path(process.egmGsfElectronIDSequence * process.patDefaultSequence* process.tightPatJetsPFlow*process.dump*process.demo)
-    #process.p = cms.Path(process.egmGsfElectronIDSequence * process.patDefaultSequence* process.tightPatJetsPFlow*process.demo)
-    process.p = cms.Path(process.egmGsfElectronIDSequence * process.makePatJets* process.selectedPatJets*process.tightPatJetsPFlow*process.demo)
-    #process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
-else:
-    #process.p = cms.Path(process.egmGsfElectronIDSequence * process.makePatJets* process.selectedPatJets*process.tightPatJetsPFlow*process.demo)
-    process.p = cms.Path(process.egmGsfElectronIDSequence * process.patJetCorrections+process.patJetCharge*process.patJets*process.selectedPatJets*process.tightPatJetsPFlow*process.demo)
-    #process.p = cms.Path(process.noBadGlobalMuons * process.egmGsfElectronIDSequence * process.patDefaultSequence*process.demo)
-    #process.p = cms.Path(process.egmGsfElectronIDSequence * process.demo)
-#process.p = cms.Path(process.demo)
+
+
+
+
+
+
+
+
+
+
