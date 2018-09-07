@@ -22,74 +22,54 @@
 #include "TTree.h"
 #include "TH2F.h"
 
+#include "TLorentzVector.h"
+
+#include <iostream>       // std::cout
+#include <string>         // std::string
+
+
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
-//#include "FWCore/Framework/interface/one/EDAnalyzer.h"
-//#include "FWCore/Framework/interface/stream/EDAnalyzer.h"
-#include "FWCore/Framework/interface/EDAnalyzer.h"
-
+#include "FWCore/Framework/interface/one/EDAnalyzer.h"
 
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
 
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
-#include <DataFormats/MuonReco/interface/Muon.h>
-#include "DataFormats/MuonReco/interface/MuonSelectors.h"
-//#include <DataFormats/PatCandidates/interface/Muon.h>
-#include "DataFormats/VertexReco/interface/Vertex.h"
-#include "DataFormats/VertexReco/interface/VertexFwd.h"
+
+#include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
+#include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
+#include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
+
+#include "DataFormats/Candidate/interface/Candidate.h"
+#include "DataFormats/PatCandidates/interface/Jet.h"
+#include "DataFormats/PatCandidates/interface/Muon.h"
+#include "DataFormats/PatCandidates/interface/Electron.h"
+#include "DataFormats/PatCandidates/interface/MET.h"
+#include "DataFormats/PatCandidates/interface/PackedCandidate.h"
+#include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
+#include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
+
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
-#include <iostream>
-
-#include "DataFormats/TrackReco/interface/Track.h"
-#include "DataFormats/TrackReco/interface/TrackFwd.h"
-#include "FWCore/MessageLogger/interface/MessageLogger.h"
-#include "TLorentzVector.h"
-
-#include "RecoVertex/AdaptiveVertexFit/interface/AdaptiveVertexFitter.h"
-#include "RecoVertex/KalmanVertexFit/interface/KalmanVertexFitter.h"
-
-
-#include "TrackingTools/TransientTrack/interface/TransientTrackBuilder.h"
-//#include "TrackingTools/TransientTrack/interface/GsfTransientTrack.h"
-#include "TrackingTools/Records/interface/TransientTrackRecord.h"
-#include "TrackingTools/TrajectoryState/interface/TrajectoryStateClosestToPoint.h"
-
-#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
-#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 #include "HLTrigger/HLTcore/interface/HLTConfigProvider.h"
 #include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
 
-//For Electrons
-#include "DataFormats/EgammaCandidates/interface/GsfElectron.h"
-#include "DataFormats/PatCandidates/interface/Electron.h"
-#include "DataFormats/Common/interface/ValueMap.h"
-#include "DataFormats/PatCandidates/interface/VIDCutFlowResult.h"
-#include "DataFormats/EgammaCandidates/interface/ConversionFwd.h"
-#include "DataFormats/EgammaCandidates/interface/Conversion.h"
-#include "RecoEgamma/EgammaTools/interface/ConversionTools.h"
-
-//TOTEM reco
-#include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
-#include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
-#include "DataFormats/CTPPSReco/interface/CTPPSDiamondLocalTrack.h"
-#include "DataFormats/CTPPSReco/interface/CTPPSPixelLocalTrack.h"
-#include "DataFormats/CTPPSReco/interface/TotemRPLocalTrack.h"
-
-#include "DataFormats/HepMCCandidate/interface/GenParticle.h"
-#include "DataFormats/PatCandidates/interface/Jet.h"
+#include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
 #include "CommonTools/UtilAlgos/interface/TFileService.h"
 
-//#include <FWCore/Framework/interface/ESHandle.h>
+#include "DataFormats/Math/interface/deltaPhi.h"
+#include "CalculatePzNu.hpp"
 
 //
 // class declaration
 //
 
-class Ntupler : public edm::EDAnalyzer {
+class Ntupler : public edm::one::EDAnalyzer<edm::one::SharedResources>  {
+  //class Ntupler : public edm::EDAnalyzer {
    public:
       explicit Ntupler(const edm::ParameterSet&);
       ~Ntupler();
@@ -101,52 +81,32 @@ private:
   virtual void beginJob() override;
   virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
   virtual void endJob() override;
-  virtual void endRun(edm::Run const &, edm::EventSetup const&) override;
-  virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
-  bool GetTrigger(const edm::Event&,const edm::EventSetup&);
-  void GetProtons(const edm::Event&);
-  void GetMC(const edm::Event&);
-  void GetMuons(const edm::Event&,reco::VertexRef,edm::ESHandle<TransientTrackBuilder>&,std::vector<reco::TransientTrack>&,std::vector<uint>&,std::vector<reco::TransientTrack>,int&);
-  void GetElectrons(const edm::Event&,reco::VertexRef,edm::ESHandle<TransientTrackBuilder>&,std::vector<reco::TransientTrack>&,std::vector<reco::TransientTrack>&,std::vector<uint>&,std::vector<reco::TransientTrack>,int&);
-  void GetTracksPrimaryVertex(reco::VertexRef,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>);
-  void GetMuonDistance(TransientVertex,std::vector<reco::TransientTrack>);
-  void GetElectronDistance(TransientVertex,std::vector<reco::TransientTrack>);
-  void GetTrackDistance(TransientVertex,std::vector<reco::TransientTrack>,std::vector<uint>,std::vector<uint>);
-  void GetJets(const edm::Event&);
+  //  virtual void endRun(edm::Run const &, edm::EventSetup const&) override;
+  //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
+  //void GetProtons(const edm::Event&);
+  //void GetMC(const edm::Event&);
+  //void GetMuons(const edm::Event&,reco::VertexRef,edm::ESHandle<TransientTrackBuilder>&,std::vector<reco::TransientTrack>&,std::vector<uint>&,std::vector<reco::TransientTrack>,int&);
+  //void GetElectrons(const edm::Event&,reco::VertexRef,edm::ESHandle<TransientTrackBuilder>&,std::vector<reco::TransientTrack>&,std::vector<reco::TransientTrack>&,std::vector<uint>&,std::vector<reco::TransientTrack>,int&);
+  //void GetJets(const edm::Event&);
   bool isJetLepton(double,double);
-  bool FitLeptonVertex(TransientVertex&,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>,std::vector<reco::TransientTrack>,string);
 
   // ----------member data ---------------------------
-  
-  string fp0;
-  string fp1;
-  unsigned int prev_run;
-  bool prev_pps;
-  TTree * tree_;
-  bool isMC;
-  bool isPPS;
-  string channel;
-  edm::LumiReWeighting *LumiWeights;
-  edm::EDGetTokenT<reco::BeamSpot> beamSpotToken_;
-  // ID decisions objects
-  edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
-  // One example of full information about the cut flow
-  edm::EDGetTokenT<edm::ValueMap<vid::CutFlowResult> > eleIdFullInfoMapToken_;
-  HLTConfigProvider hltConfig_;
-  HLTPrescaleProvider hltPrescaleProvider_;
+  boost::shared_ptr<FactorizedJetCorrector> jecAK8_;
+  edm::EDGetTokenT<edm::View<pat::Jet>> jet_token_;
+  edm::EDGetTokenT<edm::View<pat::Jet>> jetAK8_token_;
+  edm::EDGetTokenT<edm::View<pat::Muon>> muon_token_;
+  edm::EDGetTokenT<std::vector<CTPPSLocalTrackLite> > pps_token_;
+  edm::EDGetTokenT<std::vector<reco::Vertex>> vertex_token_;
+  edm::EDGetTokenT<double> rho_token_;
+  edm::EDGetTokenT<edm::TriggerResults> hlt_token_;
+  edm::EDGetTokenT<std::vector< PileupSummaryInfo > > pu_token_;
+  edm::EDGetTokenT<reco::GenParticleCollection> gen_part_token_;
+  edm::EDGetTokenT<reco::GenJetCollection> gen_jet_token_;
+  edm::EDGetTokenT<edm::View<pat::MET>> met_token_;
+  edm::EDGetTokenT<edm::View<pat::Electron>> electron_token_;
+  edm::EDGetTokenT<edm::View<pat::PackedCandidate>> pfcand_token_;
 
-  TH1F * h_trueNumInteractions;
-  TH1F * h_passTrigger;
-  TH1F * h_mu_closest;
-  TH1F * h_mu_closest_chi2_10;
-  TH2F * h_mu_chi2_vs_closest;
-  TH1F * h_e_closest;
-  TH1F * h_e_closest_chi2_10;
-  TH2F * h_e_chi2_vs_closest;
-  TH1F * h_lepton_pt;
-  TH1F * h_jets_30;
-  TH1F * h_jets_25;
-  TH1F * h_jets_20;
+  TTree * tree_;
 
   std::vector<float> * muon_pt_;
   std::vector<float> * muon_eta_;
@@ -160,69 +120,62 @@ private:
   std::vector<float> * muon_dxy_;
   std::vector<float> * muon_dz_;
 
-  std::vector<float> * electron_pt_;
-  std::vector<float> * electron_eta_;
-  std::vector<float> * electron_phi_;
-  std::vector<float> * electron_px_;
-  std::vector<float> * electron_py_;
-  std::vector<float> * electron_pz_;
-  std::vector<float> * electron_e_;
-  std::vector<float> * electron_charge_;
-  std::vector<bool> *electron_passip_;
-  std::vector<float> * electron_dxy_;
-  std::vector<float> * electron_dz_;
+  float * met_;
+  float * met_x_;
+  float * met_y_;
 
   std::vector<float> * jet_pt_;
   std::vector<float> * jet_energy_;
   std::vector<float> * jet_phi_;
   std::vector<float> * jet_eta_;
+  std::vector<float> * jet_px_;
+  std::vector<float> * jet_py_;
+  std::vector<float> * jet_pz_;
+  std::vector<float> * jet_mass_;
+  std::vector<float> * jet_tau1_;
+  std::vector<float> * jet_tau2_;
+  std::vector<float> * jet_corrmass_;
+  std::vector<float> * jet_vertexz_;
 
-  std::vector<float> * allvertices_z_;
+  std::vector<float> * dijet_mass_;
+  std::vector<float> * dijet_pt_;
+  std::vector<float> * dijet_y_;
+  std::vector<float> * dijet_phi_;
+  std::vector<float> * dijet_dphi_;
 
-  int * vertex_ntracks_;
-  float * vertex_x_;
-  float * vertex_y_;
-  float * vertex_z_;
-  int * vertex_nvtxs_;
+  std::vector<float> * pps_track_x_;
+  std::vector<float> * pps_track_y_;
+  std::vector<int> * pps_track_rpid_;
 
-  float * fvertex_x_;
-  float * fvertex_y_;
-  float * fvertex_z_;
-  float * fvertex_chi2ndof_;
-  int * fvertex_nltracks_p5mm_;
-  int * fvertex_ntracks_cms_p5mm_;
-  int * fvertex_ntracks_ts_p5mm_;
-  int * fvertex_ntracks_cms_p3mm_;
-  int * fvertex_ntracks_ts_p3mm_;
-  float * fvertex_closest_trk_cms_;
-  float * fvertex_closest_trk_ts_;
-  std::vector<float> * fvertex_tkdist_ts_p3mm_to_1p5mm_;
-  std::vector<float> * fvertex_tkdist_cms_p3mm_to_1p5mm_;
-  std::vector<float> * fvertex_tkpt_;
-  std::vector<float> * fvertex_tketa_;
-  std::vector<float> * muon_tkdist_;
-  std::vector<float> * muon_tkpt_;
-  std::vector<float> * electron_tkdist_;
-  std::vector<float> * electron_tkpt_;
+  std::vector<float> * gen_proton_px_;
+  std::vector<float> * gen_proton_py_;
+  std::vector<float> * gen_proton_pz_;
+  std::vector<float> * gen_proton_xi_;
+  std::vector<float> * gen_proton_t_;
 
-  //std::vector<float> * rp_tracks_xraw_;
-  std::vector<float> * rp_tracks_y_;
-  std::vector<float> * rp_tracks_x_;
-  std::vector<float> * rp_tracks_xi_;
-  std::vector<float> * rp_tracks_xi_unc_;
-  std::vector<float> * rp_tracks_detId_;
-  std::vector<float> * rp_tracks_time_;
-  //float * mumu_mass_;
-  //float * mumu_rapidity_;
-
-
+  std::vector<string> * hlt_;
 
   int * run_;
   long int * ev_;
   int * lumiblock_;
-  bool * ispps_;
-
-  //float * Tnpv_;
+  int * nVertices_;
   float * pileupWeight_;
+  int * pfcand_nextracks_;
+
+  float * recoMWhad_;
+  float * recoMWlep_;
+  float * dphiWW_;
+  float * recoMWW_;
+  float * WLeptonicPt_;
+
+  HLTConfigProvider hltConfig_;
+  HLTPrescaleProvider hltPrescaleProvider_;
+  edm::LumiReWeighting *LumiWeights;
+
+  bool isMC;
+  int year;
+  std::string era;
+
+  
 
 };
