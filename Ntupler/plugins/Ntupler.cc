@@ -21,7 +21,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   pu_token_(consumes<std::vector< PileupSummaryInfo > >(edm::InputTag("slimmedAddPileupInfo"))),
   gen_part_token_(consumes<reco::GenParticleCollection>(edm::InputTag("prunedGenParticles"))),
   gen_jet_token_(consumes<reco::GenJetCollection>(edm::InputTag("slimmedGenJetsAK8"))),
-  met_token_(consumes<edm::View<pat::MET>>(edm::InputTag("slimmedMETsPuppi"))),
+  met_token_(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi"))),
   electron_token_(consumes<edm::View<pat::Electron>>(edm::InputTag("slimmedElectrons"))),
   pfcand_token_(consumes<edm::View<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"))),
   hltPrescaleProvider_(iConfig, consumesCollector(), *this)
@@ -184,7 +184,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }}//endof looking at if by lepton and if pt>200 GeV
      }
 
-
    edm::Handle<edm::View<pat::Jet> > jetColl; // PAT      
    iEvent.getByLabel("slimmedJetsJetId", jetColl);
    //int numbJets_id=0;
@@ -229,7 +228,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }//Need at least one fat jet to even look at this
    }//end of looping over jet collection
   
-
    //Get Muons
    edm::Handle<edm::View<pat::Muon> > muonHandle;
    iEvent.getByToken(muon_token_,muonHandle);
@@ -258,31 +256,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    //Get Electrons
    edm::Handle<edm::View<pat::Electron> > electronHandle;
    iEvent.getByToken(electron_token_,electronHandle);
-
-   edm::Handle<edm::View<pat::PackedCandidate> > pfCands; // PAT      
-   iEvent.getByToken(pfcand_token_, pfCands);
-   int count_pv=0;
-   for (const pat::PackedCandidate &pfcand : *pfCands) { 
-     //if(fabs(pfcand.pdgId())==211&&pfcand.fromPV(0)==3){
-     if((*jet_eta_).size()>0){
-       if(pfcand.fromPV(0)==3&&(fabs(pfcand.pdgId())==13||fabs(pfcand.pdgId())==211||fabs(pfcand.pdgId()) == 11 )){
-	 double deltaR=sqrt(  (pfcand.eta()-(*jet_eta_)[0])*(pfcand.eta()-(*jet_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*jet_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*jet_phi_)[0]));
-	 if (deltaR>0.8){
-	   //cout<<"z distance: "<<pfcand.vertex().z()-vtx->position().z()-vtx->position().z()<<endl;
-	   //cout<<"vtx->position().z(): "<<vtx->position().z()<<endl;
-	   //if ((abs(pfcand.vertex().z()-vtx->position().z())<0.02) && (abs(pfcand.vertex().x()-vtx->position().x())<0.006) && (abs(pfcand.vertex().y()-vtx->position().y())<0.006)){
-	   double deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
-	   if(deltaR_mu>0.3){
-	     count_pv=count_pv+1;
-	   }
-	   //}//end of requiring pfcand vertex close to primary vertex
-	 }
-       }
-     }
-   }//end over loop over pf candidates
-  *pfcand_nextracks_=count_pv;
-
-
 
    //Get MET
    edm::Handle<pat::METCollection> patMET; // PAT      
@@ -383,6 +356,30 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
 
+     edm::Handle<edm::View<pat::PackedCandidate> > pfCands; // PAT      
+     iEvent.getByToken(pfcand_token_, pfCands);
+     int count_pv=0;
+     for (const pat::PackedCandidate &pfcand : *pfCands) { 
+       //if(fabs(pfcand.pdgId())==211&&pfcand.fromPV(0)==3){
+       if((*jet_eta_).size()>0){
+	 if(pfcand.fromPV(0)==3&&(fabs(pfcand.pdgId())==13||fabs(pfcand.pdgId())==211||fabs(pfcand.pdgId()) == 11 )){
+	   double deltaR=sqrt(  (pfcand.eta()-(*jet_eta_)[0])*(pfcand.eta()-(*jet_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*jet_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*jet_phi_)[0]));
+	   if (deltaR>0.8){
+	     //cout<<"z distance: "<<pfcand.vertex().z()-vtx->position().z()-vtx->position().z()<<endl;
+	     //cout<<"vtx->position().z(): "<<vtx->position().z()<<endl;
+	     //if ((abs(pfcand.vertex().z()-vtx->position().z())<0.02) && (abs(pfcand.vertex().x()-vtx->position().x())<0.006) && (abs(pfcand.vertex().y()-vtx->position().y())<0.006)){
+	     double deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
+	     if(deltaR_mu>0.3){
+	       count_pv=count_pv+1;
+	     }
+	     //}//end of requiring pfcand vertex close to primary vertex
+	   }
+	 }
+       }
+     }//end over loop over pf candidates
+     *pfcand_nextracks_=count_pv;
+     
+     
      TLorentzVector MuonP4;
      MuonP4=TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]);
      //
