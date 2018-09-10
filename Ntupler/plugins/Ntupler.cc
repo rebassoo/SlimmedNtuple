@@ -110,13 +110,41 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   (*hlt_).push_back(TriggerName);
 	 }
      }
-   
 
-   //Get Vertices and rho                                                                                                                                             
    edm::Handle< std::vector<reco::Vertex> > vertices_;
    iEvent.getByToken(vertex_token_, vertices_);
    reco::VertexRef vtx(vertices_, 0);
 
+   //Get Muons
+   edm::Handle<edm::View<pat::Muon> > muonHandle;
+   iEvent.getByToken(muon_token_,muonHandle);
+   int numMuLoose=0;
+   for (const pat::Muon &MuonIt : *muonHandle) { 
+     bool tightId=MuonIt.isTightMuon(*vtx);
+     double iso = (MuonIt.pfIsolationR04().sumChargedHadronPt + max(0., MuonIt.pfIsolationR04().sumNeutralHadronEt + MuonIt.pfIsolationR04().sumPhotonEt - 0.5*MuonIt.pfIsolationR04().sumPUPt))/MuonIt.pt();
+     if(tightId&&MuonIt.pt()>53&&fabs(MuonIt.eta())<2.4&&iso<0.15){
+       (*muon_px_).push_back(MuonIt.px());
+       (*muon_py_).push_back(MuonIt.py());
+       (*muon_pz_).push_back(MuonIt.pz());
+       (*muon_e_).push_back(MuonIt.energy());
+       (*muon_charge_).push_back(MuonIt.charge());
+       (*muon_pt_).push_back(MuonIt.pt());
+       (*muon_eta_).push_back(MuonIt.eta());
+       (*muon_phi_).push_back(MuonIt.phi());
+       (*muon_iso_).push_back(iso);
+       (*muon_dxy_).push_back(fabs(MuonIt.muonBestTrack()->dxy(vtx->position())));
+       (*muon_dz_).push_back(fabs(MuonIt.muonBestTrack()->dz(vtx->position())));
+     }
+     bool looseId=MuonIt.isLooseMuon();
+    if(looseId&&MuonIt.pt()>20&&fabs(MuonIt.eta())<2.4){numMuLoose++;}
+
+   }//end of looping over muons
+
+   //Get Electrons
+   edm::Handle<edm::View<pat::Electron> > electronHandle;
+   iEvent.getByToken(electron_token_,electronHandle);
+
+   //Get Vertices and rho                                                                                           
    edm::Handle<double> rhoHandle;
    iEvent.getByToken(rho_token_,rhoHandle);
    double rho = *rhoHandle; 
@@ -184,79 +212,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }}//endof looking at if by lepton and if pt>200 GeV
      }
 
-   edm::Handle<edm::View<pat::Jet> > jetColl; // PAT      
-   iEvent.getByLabel("slimmedJetsJetId", jetColl);
-   //int numbJets_id=0;
-   //   int numJetsAK4_id=0;
-   for (unsigned int i=0; i<jetColl->size(); i++) {
-     const edm::Ptr<pat::Jet> jet = jetColl->ptrAt(i);
-     if((*jet_eta_).size()==1){
-       if(jet->pt()>30&&fabs(jet->eta())<2.4){
-	 bool isLepton=isJetLepton(jet->eta(),jet->phi());
-	 if(!isLepton){
-	   //numJets_id++;  
-	   //if(jet->phi(),jet->eta())
-	   double deltaR=sqrt( ((*jet_eta_)[0]-jet->eta())*((*jet_eta_)[0]-jet->eta()) + ((*jet_phi_)[0]-jet->phi())*((*jet_phi_)[0]-jet->phi()) );
-	   if(deltaR<0.8){
-	     continue;
-	     //numJetsAK4_id++;
-	   }
-	   std::vector<std::pair<std::string, float> > btag=jet->getPairDiscri();
-	   int size_v=btag.size();
-	   for(int i=0;i<size_v;i++){
-	     if(btag[i].first=="pfCombinedInclusiveSecondaryVertexV2BJetTags"){
-	       //cout<<"btag and result: "<<btag[i].first<<", "<<btag[i].second<<endl;
-	       //medium is 0.8484, loose is 0.5426, tight is 0.9535
-	       if(btag[i].second>0.9535){
-		 continue;
-		 //numbJets_id++;
-	       }//end of btag requirement
-	     }//end of requireing looking at pfCombinedInclusiveSecondaryVertexV2BJetTags
-	   }//end of looping over btags
-	 }//end of looking at if it is a lepton
-	 //cout<<"Jet energy, phi, eta: "<<jet->energy()<<", "<<jet->phi()<<", "<<jet->eta()<<endl;
-	 //cout<<"Jet corrected energy: "<<jet->energy()<<endl;
-	 //cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
-	 //cout<<"Jet corrected pt: "<<jet->pt()<<endl;
-	 //cout<<"Uncorrected pt: "<<jet->correctedP4(0).Pt()<<endl;
-	 std::vector< std::string > jec_levels = jet->availableJECLevels();
-	 //int size = jec_levels.size();
-	 //for(int i=0;i<size;i++){
-	 //  cout<<jec_levels[i]<<endl;
-	 // }
-       }//end of requirement of 30 geV
-     }//Need at least one fat jet to even look at this
-   }//end of looping over jet collection
   
-   //Get Muons
-   edm::Handle<edm::View<pat::Muon> > muonHandle;
-   iEvent.getByToken(muon_token_,muonHandle);
-   int numMuLoose=0;
-   for (const pat::Muon &MuonIt : *muonHandle) { 
-     bool tightId=MuonIt.isTightMuon(*vtx);
-     double iso = (MuonIt.pfIsolationR04().sumChargedHadronPt + max(0., MuonIt.pfIsolationR04().sumNeutralHadronEt + MuonIt.pfIsolationR04().sumPhotonEt - 0.5*MuonIt.pfIsolationR04().sumPUPt))/MuonIt.pt();
-     if(tightId&&MuonIt.pt()>53&&fabs(MuonIt.eta())<2.4&&iso<0.15){
-       (*muon_px_).push_back(MuonIt.px());
-       (*muon_py_).push_back(MuonIt.py());
-       (*muon_pz_).push_back(MuonIt.pz());
-       (*muon_e_).push_back(MuonIt.energy());
-       (*muon_charge_).push_back(MuonIt.charge());
-       (*muon_pt_).push_back(MuonIt.pt());
-       (*muon_eta_).push_back(MuonIt.eta());
-       (*muon_phi_).push_back(MuonIt.phi());
-       (*muon_iso_).push_back(iso);
-       (*muon_dxy_).push_back(fabs(MuonIt.muonBestTrack()->dxy(vtx->position())));
-       (*muon_dz_).push_back(fabs(MuonIt.muonBestTrack()->dz(vtx->position())));
-     }
-     bool looseId=MuonIt.isLooseMuon();
-    if(looseId&&MuonIt.pt()>20&&fabs(MuonIt.eta())<2.4){numMuLoose++;}
-
-   }//end of looping over muons
-
-   //Get Electrons
-   edm::Handle<edm::View<pat::Electron> > electronHandle;
-   iEvent.getByToken(electron_token_,electronHandle);
-
    //Get MET
    edm::Handle<pat::METCollection> patMET; // PAT      
    iEvent.getByToken(met_token_,patMET);
@@ -332,8 +288,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
      }
 
-
    // If at least 2 jets, make dijet pairs of the leading 2
+   /*
    if(collSize >= 2)
      {
        jet1.SetPtEtaPhiM((*jet_pt_)[0],(*jet_eta_)[0],(*jet_phi_)[0],(*jet_corrmass_)[0]);
@@ -351,10 +307,55 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        else
 	 (*dijet_dphi_).push_back((2*3.14159)-dphi);
      }
-
-
+   */
 
    if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
+
+     edm::Handle<edm::View<pat::Jet> > jetColl; // PAT      
+     iEvent.getByLabel("slimmedJetsJetId", jetColl);
+     //int numbJets_id=0;
+     //   int numJetsAK4_id=0;
+     for (unsigned int i=0; i<jetColl->size(); i++) {
+       const edm::Ptr<pat::Jet> jet = jetColl->ptrAt(i);
+       if((*jet_eta_).size()==1){
+	 if(jet->pt()>30&&fabs(jet->eta())<2.4){
+	   bool isLepton=isJetLepton(jet->eta(),jet->phi());
+	   if(!isLepton){
+	     //numJets_id++;  
+	     //if(jet->phi(),jet->eta())
+	     double deltaR=sqrt( ((*jet_eta_)[0]-jet->eta())*((*jet_eta_)[0]-jet->eta()) + ((*jet_phi_)[0]-jet->phi())*((*jet_phi_)[0]-jet->phi()) );
+	     if(deltaR<0.8){
+	       continue;
+	       //numJetsAK4_id++;
+	     }
+	     std::vector<std::pair<std::string, float> > btag=jet->getPairDiscri();
+	     int size_v=btag.size();
+	     for(int i=0;i<size_v;i++){
+	       if(btag[i].first=="pfCombinedInclusiveSecondaryVertexV2BJetTags"){
+		 //cout<<"btag and result: "<<btag[i].first<<", "<<btag[i].second<<endl;
+		 //medium is 0.8484, loose is 0.5426, tight is 0.9535
+		 if(btag[i].second>0.9535){
+		   continue;
+		 //numbJets_id++;
+		 }//end of btag requirement
+	     }//end of requireing looking at pfCombinedInclusiveSecondaryVertexV2BJetTags
+	     }//end of looping over btags
+	   }//end of looking at if it is a lepton
+	   //cout<<"Jet energy, phi, eta: "<<jet->energy()<<", "<<jet->phi()<<", "<<jet->eta()<<endl;
+	   //cout<<"Jet corrected energy: "<<jet->energy()<<endl;
+	   //cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
+	   //cout<<"Jet corrected pt: "<<jet->pt()<<endl;
+	   //cout<<"Uncorrected pt: "<<jet->correctedP4(0).Pt()<<endl;
+	   std::vector< std::string > jec_levels = jet->availableJECLevels();
+	 //int size = jec_levels.size();
+	 //for(int i=0;i<size;i++){
+	 //  cout<<jec_levels[i]<<endl;
+	 // }
+	 }//end of requirement of 30 geV
+       }//Need at least one fat jet to even look at this
+     }//end of looping over jet collection
+     
+
 
      edm::Handle<edm::View<pat::PackedCandidate> > pfCands; // PAT      
      iEvent.getByToken(pfcand_token_, pfCands);
@@ -378,7 +379,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
      }//end over loop over pf candidates
      *pfcand_nextracks_=count_pv;
-     
      
      TLorentzVector MuonP4;
      MuonP4=TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]);
