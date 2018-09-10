@@ -102,7 +102,7 @@ private:
   edm::EDGetTokenT<std::vector< PileupSummaryInfo > > pu_token_;
   edm::EDGetTokenT<reco::GenParticleCollection> gen_part_token_;
   edm::EDGetTokenT<reco::GenJetCollection> gen_jet_token_;
-  edm::EDGetTokenT<edm::View<pat::MET>> met_token_;
+  edm::EDGetTokenT<pat::METCollection> met_token_;
   edm::EDGetTokenT<edm::View<pat::Electron>> electron_token_;
   edm::EDGetTokenT<edm::View<pat::PackedCandidate>> pfcand_token_;
 
