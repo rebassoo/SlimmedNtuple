@@ -45,7 +45,7 @@ process.demo.era = cms.string("C")
 
 process.p = cms.Path(#process.hltFilter
                      process.slimmedJetsAK8JetId
-                     process.slimmedJetsJetId
+                     *process.slimmedJetsJetId
                      *process.demo)
 
 
