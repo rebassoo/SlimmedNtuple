@@ -40,15 +40,35 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
                                   
    std::vector<std::string> jecAK8PayloadNames_;
    if(isMC==false && year==2017 && era == "B")
-     {jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2L3Residual_AK8PFchs.txt");}
+     {
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2L3Residual_AK8PFchs.txt");
+     }
    if(isMC==false && year==2017 && era == "C")
-     {jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2L3Residual_AK8PFchs.txt");}
+     {
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2L3Residual_AK8PFchs.txt");
+     }
    if(isMC==false && year==2017 && era == "D")
-     {jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2L3Residual_AK8PFchs.txt");}
+     {
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2L3Residual_AK8PFchs.txt");
+     }
    if(isMC==false && year==2017 && era == "E")
-     {jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2L3Residual_AK8PFchs.txt");}
+     {
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2L3Residual_AK8PFchs.txt");
+     }
    if(isMC==false && year==2017 && era == "F")
-     {jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2L3Residual_AK8PFchs.txt");}
+     {
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2L3Residual_AK8PFchs.txt");
+     }
 
    if(isMC==true && year==2017)
      {
@@ -95,6 +115,17 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    *run_ = iEvent.id().run();
    *ev_ = iEvent.id().event();
    *lumiblock_ = iEvent.luminosityBlock();
+
+
+   /*
+   cout<<"(*gen_proton_xi_)[0]: "<<(*gen_proton_xi_)[0]<<endl;
+   if((*gen_proton_xi_)[0]<0.15&&(*gen_proton_xi_)[0]>0.022&&(*gen_proton_xi_)[1]<0.15&&(*gen_proton_xi_)[1]>0.022){
+     (*dijet_mass_).push_back(1);
+     tree_->Fill();
+
+   }
+     return;
+   */
 
    // HLT
    edm::Handle<edm::TriggerResults> hltResults;
@@ -157,8 +188,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    for (unsigned int ijet=0; ijet<collSize; ijet++) 
      {
-       reco::Jet jet = (*jets)[ijet];;
-
+       //reco::Jet jet = (*jets)[ijet];;
+       const edm::Ptr<pat::Jet> jet = jets->ptrAt(ijet);
        // CMSSW_8_X samples
        //       double pruned_mass = (*jets)[ijet].userFloat("ak8PFJetsCHSPrunedMass");
        //       double tau1         = (*jets)[ijet].userFloat("NjettinessAK8:tau1");
@@ -182,31 +213,36 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        double tau2         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau2");
 
        //if(jet.pt()>200&&fabs(jet.eta())<2.4&&looseJetID){
-       if(jet.pt()>200&&fabs(jet.eta())<2.4){
-	 bool isLepton=isJetLepton(jet.eta(),jet.phi());
+       if(jet->pt()>200&&fabs(jet->eta())<2.4){
+	 bool isLepton=isJetLepton(jet->eta(),jet->phi());
 	 if(!isLepton){
-	   (*jet_pt_).push_back(jet.pt());
-	   (*jet_phi_).push_back(jet.phi());
-	   (*jet_eta_).push_back(jet.eta());
-	   (*jet_px_).push_back(jet.px());
-	   (*jet_py_).push_back(jet.py());
-	   (*jet_pz_).push_back(jet.pz());
-	   (*jet_energy_).push_back(jet.energy());
+	   //(*jet_pt_).push_back(jet->pt());
+	   (*jet_pt_).push_back(jet->pt());
+	   (*jet_phi_).push_back(jet->phi());
+	   (*jet_eta_).push_back(jet->eta());
+	   (*jet_px_).push_back(jet->px());
+	   (*jet_py_).push_back(jet->py());
+	   (*jet_pz_).push_back(jet->pz());
+	   (*jet_energy_).push_back(jet->energy());
 	   (*jet_mass_).push_back(pruned_mass);
 	   (*jet_tau1_).push_back(tau1);
 	   (*jet_tau2_).push_back(tau2);
-	   (*jet_vertexz_).push_back(jet.vz());
+	   (*jet_vertexz_).push_back(jet->vz());
 
 	   // Now apply corrections!
 	   double pruned_masscorr = 0;
 	   double corr = 0;
-	   jecAK8_->setJetEta( jet.eta() );
-	   jecAK8_->setJetPt ( jet.pt() );
-	   jecAK8_->setJetE  ( jet.energy() );
-	   jecAK8_->setJetA  ( jet.jetArea() );
+	   jecAK8_->setJetEta( jet->correctedJet(0).eta() );
+	   jecAK8_->setJetPt ( jet->correctedJet(0).pt() );
+	   jecAK8_->setJetE  ( jet->correctedJet(0).energy() );
+	   jecAK8_->setJetA  ( jet->correctedJet(0).jetArea() );
 	   jecAK8_->setRho   ( rho );
 	   jecAK8_->setNPV   ( vertices_->size() );
 	   corr = jecAK8_->getCorrection();
+	   //cout<<"Correction from Jet Corrector is: "<<corr<<endl;
+	   //cout<<"Uncorrected jet pt: "<<jet->correctedP4(0).pt()<<endl;
+	   //cout<<"Uncorrected jet pt2: "<<jet->correctedJet(0).pt()<<endl;
+	   //cout<<"Corrected jet pt: "<<jet->pt()<<endl;
 	   pruned_masscorr = corr*pruned_mass;
 	   (*jet_corrmass_).push_back(pruned_masscorr);
 	 }}//endof looking at if by lepton and if pt>200 GeV
@@ -264,6 +300,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        *pileupWeight_ = LumiWeights->weight( trueInteractions );
      }
 
+
+
    // Fill GEN infor if running on MC
    if(isMC == true)
      {
@@ -288,8 +326,9 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
      }
 
+
    // If at least 2 jets, make dijet pairs of the leading 2
-   /*
+/* 
    if(collSize >= 2)
      {
        jet1.SetPtEtaPhiM((*jet_pt_)[0],(*jet_eta_)[0],(*jet_phi_)[0],(*jet_corrmass_)[0]);
@@ -307,7 +346,9 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        else
 	 (*dijet_dphi_).push_back((2*3.14159)-dphi);
      }
-   */
+*/
+
+
 
    if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
 
@@ -318,6 +359,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      for (unsigned int i=0; i<jetColl->size(); i++) {
        const edm::Ptr<pat::Jet> jet = jetColl->ptrAt(i);
        if((*jet_eta_).size()==1){
+	 //cout<<"AK4 jet pt: "<<jet->pt()<<endl;
 	 if(jet->pt()>30&&fabs(jet->eta())<2.4){
 	   bool isLepton=isJetLepton(jet->eta(),jet->phi());
 	   if(!isLepton){
@@ -442,11 +484,13 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      *WLeptonicPt_=WLeptonic_Pt;
      *recoMWW_=MWW_Nu;
 
+
      tree_->Fill();
 
 
-
    }
+
+   
 
    (*muon_pt_).clear();
    (*muon_eta_).clear();
