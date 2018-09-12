@@ -124,6 +124,10 @@ private:
   float * met_x_;
   float * met_y_;
 
+  int * num_bjets_ak8_;
+  int * num_bjets_ak4_;
+  int * num_jets_ak4_;
+
   std::vector<float> * jet_pt_;
   std::vector<float> * jet_energy_;
   std::vector<float> * jet_phi_;
