@@ -48,7 +48,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
    if(isMC==false && year==2017 && era == "C")
      {
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L3Absolute_AK8PFchs.txt");
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2L3Residual_AK8PFchs.txt");
      }
    if(isMC==false && year==2017 && era == "D")
@@ -86,7 +86,6 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
 
    // Make the FactorizedJetCorrector                                                                                                                                                      
    jecAK8_ = boost::shared_ptr<FactorizedJetCorrector> ( new FactorizedJetCorrector(vPar) );
-
 
 
 }
@@ -141,6 +140,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   (*hlt_).push_back(TriggerName);
 	 }
      }
+   
 
    edm::Handle< std::vector<reco::Vertex> > vertices_;
    iEvent.getByToken(vertex_token_, vertices_);
@@ -180,12 +180,13 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    iEvent.getByToken(rho_token_,rhoHandle);
    double rho = *rhoHandle; 
 
+
    // Get ak8Jets
    edm::Handle<edm::View<pat::Jet>> jets;
    iEvent.getByToken(jetAK8_token_, jets);
    unsigned int collSize=jets->size();
    TLorentzVector jet1, jet2, jj;
-
+   int numbJetsAk8_id=0;
    for (unsigned int ijet=0; ijet<collSize; ijet++) 
      {
        //reco::Jet jet = (*jets)[ijet];;
@@ -229,6 +230,19 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   (*jet_tau2_).push_back(tau2);
 	   (*jet_vertexz_).push_back(jet->vz());
 
+	   std::vector<std::pair<std::string, float> > btag=jet->getPairDiscri();
+	   int size_v=btag.size();
+	   for(int i=0;i<size_v;i++){
+	     if(btag[i].first=="pfCombinedInclusiveSecondaryVertexV2BJetTags"){
+	       //cout<<"btag and result: "<<btag[i].first<<", "<<btag[i].second<<endl;
+	       //https://twiki.cern.ch/twiki/bin/viewauth/CMS/BtagRecommendation94X
+	       if(btag[i].second>0.8838){
+		 numbJetsAk8_id++;
+	       }//end of btag requirement
+	     }//end of requireing looking at pfCombinedInclusiveSecondaryVertexV2BJetTags
+	   }//end of looping over btags
+	   
+	   
 	   // Now apply corrections!
 	   double pruned_masscorr = 0;
 	   double corr = 0;
@@ -247,6 +261,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   (*jet_corrmass_).push_back(pruned_masscorr);
 	 }}//endof looking at if by lepton and if pt>200 GeV
      }
+
+   *num_bjets_ak8_=numbJetsAk8_id;
 
   
    //Get MET
@@ -270,7 +286,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    for ( const auto& trk : *ppsTracks ) 
      {
        const CTPPSDetId detid( trk.getRPId() );
-       
        // transform the raw, 32-bit unsigned integer detId into the TOTEM "decimal" notation
        const unsigned short raw_id = 100*detid.arm()+10*detid.station()+detid.rp();
 
@@ -349,13 +364,12 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 */
 
 
-
    if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
 
      edm::Handle<edm::View<pat::Jet> > jetColl; // PAT      
      iEvent.getByLabel("slimmedJetsJetId", jetColl);
-     //int numbJets_id=0;
-     //   int numJetsAK4_id=0;
+     int numbJets_id=0;
+     int numJetsAK4_id=0;
      for (unsigned int i=0; i<jetColl->size(); i++) {
        const edm::Ptr<pat::Jet> jet = jetColl->ptrAt(i);
        if((*jet_eta_).size()==1){
@@ -365,23 +379,24 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   if(!isLepton){
 	     //numJets_id++;  
 	     //if(jet->phi(),jet->eta())
-	     double deltaR=sqrt( ((*jet_eta_)[0]-jet->eta())*((*jet_eta_)[0]-jet->eta()) + ((*jet_phi_)[0]-jet->phi())*((*jet_phi_)[0]-jet->phi()) );
-	     if(deltaR<0.8){
-	       continue;
-	       //numJetsAK4_id++;
-	     }
 	     std::vector<std::pair<std::string, float> > btag=jet->getPairDiscri();
 	     int size_v=btag.size();
 	     for(int i=0;i<size_v;i++){
 	       if(btag[i].first=="pfCombinedInclusiveSecondaryVertexV2BJetTags"){
 		 //cout<<"btag and result: "<<btag[i].first<<", "<<btag[i].second<<endl;
 		 //medium is 0.8484, loose is 0.5426, tight is 0.9535
-		 if(btag[i].second>0.9535){
-		   continue;
-		 //numbJets_id++;
+		 //if(btag[i].second>0.9535){
+		 if(btag[i].second>0.9693){
+		   numbJets_id++;
 		 }//end of btag requirement
 	     }//end of requireing looking at pfCombinedInclusiveSecondaryVertexV2BJetTags
 	     }//end of looping over btags
+
+	     double deltaR=sqrt( ((*jet_eta_)[0]-jet->eta())*((*jet_eta_)[0]-jet->eta()) + ((*jet_phi_)[0]-jet->phi())*((*jet_phi_)[0]-jet->phi()) );
+	     if(deltaR<0.8){
+	      continue;
+	     }
+	     else{numJetsAK4_id++;}
 	   }//end of looking at if it is a lepton
 	   //cout<<"Jet energy, phi, eta: "<<jet->energy()<<", "<<jet->phi()<<", "<<jet->eta()<<endl;
 	   //cout<<"Jet corrected energy: "<<jet->energy()<<endl;
@@ -396,8 +411,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }//end of requirement of 30 geV
        }//Need at least one fat jet to even look at this
      }//end of looping over jet collection
-     
-
+     *num_bjets_ak4_=numbJets_id;
+     *num_jets_ak4_=numJetsAK4_id;
 
      edm::Handle<edm::View<pat::PackedCandidate> > pfCands; // PAT      
      iEvent.getByToken(pfcand_token_, pfCands);
@@ -591,8 +606,10 @@ Ntupler::beginJob()
   met_ = new float;
   met_x_ = new float;
   met_y_ = new float;
-
   pfcand_nextracks_ = new int;
+  num_bjets_ak8_ = new int;
+  num_bjets_ak4_ = new int;
+  num_jets_ak4_ = new int;
 
   recoMWhad_ = new float;
   recoMWlep_ = new float;
@@ -652,6 +669,9 @@ Ntupler::beginJob()
   tree_->Branch("met_x",met_x_,"met_x/f");
   tree_->Branch("met_y",met_y_,"met_y/f");
   tree_->Branch("pfcand_nextracks",pfcand_nextracks_,"pfcand_nextracks/I");
+  tree_->Branch("num_bjets_ak8",num_bjets_ak8_,"num_bjets_ak8/I");
+  tree_->Branch("num_bjets_ak4",num_bjets_ak4_,"num_bjets_ak4/I");
+  tree_->Branch("num_jets_ak4",num_jets_ak4_,"num_jets_ak4/I");
   tree_->Branch("recoMWhad",recoMWhad_,"recoMWhad/f");
   tree_->Branch("recoMWlep",recoMWlep_,"recoMWlep/f");
   tree_->Branch("recoMWW",recoMWW_,"recoMWW/f");
@@ -716,6 +736,9 @@ Ntupler::endJob()
   delete met_;
   delete met_x_;
   delete met_y_;
+  delete num_bjets_ak8_;
+  delete num_bjets_ak4_;
+  delete num_jets_ak4_;
 
   delete pfcand_nextracks_;
   delete recoMWhad_;
