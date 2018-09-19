@@ -24,6 +24,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   met_token_(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi"))),
   electron_token_(consumes<edm::View<pat::Electron>>(edm::InputTag("slimmedElectrons"))),
   pfcand_token_(consumes<edm::View<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"))),
+  mcweight_token_(consumes<GenEventInfoProduct>(edm::InputTag("generator"))),
   hltPrescaleProvider_(iConfig, consumesCollector(), *this)
 {
   
@@ -42,7 +43,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
    if(isMC==false && year==2017 && era == "B")
      {
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L3Absolute_AK8PFchs.txt");
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2L3Residual_AK8PFchs.txt");
      }
    if(isMC==false && year==2017 && era == "C")
@@ -54,19 +55,19 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
    if(isMC==false && year==2017 && era == "D")
      {
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L3Absolute_AK8PFchs.txt");
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2L3Residual_AK8PFchs.txt");
      }
    if(isMC==false && year==2017 && era == "E")
      {
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L3Absolute_AK8PFchs.txt");
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2L3Residual_AK8PFchs.txt");
      }
    if(isMC==false && year==2017 && era == "F")
      {
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L3Absolute_AK8PFchs.txt.txt");
+       jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L3Absolute_AK8PFchs.txt");
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2L3Residual_AK8PFchs.txt");
      }
 
@@ -109,6 +110,30 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    using namespace edm;
    using namespace std;
+
+   // HLT
+   edm::Handle<edm::TriggerResults> hltResults;
+   iEvent.getByToken(hlt_token_,hltResults);
+   const edm::TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
+   //bool passTrigger=0;
+   //std::string TriggerPrefix = "HLT_MuIso27_v";
+   for(unsigned int i=0; i<trigNames.size();i++)
+     {
+       int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
+       //       int result = hltResults->accept(i);
+       std::string TriggerName = trigNames.triggerName(i);
+       if((hltResults->accept(i)>0)&&(prescale_value==1)) {(*hlt_).push_back(TriggerName); }
+       //  if(TriggerName.find(TriggerPrefix) != std::string::npos){
+       //	 if((hltResults->accept(i)>0)&&(prescale_value==1)){
+       //   passTrigger=true;
+       // }
+       //}
+
+     }//end of looping over trigger names
+   //   h_total_events->Fill(1.);
+   //if(!passTrigger){return;}
+
+
    
    // Run and vertex multiplicity info
    *run_ = iEvent.id().run();
@@ -126,21 +151,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      return;
    */
 
-   // HLT
-   edm::Handle<edm::TriggerResults> hltResults;
-   iEvent.getByToken(hlt_token_,hltResults);
-   const edm::TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
-   for(unsigned int i=0; i<trigNames.size();i++)
-     {
-       int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
-       //       int result = hltResults->accept(i);
-       std::string TriggerName = trigNames.triggerName(i);
-       if((hltResults->accept(i)>0)&&(prescale_value==1))
-	 {
-	   (*hlt_).push_back(TriggerName);
-	 }
-     }
-   
 
    edm::Handle< std::vector<reco::Vertex> > vertices_;
    iEvent.getByToken(vertex_token_, vertices_);
@@ -315,7 +325,17 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        *pileupWeight_ = LumiWeights->weight( trueInteractions );
      }
 
-
+   
+   if(isMC == true){
+     edm::Handle<GenEventInfoProduct> genEvtInfo; 
+     iEvent.getByLabel( "generator", genEvtInfo );
+     
+     //std::vector<double>& evtWeights = genEvtInfo->weights();
+     double theWeight = genEvtInfo->weight();
+     //cout<<"theWeight: "<<theWeight<<endl;
+     *mcWeight_=theWeight;
+   }
+   
 
    // Fill GEN infor if running on MC
    if(isMC == true)
@@ -505,7 +525,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    }
 
-   
 
    (*muon_pt_).clear();
    (*muon_eta_).clear();
@@ -547,7 +566,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*gen_proton_pz_).clear();
    (*gen_proton_xi_).clear();
    (*gen_proton_t_).clear();
-
+   
    (*hlt_).clear();
 
 
@@ -653,6 +672,7 @@ Ntupler::beginJob()
   lumiblock_ = new int;
   nVertices_ = new int;
   pileupWeight_ = new float;
+  mcWeight_ = new float;
 
   tree_->Branch("muon_pt",&muon_pt_);
   tree_->Branch("muon_eta",&muon_eta_);
@@ -706,11 +726,12 @@ Ntupler::beginJob()
   tree_->Branch("gen_proton_t",&gen_proton_t_);
   tree_->Branch("nVertices",nVertices_,"nVertices/i");
   tree_->Branch("pileupWeight",pileupWeight_,"pileupWeight/f");
+  tree_->Branch("mcWeight",mcWeight_,"mcWeight/f");
   tree_->Branch("run",run_,"run/I");
   tree_->Branch("event",ev_,"event/L");
   tree_->Branch("lumiblock",lumiblock_,"lumiblock/I");
 
-
+  h_total_events = fs->make<TH1F>("h_total_events","",2 ,-0.5 ,1.5);
 
 
 
