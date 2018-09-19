@@ -56,6 +56,7 @@
 #include "HLTrigger/HLTcore/interface/HLTPrescaleProvider.h"
 
 #include "SimDataFormats/PileupSummaryInfo/interface/PileupSummaryInfo.h"
+#include "SimDataFormats/GeneratorProducts/interface/GenEventInfoProduct.h"
 #include "PhysicsTools/Utilities/interface/LumiReWeighting.h"
 
 #include "FWCore/ServiceRegistry/interface/Service.h"
@@ -105,8 +106,10 @@ private:
   edm::EDGetTokenT<pat::METCollection> met_token_;
   edm::EDGetTokenT<edm::View<pat::Electron>> electron_token_;
   edm::EDGetTokenT<edm::View<pat::PackedCandidate>> pfcand_token_;
+  edm::EDGetTokenT<GenEventInfoProduct> mcweight_token_;
 
   TTree * tree_;
+  TH1F * h_total_events;
 
   std::vector<float> * muon_pt_;
   std::vector<float> * muon_eta_;
@@ -164,6 +167,7 @@ private:
   int * lumiblock_;
   int * nVertices_;
   float * pileupWeight_;
+  float * mcWeight_;
   int * pfcand_nextracks_;
 
   float * recoMWhad_;
