@@ -6,7 +6,7 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
@@ -77,7 +77,15 @@ process.demo.isMC = cms.bool(True)
 process.demo.year = cms.int32(2017)
 process.demo.era = cms.string("C")
 
-process.p = cms.Path(process.hltFilter*
+process.load("SlimmedNtuple.TotalEvents.CfiFile_cfi")
+
+process.Timing = cms.Service("Timing",                                                                                                                                                     
+summaryOnly = cms.untracked.bool(False),                                                                                                                                                 
+useJobReport = cms.untracked.bool(True)                                                                                                                                                  
+) 
+
+process.p = cms.Path(process.totalEvents*
+                     process.hltFilter*
                      process.patJetCorrFactorsUpdatedJEC * process.updatedPatJetsUpdatedJEC*
                      process.patJetCorrFactorsUpdatedJECAK8*
                      process.updatedPatJetsUpdatedJECAK8*
