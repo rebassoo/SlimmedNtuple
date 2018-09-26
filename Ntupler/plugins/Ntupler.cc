@@ -91,6 +91,13 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
    jecAK8_ = boost::shared_ptr<FactorizedJetCorrector> ( new FactorizedJetCorrector(vPar) );
 
 
+   // Get JER smearing                                                                                                                                               
+   if(isMC==true && year==2017) // Note - here we're using Summer16 for 2017 MC, until the 2017 version is ready
+     {                                     
+       jerAK8chsName_res_ = "Summer16_25nsV1_MC_PtResolution_AK8PFchs.txt";
+       jerAK8chsName_sf_ = "Summer16_25nsV1_MC_SF_AK8PFchs.txt";
+     }
+
 }
 
 
@@ -297,6 +304,31 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   //cout<<"Corrected jet pt: "<<jet->pt()<<endl;
 	   pruned_masscorr = corr*pruned_mass;
 	   (*jet_corrmass_).push_back(pruned_masscorr);
+
+	   if(isMC == true)
+	     {
+	       JME::JetResolution resolution_ak8;
+	       JME::JetResolutionScaleFactor resolution_ak8_sf;
+	       resolution_ak8 = JME::JetResolution(jerAK8chsName_res_);
+	       resolution_ak8_sf = JME::JetResolutionScaleFactor(jerAK8chsName_sf_);
+	       JME::JetParameters parameters_ak8;
+	       parameters_ak8.setJetPt(jet->pt());
+	       parameters_ak8.setJetEta(jet->eta());
+	       parameters_ak8.setRho(rho);
+      
+	       float jer_res= resolution_ak8.getResolution(parameters_ak8);
+	       float jer_sf = resolution_ak8_sf.getScaleFactor(parameters_ak8);
+	       float jer_sf_up = resolution_ak8_sf.getScaleFactor(parameters_ak8, Variation::UP);
+	       float jer_sf_down = resolution_ak8_sf.getScaleFactor(parameters_ak8, Variation::DOWN);
+
+	       (*jet_jer_res_).push_back(jer_res);
+	       (*jet_jer_sf_).push_back(jer_sf);
+	       (*jet_jer_sfup_).push_back(jer_sf_up);
+	       (*jet_jer_sfdown_).push_back(jer_sf_down);
+
+	     }
+
+
 	 }}//endof looking at if by lepton and if pt>200 GeV
      }
 
@@ -614,6 +646,10 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*jet_tau2_).clear();
    (*jet_corrmass_).clear();
    (*jet_vertexz_).clear();
+   (*jet_jer_res_).clear();
+   (*jet_jer_sf_).clear();
+   (*jet_jer_sfup_).clear();
+   (*jet_jer_sfdown_).clear();
 
    (*dijet_mass_).clear();
    (*dijet_y_).clear();
@@ -747,6 +783,10 @@ Ntupler::beginJob()
   jet_tau2_ = new std::vector<float>;
   jet_corrmass_ = new std::vector<float>;
   jet_vertexz_ = new std::vector<float>;
+  jet_jer_res_ = new std::vector<float>;
+  jet_jer_sf_ = new std::vector<float>;
+  jet_jer_sfup_ = new std::vector<float>;
+  jet_jer_sfdown_ = new std::vector<float>;
 
   dijet_mass_ = new std::vector<float>;
   dijet_pt_ = new std::vector<float>;
@@ -819,6 +859,10 @@ Ntupler::beginJob()
   tree_->Branch("jet_tau2",&jet_tau2_);
   tree_->Branch("jet_corrmass",&jet_corrmass_);
   tree_->Branch("jet_vertexz",&jet_vertexz_);
+  tree_->Branch("jet_jer_res",&jet_jer_res_);
+  tree_->Branch("jet_jer_sf",&jet_jer_sf_);
+  tree_->Branch("jet_jer_sfup",&jet_jer_sfup_);
+  tree_->Branch("jet_jer_sfdown",&jet_jer_sfdown_);
   tree_->Branch("dijet_mass",&dijet_mass_);
   tree_->Branch("dijet_pt",&dijet_pt_);
   tree_->Branch("dijet_y",&dijet_y_);
@@ -897,6 +941,10 @@ Ntupler::endJob()
   delete jet_tau2_;
   delete jet_corrmass_;
   delete jet_vertexz_;
+  delete jet_jer_res_;
+  delete jet_jer_sf_;
+  delete jet_jer_sfup_;
+  delete jet_jer_sfdown_;
   delete dijet_mass_;
   delete dijet_pt_;
   delete dijet_y_;
