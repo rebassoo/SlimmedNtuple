@@ -22,7 +22,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   gen_part_token_(consumes<reco::GenParticleCollection>(edm::InputTag("prunedGenParticles"))),
   gen_jet_token_(consumes<reco::GenJetCollection>(edm::InputTag("slimmedGenJetsAK8"))),
   met_token_(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi"))),
-  electron_token_(consumes<edm::View<pat::Electron>>(edm::InputTag("slimmedElectrons"))),
+  //electron_token_(consumes<edm::View<pat::Electron>>(edm::InputTag("slimmedElectrons"))),
+  electron_token_(consumes<edm::View<reco::GsfElectron>>(edm::InputTag("slimmedElectrons"))),
   pfcand_token_(consumes<edm::View<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"))),
   mcweight_token_(consumes<GenEventInfoProduct>(edm::InputTag("generator"))),
   hltPrescaleProvider_(iConfig, consumesCollector(), *this)
@@ -33,6 +34,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   year = iConfig.getParameter<int>("year");
   era = iConfig.getParameter<std::string>("era");
 
+  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"));
 
    if(isMC == true)
      {
@@ -112,44 +114,38 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    using namespace std;
 
    // HLT
+   //cout<<"I get here"<<endl;
    edm::Handle<edm::TriggerResults> hltResults;
    iEvent.getByToken(hlt_token_,hltResults);
    const edm::TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
-   //bool passTrigger=0;
-   //std::string TriggerPrefix = "HLT_MuIso27_v";
+   std::string TriggerPrefix_mu = "HLT_IsoMu27_";
+   std::string TriggerPrefix_e = "HLT_Ele35_WPTight_Gsf_v";
+   bool passTrigger_mu=false;
+   bool passTrigger_e=false;
    for(unsigned int i=0; i<trigNames.size();i++)
      {
+       //cout<<"I get here 1"<<endl;
        int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
        //       int result = hltResults->accept(i);
        std::string TriggerName = trigNames.triggerName(i);
-       if((hltResults->accept(i)>0)&&(prescale_value==1)) {(*hlt_).push_back(TriggerName); }
-       //  if(TriggerName.find(TriggerPrefix) != std::string::npos){
-       //	 if((hltResults->accept(i)>0)&&(prescale_value==1)){
-       //   passTrigger=true;
-       // }
-       //}
+       //cout<<"TriggerName: "<<TriggerName<<endl;
+       if(TriggerName.find(TriggerPrefix_mu) != std::string::npos){
+	 if((hltResults->accept(i)>0)&&(prescale_value==1)){
+	   passTrigger_mu=true;
+	 }
+       }
+       
+       if(TriggerName.find(TriggerPrefix_e) != std::string::npos){
+	 if((hltResults->accept(i)>0)&&(prescale_value==1)){
+	   passTrigger_e=true;
+	 }
+       }
+     }
 
-     }//end of looping over trigger names
-   //   h_total_events->Fill(1.);
-   //if(!passTrigger){return;}
-
-
-   
    // Run and vertex multiplicity info
    *run_ = iEvent.id().run();
    *ev_ = iEvent.id().event();
    *lumiblock_ = iEvent.luminosityBlock();
-
-
-   /*
-   cout<<"(*gen_proton_xi_)[0]: "<<(*gen_proton_xi_)[0]<<endl;
-   if((*gen_proton_xi_)[0]<0.15&&(*gen_proton_xi_)[0]>0.022&&(*gen_proton_xi_)[1]<0.15&&(*gen_proton_xi_)[1]>0.022){
-     (*dijet_mass_).push_back(1);
-     tree_->Fill();
-
-   }
-     return;
-   */
 
 
    edm::Handle< std::vector<reco::Vertex> > vertices_;
@@ -182,8 +178,40 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }//end of looping over muons
 
    //Get Electrons
-   edm::Handle<edm::View<pat::Electron> > electronHandle;
+   edm::Handle<edm::ValueMap<bool> > ele_id_decisions;
+   iEvent.getByToken(eleIdMapToken_ ,ele_id_decisions);
+   edm::Handle<edm::View<reco::GsfElectron> > electronHandle;
    iEvent.getByToken(electron_token_,electronHandle);
+   unsigned int n = electronHandle->size();
+   //cout<<"I get before electrons: "<<endl;
+   for(unsigned int i = 0; i < n; ++i) {
+     const auto el = electronHandle->ptrAt(i);
+     //reco::GsfElectronRef ele(electronHandle, i);
+     //reco::GsfTrackRef theTrack = el->gsfTrack();
+     //dz_.push_back( theTrack->dz( firstGoodVertex->position() ) );
+     //dxy_.push_back( theTrack->dxy( firstGoodVertex->position() ) );
+     //bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,conversions_h,theBeamSpot->position());
+     bool isPassEleId = (*ele_id_decisions)[el];
+     
+     //if(el->pt()>30){ 
+       //       cout<<"electron pt is: "<<el->pt()<<endl;
+     //}
+     
+     if(isPassEleId&&el->pt()>50&&fabs(el->superCluster()->eta())<2.4){ 
+       (*electron_pt_).push_back(el->pt());
+       (*electron_dxy_).push_back(fabs(el->gsfTrack()->dxy(vtx->position())));
+       (*electron_dz_).push_back(fabs(el->gsfTrack()->dz(vtx->position())));
+       (*electron_eta_).push_back(el->superCluster()->eta());
+       (*electron_phi_).push_back(el->superCluster()->phi());
+       (*electron_px_).push_back(el->px());
+       (*electron_py_).push_back(el->py());
+       (*electron_pz_).push_back(el->pz());
+       (*electron_e_).push_back(el->energy());
+       (*electron_charge_).push_back(el->charge());
+     }
+
+   }
+
 
    //Get Vertices and rho                                                                                           
    edm::Handle<double> rhoHandle;
@@ -383,8 +411,22 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
 */
 
+   bool passes_muon=false;
+   bool passes_electron=false;
+   if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&(*electron_pt_).size()==0&&passTrigger_mu){
+     passes_muon=true;
+   }
+   if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&(*muon_pt_).size()==0&&passTrigger_e){
+     passes_electron=true;
+   }
+   bool passFatJet=false;
+   //if(channel=="electron"&&passes_electron){passFatJet=true;}
+   //if(channel=="muon"&&passes_muon){passFatJet=true;}
+   if(passes_muon||passes_electron){passFatJet=true;}
 
-   if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
+   //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
+   //Only store samples that pass Fat Jet
+   if(passFatJet){
 
      edm::Handle<edm::View<pat::Jet> > jetColl; // PAT      
      iEvent.getByLabel("slimmedJetsJetId", jetColl);
@@ -399,6 +441,11 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   if(!isLepton){
 	     //numJets_id++;  
 	     //if(jet->phi(),jet->eta())
+	     double deltaR=sqrt( ((*jet_eta_)[0]-jet->eta())*((*jet_eta_)[0]-jet->eta()) + ((*jet_phi_)[0]-jet->phi())*((*jet_phi_)[0]-jet->phi()) );
+	     if(deltaR<0.8){
+	      continue;
+	     }
+	     else{numJetsAK4_id++;}
 	     std::vector<std::pair<std::string, float> > btag=jet->getPairDiscri();
 	     int size_v=btag.size();
 	     for(int i=0;i<size_v;i++){
@@ -412,11 +459,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     }//end of requireing looking at pfCombinedInclusiveSecondaryVertexV2BJetTags
 	     }//end of looping over btags
 
-	     double deltaR=sqrt( ((*jet_eta_)[0]-jet->eta())*((*jet_eta_)[0]-jet->eta()) + ((*jet_phi_)[0]-jet->phi())*((*jet_phi_)[0]-jet->phi()) );
-	     if(deltaR<0.8){
-	      continue;
-	     }
-	     else{numJetsAK4_id++;}
 	   }//end of looking at if it is a lepton
 	   //cout<<"Jet energy, phi, eta: "<<jet->energy()<<", "<<jet->phi()<<", "<<jet->eta()<<endl;
 	   //cout<<"Jet corrected energy: "<<jet->energy()<<endl;
@@ -446,9 +488,15 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     //cout<<"z distance: "<<pfcand.vertex().z()-vtx->position().z()-vtx->position().z()<<endl;
 	     //cout<<"vtx->position().z(): "<<vtx->position().z()<<endl;
 	     //if ((abs(pfcand.vertex().z()-vtx->position().z())<0.02) && (abs(pfcand.vertex().x()-vtx->position().x())<0.006) && (abs(pfcand.vertex().y()-vtx->position().y())<0.006)){
-	     double deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
-	     if(deltaR_mu>0.3){
-	       count_pv=count_pv+1;
+	     double deltaR_mu=1000;
+	     double deltaR_e=1000;
+	     if(passes_muon){
+	       deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
+	       if(deltaR_mu>0.3){count_pv=count_pv+1;}
+	     }
+	     if(passes_electron){
+	       deltaR_e=sqrt(  (pfcand.eta()-(*electron_eta_)[0])*(pfcand.eta()-(*electron_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0]));
+	       if(deltaR_e>0.3){count_pv=count_pv+1;}
 	     }
 	     //}//end of requiring pfcand vertex close to primary vertex
 	   }
@@ -457,11 +505,15 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }//end over loop over pf candidates
      *pfcand_nextracks_=count_pv;
      
-     TLorentzVector MuonP4;
-     MuonP4=TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]);
+
+     TLorentzVector LeptonP4;
+     if(passes_muon){
+       LeptonP4=TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]);}
+     if(passes_electron){
+       LeptonP4=TLorentzVector((*electron_px_)[0],(*electron_py_)[0],(*electron_pz_)[0],(*electron_e_)[0]);}
      //
      //Neutrino 
-     TLorentzVector Neutrino_nominal = Nu4Momentum(MuonP4, METPt, METphi);   // Neutrino Method   
+     TLorentzVector Neutrino_nominal = Nu4Momentum(LeptonP4, METPt, METphi);   // Neutrino Method   
      double E_nu=sqrt(MET->corPx()*MET->corPx()+MET->corPy()*MET->corPy()+Neutrino_nominal.Pz()*Neutrino_nominal.Pz());
      TLorentzVector Neutrino = TLorentzVector(*met_x_,*met_y_,Neutrino_nominal.Pz(),E_nu); 
      /*
@@ -475,7 +527,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      */
 
      //W lep with neutrino - W leptonic
-     TLorentzVector WLeptonic = Neutrino + MuonP4;
+     TLorentzVector WLeptonic = Neutrino + LeptonP4;
      double WLeptonic_Pt  = WLeptonic.Pt();
      double WLeptonic_M   = WLeptonic.M();
      double WLeptonic_phi = WLeptonic.Phi();
@@ -538,6 +590,18 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*muon_dxy_).clear();
    (*muon_dz_).clear();
 
+   (*electron_pt_).clear();
+   (*electron_eta_).clear();
+   (*electron_phi_).clear();
+   (*electron_dxy_).clear();
+   (*electron_dz_).clear();
+   (*electron_px_).clear();
+   (*electron_py_).clear();
+   (*electron_pz_).clear();
+   (*electron_e_).clear();
+   (*electron_charge_).clear();
+
+
    (*jet_pt_).clear();
    (*jet_px_).clear();
    (*jet_py_).clear();
@@ -574,6 +638,31 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 }
 
 
+bool Ntupler::isJetLeptonAK8(double jet_eta, double jet_phi)
+{
+  
+  for(uint i=0;i<(*muon_eta_).size();i++){
+    double eta=(*muon_eta_)[i];
+    double phi=(*muon_phi_)[i];
+    double deltaR=sqrt((eta-jet_eta)*(eta-jet_eta)+(phi-jet_phi)*(phi-jet_phi));
+    if(deltaR<1.0){
+      return true;
+    }
+  }
+  
+  for(uint i=0;i<(*electron_eta_).size();i++){
+    double eta=(*electron_eta_)[i];
+    double phi=(*electron_phi_)[i];
+    double deltaR=sqrt((eta-jet_eta)*(eta-jet_eta)+(phi-jet_phi)*(phi-jet_phi));
+    if(deltaR<1.0){
+      return true;
+    }
+  }
+
+  return false;
+
+}
+
 bool Ntupler::isJetLepton(double jet_eta, double jet_phi)
 {
   
@@ -581,25 +670,24 @@ bool Ntupler::isJetLepton(double jet_eta, double jet_phi)
     double eta=(*muon_eta_)[i];
     double phi=(*muon_phi_)[i];
     double deltaR=sqrt((eta-jet_eta)*(eta-jet_eta)+(phi-jet_phi)*(phi-jet_phi));
-    if(deltaR<0.5){
+    if(deltaR<0.3){
       return true;
     }
   }
-  /*
+  
   for(uint i=0;i<(*electron_eta_).size();i++){
     double eta=(*electron_eta_)[i];
     double phi=(*electron_phi_)[i];
     double deltaR=sqrt((eta-jet_eta)*(eta-jet_eta)+(phi-jet_phi)*(phi-jet_phi));
-    if(deltaR<0.5){
+    if(deltaR<0.3){
       return true;
     }
   }
-  */
-
 
   return false;
 
 }
+
 
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -621,6 +709,17 @@ Ntupler::beginJob()
   muon_iso_ = new std::vector<float>;
   muon_dxy_ = new std::vector<float>;
   muon_dz_ = new std::vector<float>;
+
+  electron_pt_ = new std::vector<float>;
+  electron_eta_ = new std::vector<float>;
+  electron_phi_ = new std::vector<float>;
+  electron_dxy_ = new std::vector<float>;
+  electron_dz_ = new std::vector<float>;
+  electron_px_ = new std::vector<float>;
+  electron_py_ = new std::vector<float>;
+  electron_pz_ = new std::vector<float>;
+  electron_e_ = new std::vector<float>;
+  electron_charge_ = new std::vector<float>;
 
   met_ = new float;
   met_x_ = new float;
@@ -685,6 +784,16 @@ Ntupler::beginJob()
   tree_->Branch("muon_iso",&muon_iso_);
   tree_->Branch("muon_dxy",&muon_dxy_);
   tree_->Branch("muon_dz",&muon_dz_);
+  tree_->Branch("electron_pt",&electron_pt_);
+  tree_->Branch("electron_eta",&electron_eta_);
+  tree_->Branch("electron_phi",&electron_phi_);
+  tree_->Branch("electron_dxy",&electron_dxy_);
+  tree_->Branch("electron_dz",&electron_dz_);
+  tree_->Branch("electron_px",&electron_px_);
+  tree_->Branch("electron_py",&electron_py_);
+  tree_->Branch("electron_pz",&electron_pz_);
+  tree_->Branch("electron_e",&electron_e_);
+  tree_->Branch("electron_charge",&electron_charge_);
   tree_->Branch("met",met_,"met/f");
   tree_->Branch("met_x",met_x_,"met_x/f");
   tree_->Branch("met_y",met_y_,"met_y/f");
@@ -731,9 +840,6 @@ Ntupler::beginJob()
   tree_->Branch("event",ev_,"event/L");
   tree_->Branch("lumiblock",lumiblock_,"lumiblock/I");
 
-  h_total_events = fs->make<TH1F>("h_total_events","",2 ,-0.5 ,1.5);
-
-
 
 }
 
@@ -753,6 +859,17 @@ Ntupler::endJob()
   delete muon_iso_;
   delete muon_dxy_;
   delete muon_dz_;
+
+  delete electron_pt_;
+  delete electron_eta_;
+  delete electron_phi_;
+  delete electron_dxy_;
+  delete electron_dz_;
+  delete electron_px_;
+  delete electron_py_;
+  delete electron_pz_;
+  delete electron_e_;
+  delete electron_charge_;
 
   delete met_;
   delete met_x_;
