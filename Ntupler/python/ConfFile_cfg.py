@@ -4,7 +4,7 @@ process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
-process.MessageLogger.cerr.FwkReport.reportEvery = 1000
+process.MessageLogger.cerr.FwkReport.reportEvery = 100
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 
@@ -77,15 +77,17 @@ process.demo.isMC = cms.bool(True)
 process.demo.year = cms.int32(2017)
 process.demo.era = cms.string("C")
 
-process.load("SlimmedNtuple.TotalEvents.CfiFile_cfi")
+from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
+switchOnVIDElectronIdProducer(process,DataFormat.MiniAOD)
+my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff']
+for idmod in my_id_modules:
+    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
-process.Timing = cms.Service("Timing",                                                                                                                                                     
-summaryOnly = cms.untracked.bool(False),                                                                                                                                                 
-useJobReport = cms.untracked.bool(True)                                                                                                                                                  
-) 
+process.load("SlimmedNtuple.TotalEvents.CfiFile_cfi")
 
 process.p = cms.Path(process.totalEvents*
                      process.hltFilter*
+                     process.egmGsfElectronIDSequence*
                      process.patJetCorrFactorsUpdatedJEC * process.updatedPatJetsUpdatedJEC*
                      process.patJetCorrFactorsUpdatedJECAK8*
                      process.updatedPatJetsUpdatedJECAK8*
