@@ -84,12 +84,8 @@ private:
   virtual void endJob() override;
   //  virtual void endRun(edm::Run const &, edm::EventSetup const&) override;
   //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
-  //void GetProtons(const edm::Event&);
-  //void GetMC(const edm::Event&);
-  //void GetMuons(const edm::Event&,reco::VertexRef,edm::ESHandle<TransientTrackBuilder>&,std::vector<reco::TransientTrack>&,std::vector<uint>&,std::vector<reco::TransientTrack>,int&);
-  //void GetElectrons(const edm::Event&,reco::VertexRef,edm::ESHandle<TransientTrackBuilder>&,std::vector<reco::TransientTrack>&,std::vector<reco::TransientTrack>&,std::vector<uint>&,std::vector<reco::TransientTrack>,int&);
-  //void GetJets(const edm::Event&);
   bool isJetLepton(double,double);
+  bool isJetLeptonAK8(double,double);
 
   // ----------member data ---------------------------
   boost::shared_ptr<FactorizedJetCorrector> jecAK8_;
@@ -104,12 +100,16 @@ private:
   edm::EDGetTokenT<reco::GenParticleCollection> gen_part_token_;
   edm::EDGetTokenT<reco::GenJetCollection> gen_jet_token_;
   edm::EDGetTokenT<pat::METCollection> met_token_;
-  edm::EDGetTokenT<edm::View<pat::Electron>> electron_token_;
+  //edm::EDGetTokenT<edm::View<pat::Electron>> electron_token_;
+  edm::EDGetTokenT<edm::View<reco::GsfElectron>> electron_token_;
   edm::EDGetTokenT<edm::View<pat::PackedCandidate>> pfcand_token_;
   edm::EDGetTokenT<GenEventInfoProduct> mcweight_token_;
 
+  //edm::EDGetToken electronsMiniAODToken_;
+  // ID decisions objects
+  edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
+
   TTree * tree_;
-  TH1F * h_total_events;
 
   std::vector<float> * muon_pt_;
   std::vector<float> * muon_eta_;
@@ -122,6 +122,17 @@ private:
   std::vector<float> * muon_iso_;
   std::vector<float> * muon_dxy_;
   std::vector<float> * muon_dz_;
+
+  std::vector<float> * electron_pt_;
+  std::vector<float> * electron_eta_;
+  std::vector<float> * electron_phi_;
+  std::vector<float> * electron_dxy_;
+  std::vector<float> * electron_dz_;
+  std::vector<float> * electron_px_;
+  std::vector<float> * electron_py_;
+  std::vector<float> * electron_pz_;
+  std::vector<float> * electron_e_;
+  std::vector<float> * electron_charge_;
 
   float * met_;
   float * met_x_;
