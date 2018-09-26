@@ -11,4 +11,6 @@
 <use name="DataFormats/CTPPSReco"/>
 <use name="HLTrigger/HLTcore"/>
 <use name="PhysicsTools/Utilities"/>
+<use name="JetMETCorrections/Modules"/>
+<use name="JetMETCorrections/Objects"/>
 <flags EDM_PLUGIN="1"/>
