@@ -40,6 +40,8 @@
 #include "CondFormats/JetMETObjects/interface/FactorizedJetCorrector.h"
 #include "CondFormats/JetMETObjects/interface/JetCorrectorParameters.h"
 #include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
+#include "JetMETCorrections/Modules/interface/JetResolution.h"
+#include "CondFormats/JetMETObjects/interface/JetResolutionObject.h"
 
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
@@ -109,6 +111,9 @@ private:
   // ID decisions objects
   edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
 
+  std::string jerAK8chsName_res_ ;
+  std::string jerAK8chsName_sf_ ;
+
   TTree * tree_;
 
   std::vector<float> * muon_pt_;
@@ -154,6 +159,10 @@ private:
   std::vector<float> * jet_tau2_;
   std::vector<float> * jet_corrmass_;
   std::vector<float> * jet_vertexz_;
+  std::vector<float> * jet_jer_res_;
+  std::vector<float> * jet_jer_sf_;
+  std::vector<float> * jet_jer_sfup_;
+  std::vector<float> * jet_jer_sfdown_;
 
   std::vector<float> * dijet_mass_;
   std::vector<float> * dijet_pt_;
