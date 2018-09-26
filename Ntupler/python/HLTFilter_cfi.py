@@ -5,7 +5,9 @@ import copy
 from HLTrigger.HLTfilters.hltHighLevel_cfi import *
 hltFilter = copy.deepcopy(hltHighLevel)
 hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
-hltFilter.HLTPaths = ['HLT_IsoMu27_v*']
+hltFilter.HLTPaths = ['HLT_Ele35_WPTight_Gsf_v*',
+                      'HLT_IsoMu27_v*']
+#hltFilter.HLTPaths = ['HLT_IsoMu27_v*']
 #hltFilter.HLTPaths = ['HLT_PFHT1050_v*',
 #                      'HLT_AK8PFJet500_v*',
 #                      'HLT_AK8PFJet360_TrimMass30_v*',
