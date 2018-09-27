@@ -345,7 +345,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    *met_y_=MET->corPy();
    double METPt=MET->corPt();
    double METphi=MET->phi();
-
+   *met_phi_=MET->phi();
 
       
 
@@ -760,6 +760,7 @@ Ntupler::beginJob()
   met_ = new float;
   met_x_ = new float;
   met_y_ = new float;
+  met_phi_ = new float;
   pfcand_nextracks_ = new int;
   num_bjets_ak8_ = new int;
   num_bjets_ak4_ = new int;
@@ -837,6 +838,7 @@ Ntupler::beginJob()
   tree_->Branch("met",met_,"met/f");
   tree_->Branch("met_x",met_x_,"met_x/f");
   tree_->Branch("met_y",met_y_,"met_y/f");
+  tree_->Branch("met_phi",met_phi_,"met_phi/f");
   tree_->Branch("pfcand_nextracks",pfcand_nextracks_,"pfcand_nextracks/I");
   tree_->Branch("num_bjets_ak8",num_bjets_ak8_,"num_bjets_ak8/I");
   tree_->Branch("num_bjets_ak4",num_bjets_ak4_,"num_bjets_ak4/I");
@@ -918,6 +920,7 @@ Ntupler::endJob()
   delete met_;
   delete met_x_;
   delete met_y_;
+  delete met_phi_;
   delete num_bjets_ak8_;
   delete num_bjets_ak4_;
   delete num_jets_ak4_;
