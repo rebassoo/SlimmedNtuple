@@ -219,12 +219,31 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    }
 
+   //Get Gen Jets
+   if(isMC == true){
+     edm::Handle<reco::GenJetCollection> genJet;
+     iEvent.getByLabel("slimmedGenJetsAK8",genJet);
+     
+     //TLorentzVector genjet1, genjet2, genjj;
+     for (reco::GenJetCollection::const_iterator genJetIter=genJet->begin(); genJetIter != genJet->end(); genJetIter++ ) {
+       (*gen_jet_pt_).push_back(genJetIter->pt());
+       (*gen_jet_phi_).push_back(genJetIter->phi());
+       (*gen_jet_eta_).push_back(genJetIter->eta());
+       (*gen_jet_energy_).push_back(genJetIter->energy());
+       //cout<<"genJetIter->pt(): "<<genJetIter->pt()<<endl;
+       //cout<<"genJetIter->eta(): "<<genJetIter->eta()<<endl;
+     }
+     //genjet1.SetPtEtaPhiE((*gen_jet_pt_)[0],(*gen_jet_eta_)[0],(*gen_jet_phi_)[0],(*gen_jet_energy_)[0]);
+     //genjet2.SetPtEtaPhiE((*gen_jet_pt_)[1],(*gen_jet_eta_)[1],(*gen_jet_phi_)[1],(*gen_jet_energy_)[1]);
+     //genjj = genjet1+genjet2;
+     //(*gen_dijet_mass_).push_back(genjj.M());
+     //(*gen_dijet_y_).push_back(genjj.Rapidity());
+   }
 
-   //Get Vertices and rho                                                                                           
+   //Get Vertices and rho                                                                                    
    edm::Handle<double> rhoHandle;
    iEvent.getByToken(rho_token_,rhoHandle);
    double rho = *rhoHandle; 
-
 
    // Get ak8Jets
    edm::Handle<edm::View<pat::Jet>> jets;
@@ -258,8 +277,55 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        double tau1         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau1");
        double tau2         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau2");
 
-       //if(jet.pt()>200&&fabs(jet.eta())<2.4&&looseJetID){
-       if(jet->pt()>200&&fabs(jet->eta())<2.4){
+       float C_JER=1.0;
+
+       if(isMC == true)
+	 {
+	   JME::JetResolution resolution_ak8;
+	   JME::JetResolutionScaleFactor resolution_ak8_sf;
+	   resolution_ak8 = JME::JetResolution(jerAK8chsName_res_);
+	   resolution_ak8_sf = JME::JetResolutionScaleFactor(jerAK8chsName_sf_);
+	   JME::JetParameters parameters_ak8;
+	   parameters_ak8.setJetPt(jet->pt());
+	   parameters_ak8.setJetEta(jet->eta());
+	   parameters_ak8.setRho(rho);
+      
+	   float jer_res= resolution_ak8.getResolution(parameters_ak8);
+	   float jer_sf = resolution_ak8_sf.getScaleFactor(parameters_ak8);
+	   float jer_sf_up = resolution_ak8_sf.getScaleFactor(parameters_ak8, Variation::UP);
+	   float jer_sf_down = resolution_ak8_sf.getScaleFactor(parameters_ak8, Variation::DOWN);
+	   
+	   (*jet_jer_res_).push_back(jer_res);
+	   (*jet_jer_sf_).push_back(jer_sf);
+	   (*jet_jer_sfup_).push_back(jer_sf_up);
+	   (*jet_jer_sfdown_).push_back(jer_sf_down);
+       
+	   TLorentzVector recojtmp, genjtmp;
+	   TRandom3 randomSrc;
+	   recojtmp.SetPtEtaPhiE(jet->pt(),jet->eta(),jet->phi(),jet->energy());
+
+	   int matchedgen=0;
+	   int indmatchedgen=-1;
+	   //Jet smearing calculation: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution
+	   //loop over gen jets
+	   for(uint ig=0; ig<(*gen_jet_pt_).size(); ig++){
+	     genjtmp.SetPtEtaPhiE((*gen_jet_pt_).at(ig),(*gen_jet_eta_).at(ig),(*gen_jet_phi_).at(ig),(*gen_jet_energy_).at(ig));
+	     if( (recojtmp.DeltaR(genjtmp) < (0.8/2.)) && (fabs(recojtmp.Pt() - genjtmp.Pt())<(3*jer_res*recojtmp.Pt()) ) ){
+	       matchedgen=1; 
+	       indmatchedgen=ig;
+	     } // 0.8 is cone radius
+	   }
+	   
+	   if(matchedgen == 1) { C_JER = 1 + (jer_sf -1 )*( (recojtmp.Pt() - (*gen_jet_pt_).at(indmatchedgen)) / recojtmp.Pt() );
+	     if(C_JER < 0) {C_JER = 0;}
+	   }
+	   else       
+	     {	   C_JER = 1 + randomSrc.Gaus(0, jer_res)*(sqrt(max(jer_sf*jer_sf - 1., 0.)));	 }
+	 }//end of if MC
+       
+
+       if( (C_JER*jet->pt())>200&&fabs(jet->eta())<2.4){
+       //if(jet->pt()>200&&fabs(jet->eta())<2.4){
 	 bool isLepton=isJetLepton(jet->eta(),jet->phi());
 	 if(!isLepton){
 	   //(*jet_pt_).push_back(jet->pt());
@@ -305,28 +371,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   pruned_masscorr = corr*pruned_mass;
 	   (*jet_corrmass_).push_back(pruned_masscorr);
 
-	   if(isMC == true)
-	     {
-	       JME::JetResolution resolution_ak8;
-	       JME::JetResolutionScaleFactor resolution_ak8_sf;
-	       resolution_ak8 = JME::JetResolution(jerAK8chsName_res_);
-	       resolution_ak8_sf = JME::JetResolutionScaleFactor(jerAK8chsName_sf_);
-	       JME::JetParameters parameters_ak8;
-	       parameters_ak8.setJetPt(jet->pt());
-	       parameters_ak8.setJetEta(jet->eta());
-	       parameters_ak8.setRho(rho);
-      
-	       float jer_res= resolution_ak8.getResolution(parameters_ak8);
-	       float jer_sf = resolution_ak8_sf.getScaleFactor(parameters_ak8);
-	       float jer_sf_up = resolution_ak8_sf.getScaleFactor(parameters_ak8, Variation::UP);
-	       float jer_sf_down = resolution_ak8_sf.getScaleFactor(parameters_ak8, Variation::DOWN);
-
-	       (*jet_jer_res_).push_back(jer_res);
-	       (*jet_jer_sf_).push_back(jer_sf);
-	       (*jet_jer_sfup_).push_back(jer_sf_up);
-	       (*jet_jer_sfdown_).push_back(jer_sf_down);
-
-	     }
 
 
 	 }}//endof looking at if by lepton and if pt>200 GeV
@@ -387,6 +431,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    
    if(isMC == true){
+     
      edm::Handle<GenEventInfoProduct> genEvtInfo; 
      iEvent.getByLabel( "generator", genEvtInfo );
      
@@ -394,6 +439,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      double theWeight = genEvtInfo->weight();
      //cout<<"theWeight: "<<theWeight<<endl;
      *mcWeight_=theWeight;
+     
    }
    
 
@@ -404,6 +450,19 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        iEvent.getByLabel("prunedGenParticles",genP);
 
        for (reco::GenParticleCollection::const_iterator mcIter=genP->begin(); mcIter != genP->end(); mcIter++ ) {
+
+	 if((fabs(mcIter->pdgId()) == 24) && (mcIter->status() == 22))
+	 //if((fabs(mcIter->pdgId()) == 24))
+	   {
+	     (*gen_W_pt_).push_back(mcIter->pt());
+	     (*gen_W_charge_).push_back(mcIter->charge());
+	     //cout<<"W pt is:"<<mcIter->pt()<<endl;
+	     //cout<<"W status is:"<<mcIter->status()<<endl;
+	     //cout<<"W mother is:"<<mcIter->mother()->pdgId()<<endl;
+	     // cout<<"W charge is:"<<mcIter->charge()<<endl;
+	   }
+
+
 	 if((mcIter->pdgId() == 2212) && (fabs(mcIter->pz()) > 3000) && (mcIter->status() == 1))
 	   {
 	     double thexi = 1 - ((mcIter->energy())/(13000.0/2.0));
@@ -422,26 +481,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
 
 
-   // If at least 2 jets, make dijet pairs of the leading 2
-/* 
-   if(collSize >= 2)
-     {
-       jet1.SetPtEtaPhiM((*jet_pt_)[0],(*jet_eta_)[0],(*jet_phi_)[0],(*jet_corrmass_)[0]);
-       jet2.SetPtEtaPhiM((*jet_pt_)[1],(*jet_eta_)[1],(*jet_phi_)[1],(*jet_corrmass_)[1]);
-       jj = jet1+jet2;
-
-
-       (*dijet_mass_).push_back(jj.M());
-       (*dijet_y_).push_back(jj.Rapidity());
-       (*dijet_pt_).push_back(jj.Pt());
-       (*dijet_phi_).push_back(jj.Phi());
-       float dphi = (*dijet_phi_)[0]-(*dijet_phi_)[1];
-       if(dphi < 3.14159)
-	 (*dijet_dphi_).push_back(dphi);
-       else
-	 (*dijet_dphi_).push_back((2*3.14159)-dphi);
-     }
-*/
 
    bool passes_muon=false;
    bool passes_electron=false;
@@ -661,12 +700,20 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*pps_track_y_).clear();
    (*pps_track_rpid_).clear();
 
+   (*gen_W_pt_).clear();
+   (*gen_W_charge_).clear();
+
    (*gen_proton_px_).clear();
    (*gen_proton_py_).clear();
    (*gen_proton_pz_).clear();
    (*gen_proton_xi_).clear();
    (*gen_proton_t_).clear();
    
+   (*gen_jet_pt_).clear();
+   (*gen_jet_phi_).clear();
+   (*gen_jet_eta_).clear();
+   (*gen_jet_energy_).clear();
+
    (*hlt_).clear();
 
 
@@ -799,11 +846,19 @@ Ntupler::beginJob()
   pps_track_y_ = new std::vector<float>;
   pps_track_rpid_ = new std::vector<int>;
 
+  gen_W_pt_ = new std::vector<float>;
+  gen_W_charge_ = new std::vector<float>;
+
   gen_proton_px_ = new std::vector<float>;
   gen_proton_py_ = new std::vector<float>;
   gen_proton_pz_ = new std::vector<float>;
   gen_proton_xi_ = new std::vector<float>;
   gen_proton_t_ = new std::vector<float>;
+
+  gen_jet_pt_ = new std::vector<float>;
+  gen_jet_phi_ = new std::vector<float>;
+  gen_jet_eta_ = new std::vector<float>;
+  gen_jet_energy_ = new std::vector<float>;
 
   hlt_ = new std::vector<string>;
 
@@ -874,11 +929,17 @@ Ntupler::beginJob()
   tree_->Branch("pps_track_y",&pps_track_y_);
   tree_->Branch("pps_track_rpid",&pps_track_rpid_);
   tree_->Branch("hlt",&hlt_);
+  tree_->Branch("gen_W_pt",&gen_W_pt_);
+  tree_->Branch("gen_W_charge",&gen_W_charge_);
   tree_->Branch("gen_proton_px",&gen_proton_px_);
   tree_->Branch("gen_proton_py",&gen_proton_py_);
   tree_->Branch("gen_proton_pz",&gen_proton_pz_);
   tree_->Branch("gen_proton_xi",&gen_proton_xi_);
   tree_->Branch("gen_proton_t",&gen_proton_t_);
+  tree_->Branch("gen_jet_pt",&gen_jet_pt_);
+  tree_->Branch("gen_jet_phi",&gen_jet_phi_);
+  tree_->Branch("gen_jet_eta",&gen_jet_eta_);
+  tree_->Branch("gen_jet_energy",&gen_jet_energy_);
   tree_->Branch("nVertices",nVertices_,"nVertices/i");
   tree_->Branch("pileupWeight",pileupWeight_,"pileupWeight/f");
   tree_->Branch("mcWeight",mcWeight_,"mcWeight/f");
@@ -956,11 +1017,17 @@ Ntupler::endJob()
   delete pps_track_x_;
   delete pps_track_y_;
   delete pps_track_rpid_;
+  delete gen_W_pt_;
+  delete gen_W_charge_;
   delete gen_proton_px_;
   delete gen_proton_py_;
   delete gen_proton_pz_;
   delete gen_proton_xi_;
   delete gen_proton_t_;
+  delete gen_jet_pt_;
+  delete gen_jet_phi_;
+  delete gen_jet_eta_;
+  delete gen_jet_energy_;
   delete hlt_;
 
 }
