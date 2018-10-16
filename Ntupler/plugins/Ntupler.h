@@ -21,7 +21,7 @@
 #include <memory>
 #include "TTree.h"
 #include "TH2F.h"
-
+#include "TRandom3.h"
 #include "TLorentzVector.h"
 
 #include <iostream>       // std::cout
@@ -175,11 +175,19 @@ private:
   std::vector<float> * pps_track_y_;
   std::vector<int> * pps_track_rpid_;
 
+  std::vector<float> * gen_W_pt_;
+  std::vector<float> * gen_W_charge_;
+
   std::vector<float> * gen_proton_px_;
   std::vector<float> * gen_proton_py_;
   std::vector<float> * gen_proton_pz_;
   std::vector<float> * gen_proton_xi_;
   std::vector<float> * gen_proton_t_;
+
+  std::vector<float> * gen_jet_pt_;
+  std::vector<float> * gen_jet_eta_;
+  std::vector<float> * gen_jet_phi_;
+  std::vector<float> * gen_jet_energy_;
 
   std::vector<string> * hlt_;
 
