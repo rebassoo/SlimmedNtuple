@@ -110,6 +110,7 @@ private:
   //edm::EDGetToken electronsMiniAODToken_;
   // ID decisions objects
   edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
+  edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_veto_;
 
   std::string jerAK8chsName_res_ ;
   std::string jerAK8chsName_sf_ ;
@@ -165,12 +166,6 @@ private:
   std::vector<float> * jet_jer_sfup_;
   std::vector<float> * jet_jer_sfdown_;
 
-  std::vector<float> * dijet_mass_;
-  std::vector<float> * dijet_pt_;
-  std::vector<float> * dijet_y_;
-  std::vector<float> * dijet_phi_;
-  std::vector<float> * dijet_dphi_;
-
   std::vector<float> * pps_track_x_;
   std::vector<float> * pps_track_y_;
   std::vector<int> * pps_track_rpid_;
@@ -198,12 +193,14 @@ private:
   float * pileupWeight_;
   float * mcWeight_;
   int * pfcand_nextracks_;
+  int * pfcand_nextracks_noDRl_;
 
   float * recoMWhad_;
   float * recoMWlep_;
   float * dphiWW_;
   float * recoMWW_;
   float * WLeptonicPt_;
+  float * WLeptonicPhi_;
 
   HLTConfigProvider hltConfig_;
   HLTPrescaleProvider hltPrescaleProvider_;
