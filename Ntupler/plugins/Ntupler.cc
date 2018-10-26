@@ -35,6 +35,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   era = iConfig.getParameter<std::string>("era");
 
   eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"));
+  eleIdMapToken_veto_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-veto"));
 
    if(isMC == true)
      {
@@ -166,7 +167,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    for (const pat::Muon &MuonIt : *muonHandle) { 
      bool tightId=MuonIt.isTightMuon(*vtx);
      double iso = (MuonIt.pfIsolationR04().sumChargedHadronPt + max(0., MuonIt.pfIsolationR04().sumNeutralHadronEt + MuonIt.pfIsolationR04().sumPhotonEt - 0.5*MuonIt.pfIsolationR04().sumPUPt))/MuonIt.pt();
-     if(tightId&&MuonIt.pt()>53&&fabs(MuonIt.eta())<2.4&&iso<0.15){
+     if(tightId&&MuonIt.pt()>50&&fabs(MuonIt.eta())<2.4&&iso<0.1){
        (*muon_px_).push_back(MuonIt.px());
        (*muon_py_).push_back(MuonIt.py());
        (*muon_pz_).push_back(MuonIt.pz());
@@ -180,17 +181,22 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        (*muon_dz_).push_back(fabs(MuonIt.muonBestTrack()->dz(vtx->position())));
      }
      bool looseId=MuonIt.isLooseMuon();
-    if(looseId&&MuonIt.pt()>20&&fabs(MuonIt.eta())<2.4){numMuLoose++;}
+    if(looseId&&MuonIt.pt()>20&&fabs(MuonIt.eta())<2.4&&iso<0.1){numMuLoose++;}
 
    }//end of looping over muons
 
    //Get Electrons
+   //Tight id
    edm::Handle<edm::ValueMap<bool> > ele_id_decisions;
    iEvent.getByToken(eleIdMapToken_ ,ele_id_decisions);
+   //Veto id
+   edm::Handle<edm::ValueMap<bool> > ele_id_decisions_veto;
+   iEvent.getByToken(eleIdMapToken_veto_ ,ele_id_decisions_veto);
    edm::Handle<edm::View<reco::GsfElectron> > electronHandle;
    iEvent.getByToken(electron_token_,electronHandle);
    unsigned int n = electronHandle->size();
    //cout<<"I get before electrons: "<<endl;
+   int num_ele_veto=0;
    for(unsigned int i = 0; i < n; ++i) {
      const auto el = electronHandle->ptrAt(i);
      //reco::GsfElectronRef ele(electronHandle, i);
@@ -215,6 +221,11 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        (*electron_pz_).push_back(el->pz());
        (*electron_e_).push_back(el->energy());
        (*electron_charge_).push_back(el->charge());
+     }
+
+     bool isPassEleId_veto = (*ele_id_decisions_veto)[el];
+     if(isPassEleId_veto&&el->pt()>35&&fabs(el->superCluster()->eta())<2.4){ 
+       num_ele_veto++;
      }
 
    }
@@ -429,7 +440,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        *pileupWeight_ = LumiWeights->weight( trueInteractions );
      }
 
-   
+
+      
    if(isMC == true){
      
      edm::Handle<GenEventInfoProduct> genEvtInfo; 
@@ -484,10 +496,12 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    bool passes_muon=false;
    bool passes_electron=false;
-   if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&(*electron_pt_).size()==0&&passTrigger_mu){
+   //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&(*electron_pt_).size()==0&&passTrigger_mu){
+   if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&num_ele_veto==0&&passTrigger_mu){
      passes_muon=true;
    }
-   if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&(*muon_pt_).size()==0&&passTrigger_e){
+   //if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&(*muon_pt_).size()==0&&passTrigger_e){
+   if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&num_ele_veto==1&&(*muon_pt_).size()==0&&passTrigger_e){
      passes_electron=true;
    }
    bool passFatJet=false;
@@ -550,6 +564,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      edm::Handle<edm::View<pat::PackedCandidate> > pfCands; // PAT      
      iEvent.getByToken(pfcand_token_, pfCands);
      int count_pv=0;
+     int count_pv_noDRl=0;
      for (const pat::PackedCandidate &pfcand : *pfCands) { 
        //if(fabs(pfcand.pdgId())==211&&pfcand.fromPV(0)==3){
        if((*jet_eta_).size()>0){
@@ -564,10 +579,12 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     if(passes_muon){
 	       deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
 	       if(deltaR_mu>0.3){count_pv=count_pv+1;}
+	       if(!(deltaR_mu<0.3&&fabs(pfcand.pdgId())==13)){count_pv_noDRl=count_pv_noDRl+1;}
 	     }
 	     if(passes_electron){
 	       deltaR_e=sqrt(  (pfcand.eta()-(*electron_eta_)[0])*(pfcand.eta()-(*electron_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0]));
 	       if(deltaR_e>0.3){count_pv=count_pv+1;}
+	       if(!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)){count_pv_noDRl=count_pv_noDRl+1;}
 	     }
 	     //}//end of requiring pfcand vertex close to primary vertex
 	   }
@@ -575,6 +592,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
      }//end over loop over pf candidates
      *pfcand_nextracks_=count_pv;
+     *pfcand_nextracks_noDRl_=count_pv_noDRl;
      
 
      TLorentzVector LeptonP4;
@@ -639,6 +657,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      *recoMWlep_=WLeptonic_M;
      double dphi=deltaPhi(WLeptonic_phi,WJphi);
      *dphiWW_=dphi;
+     *WLeptonicPhi_=WLeptonic_phi;
      *WLeptonicPt_=WLeptonic_Pt;
      *recoMWW_=MWW_Nu;
 
@@ -689,12 +708,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*jet_jer_sf_).clear();
    (*jet_jer_sfup_).clear();
    (*jet_jer_sfdown_).clear();
-
-   (*dijet_mass_).clear();
-   (*dijet_y_).clear();
-   (*dijet_phi_).clear();
-   (*dijet_pt_).clear();
-   (*dijet_dphi_).clear();
 
    (*pps_track_x_).clear();
    (*pps_track_y_).clear();
@@ -809,6 +822,7 @@ Ntupler::beginJob()
   met_y_ = new float;
   met_phi_ = new float;
   pfcand_nextracks_ = new int;
+  pfcand_nextracks_noDRl_ = new int;
   num_bjets_ak8_ = new int;
   num_bjets_ak4_ = new int;
   num_jets_ak4_ = new int;
@@ -818,6 +832,7 @@ Ntupler::beginJob()
   recoMWW_ = new float;
   dphiWW_ = new float;
   WLeptonicPt_ = new float;
+  WLeptonicPhi_ = new float;
 
   jet_pt_ = new std::vector<float>;
   jet_px_ = new std::vector<float>;
@@ -835,12 +850,6 @@ Ntupler::beginJob()
   jet_jer_sf_ = new std::vector<float>;
   jet_jer_sfup_ = new std::vector<float>;
   jet_jer_sfdown_ = new std::vector<float>;
-
-  dijet_mass_ = new std::vector<float>;
-  dijet_pt_ = new std::vector<float>;
-  dijet_y_ = new std::vector<float>;
-  dijet_phi_ = new std::vector<float>;
-  dijet_dphi_ = new std::vector<float>;
 
   pps_track_x_ = new std::vector<float>;
   pps_track_y_ = new std::vector<float>;
@@ -895,6 +904,7 @@ Ntupler::beginJob()
   tree_->Branch("met_y",met_y_,"met_y/f");
   tree_->Branch("met_phi",met_phi_,"met_phi/f");
   tree_->Branch("pfcand_nextracks",pfcand_nextracks_,"pfcand_nextracks/I");
+  tree_->Branch("pfcand_nextracks_noDRl",pfcand_nextracks_noDRl_,"pfcand_nextracks_noDRl/I");
   tree_->Branch("num_bjets_ak8",num_bjets_ak8_,"num_bjets_ak8/I");
   tree_->Branch("num_bjets_ak4",num_bjets_ak4_,"num_bjets_ak4/I");
   tree_->Branch("num_jets_ak4",num_jets_ak4_,"num_jets_ak4/I");
@@ -903,6 +913,7 @@ Ntupler::beginJob()
   tree_->Branch("recoMWW",recoMWW_,"recoMWW/f");
   tree_->Branch("dphiWW",dphiWW_,"dphiWW/f");
   tree_->Branch("WLeptonicPt",WLeptonicPt_,"WLeptonicPt/f");
+  tree_->Branch("WLeptonicPhi",WLeptonicPhi_,"WLeptonicPhi/f");
 
   tree_->Branch("jet_pt",&jet_pt_);
   tree_->Branch("jet_px",&jet_px_);
@@ -920,11 +931,6 @@ Ntupler::beginJob()
   tree_->Branch("jet_jer_sf",&jet_jer_sf_);
   tree_->Branch("jet_jer_sfup",&jet_jer_sfup_);
   tree_->Branch("jet_jer_sfdown",&jet_jer_sfdown_);
-  tree_->Branch("dijet_mass",&dijet_mass_);
-  tree_->Branch("dijet_pt",&dijet_pt_);
-  tree_->Branch("dijet_y",&dijet_y_);
-  tree_->Branch("dijet_phi",&dijet_phi_);
-  tree_->Branch("dijet_dphi",&dijet_dphi_);
   tree_->Branch("pps_track_x",&pps_track_x_);
   tree_->Branch("pps_track_y",&pps_track_y_);
   tree_->Branch("pps_track_rpid",&pps_track_rpid_);
@@ -987,11 +993,13 @@ Ntupler::endJob()
   delete num_jets_ak4_;
 
   delete pfcand_nextracks_;
+  delete pfcand_nextracks_noDRl_;
   delete recoMWhad_;
   delete recoMWlep_;
   delete dphiWW_;
   delete recoMWW_;
   delete WLeptonicPt_;
+  delete WLeptonicPhi_;
 
   delete jet_pt_;
   delete jet_px_;
@@ -1009,11 +1017,6 @@ Ntupler::endJob()
   delete jet_jer_sf_;
   delete jet_jer_sfup_;
   delete jet_jer_sfdown_;
-  delete dijet_mass_;
-  delete dijet_pt_;
-  delete dijet_y_;
-  delete dijet_phi_;
-  delete dijet_dphi_;
   delete pps_track_x_;
   delete pps_track_y_;
   delete pps_track_rpid_;
