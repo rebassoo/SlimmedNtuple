@@ -4,9 +4,10 @@ process = cms.Process("Demo")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
-process.MessageLogger.cerr.FwkReport.reportEvery = 100
+#process.MessageLogger.cerr.FwkReport.reportEvery = 1
+process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
@@ -17,9 +18,10 @@ process.source = cms.Source("PoolSource",
         #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14_ext1-v2/70000/FED622C0-7975-E811-AA65-0242AC130002.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/36FDBA37-1C56-E811-B75E-00266CF2E388.root'
         #'root://xrootd.t2.ucsd.edu:2040//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
-        'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/00469E05-E055-E811-807F-008CFAF7174A.root'
-        #'file:step3_fpmc_MiniAOD.root'
+        'file:step3_fpmc_MiniAOD.root'
         )
 )
 
@@ -31,6 +33,8 @@ process.hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 MC=True
+
+#Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
 if MC:
     process.GlobalTag.globaltag ='94X_mc2017_realistic_v14'
 else:
