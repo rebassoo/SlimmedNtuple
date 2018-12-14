@@ -90,88 +90,15 @@ private:
   bool isJetLeptonAK8(double,double);
 
   // ----------member data ---------------------------
-  boost::shared_ptr<FactorizedJetCorrector> jecAK8_;
-  edm::EDGetTokenT<edm::View<pat::Jet>> jet_token_;
-  edm::EDGetTokenT<edm::View<pat::Jet>> jetAK8_token_;
-  edm::EDGetTokenT<edm::View<pat::Muon>> muon_token_;
   edm::EDGetTokenT<std::vector<CTPPSLocalTrackLite> > pps_token_;
-  edm::EDGetTokenT<std::vector<reco::Vertex>> vertex_token_;
-  edm::EDGetTokenT<double> rho_token_;
-  edm::EDGetTokenT<edm::TriggerResults> hlt_token_;
-  edm::EDGetTokenT<std::vector< PileupSummaryInfo > > pu_token_;
   edm::EDGetTokenT<reco::GenParticleCollection> gen_part_token_;
-  edm::EDGetTokenT<reco::GenJetCollection> gen_jet_token_;
-  edm::EDGetTokenT<pat::METCollection> met_token_;
-  //edm::EDGetTokenT<edm::View<pat::Electron>> electron_token_;
-  edm::EDGetTokenT<edm::View<reco::GsfElectron>> electron_token_;
-  edm::EDGetTokenT<edm::View<pat::PackedCandidate>> pfcand_token_;
-  edm::EDGetTokenT<GenEventInfoProduct> mcweight_token_;
-
-  //edm::EDGetToken electronsMiniAODToken_;
-  // ID decisions objects
-  edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_;
-  edm::EDGetTokenT<edm::ValueMap<bool> > eleIdMapToken_veto_;
-
-  std::string jerAK8chsName_res_ ;
-  std::string jerAK8chsName_sf_ ;
 
   TTree * tree_;
 
-  std::vector<float> * muon_pt_;
-  std::vector<float> * muon_eta_;
-  std::vector<float> * muon_phi_;
-  std::vector<float> * muon_px_;
-  std::vector<float> * muon_py_;
-  std::vector<float> * muon_pz_;
-  std::vector<float> * muon_e_;
-  std::vector<float> * muon_charge_;
-  std::vector<float> * muon_iso_;
-  std::vector<float> * muon_dxy_;
-  std::vector<float> * muon_dz_;
-
-  std::vector<float> * electron_pt_;
-  std::vector<float> * electron_eta_;
-  std::vector<float> * electron_phi_;
-  std::vector<float> * electron_dxy_;
-  std::vector<float> * electron_dz_;
-  std::vector<float> * electron_px_;
-  std::vector<float> * electron_py_;
-  std::vector<float> * electron_pz_;
-  std::vector<float> * electron_e_;
-  std::vector<float> * electron_charge_;
-
-  float * met_;
-  float * met_x_;
-  float * met_y_;
-  float * met_phi_;
-
-  int * num_bjets_ak8_;
-  int * num_bjets_ak4_;
-  int * num_jets_ak4_;
-
-  std::vector<float> * jet_pt_;
-  std::vector<float> * jet_energy_;
-  std::vector<float> * jet_phi_;
-  std::vector<float> * jet_eta_;
-  std::vector<float> * jet_px_;
-  std::vector<float> * jet_py_;
-  std::vector<float> * jet_pz_;
-  std::vector<float> * jet_mass_;
-  std::vector<float> * jet_tau1_;
-  std::vector<float> * jet_tau2_;
-  std::vector<float> * jet_corrmass_;
-  std::vector<float> * jet_vertexz_;
-  std::vector<float> * jet_jer_res_;
-  std::vector<float> * jet_jer_sf_;
-  std::vector<float> * jet_jer_sfup_;
-  std::vector<float> * jet_jer_sfdown_;
 
   std::vector<float> * pps_track_x_;
   std::vector<float> * pps_track_y_;
   std::vector<int> * pps_track_rpid_;
-
-  std::vector<float> * gen_W_pt_;
-  std::vector<float> * gen_W_charge_;
 
   std::vector<float> * gen_proton_px_;
   std::vector<float> * gen_proton_py_;
@@ -179,37 +106,10 @@ private:
   std::vector<float> * gen_proton_xi_;
   std::vector<float> * gen_proton_t_;
 
-  std::vector<float> * gen_jet_pt_;
-  std::vector<float> * gen_jet_eta_;
-  std::vector<float> * gen_jet_phi_;
-  std::vector<float> * gen_jet_energy_;
-
-  std::vector<string> * hlt_;
 
   int * run_;
   long int * ev_;
   int * lumiblock_;
-  int * nVertices_;
-  float * pileupWeight_;
-  float * mcWeight_;
-  int * pfcand_nextracks_;
-  int * pfcand_nextracks_noDRl_;
-
-  float * recoMWhad_;
-  float * recoMWlep_;
-  float * dphiWW_;
-  float * recoMWW_;
-  float * WLeptonicPt_;
-  float * WLeptonicPhi_;
-
-  HLTConfigProvider hltConfig_;
-  HLTPrescaleProvider hltPrescaleProvider_;
-  edm::LumiReWeighting *LumiWeights;
-
-  bool isMC;
-  int year;
-  std::string era;
-
   
 
 };
