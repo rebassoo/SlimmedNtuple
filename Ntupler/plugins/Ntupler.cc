@@ -40,7 +40,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    using namespace edm;
    using namespace std;
 
-   cout<<"I get to beginning of code"<<endl;
+   //cout<<"I get to beginning of code"<<endl;
 
    // Run and vertex multiplicity info
    *run_ = iEvent.id().run();
@@ -82,12 +82,14 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 double thepz = mcIter->pz();
 	 double thepx = mcIter->px();
 	 double thepy = mcIter->py();
+	 double theenergy = mcIter->energy();
 	 
 	 (*gen_proton_xi_).push_back(thexi);
 	     (*gen_proton_t_).push_back(thet);
 	     (*gen_proton_pz_).push_back(thepz);
 	     (*gen_proton_py_).push_back(thepy);
 	     (*gen_proton_px_).push_back(thepx);
+	     (*gen_proton_energy_).push_back(theenergy);
        }
    }
 
@@ -163,6 +165,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*gen_proton_px_).clear();
    (*gen_proton_py_).clear();
    (*gen_proton_pz_).clear();
+   (*gen_proton_energy_).clear();
    (*gen_proton_xi_).clear();
    (*gen_proton_t_).clear();
 
@@ -197,6 +200,7 @@ Ntupler::beginJob()
   gen_proton_px_ = new std::vector<float>;
   gen_proton_py_ = new std::vector<float>;
   gen_proton_pz_ = new std::vector<float>;
+  gen_proton_energy_ = new std::vector<float>;
   gen_proton_xi_ = new std::vector<float>;
   gen_proton_t_ = new std::vector<float>;
 
@@ -219,6 +223,7 @@ Ntupler::beginJob()
   tree_->Branch("gen_proton_px",&gen_proton_px_);
   tree_->Branch("gen_proton_py",&gen_proton_py_);
   tree_->Branch("gen_proton_pz",&gen_proton_pz_);
+  tree_->Branch("gen_proton_energy",&gen_proton_energy_);
   tree_->Branch("gen_proton_xi",&gen_proton_xi_);
   tree_->Branch("gen_proton_t",&gen_proton_t_);
   tree_->Branch("proton_xi",&proton_xi_);
@@ -247,6 +252,7 @@ Ntupler::endJob()
   delete gen_proton_px_;
   delete gen_proton_py_;
   delete gen_proton_pz_;
+  delete gen_proton_energy_;
   delete gen_proton_xi_;
   delete gen_proton_t_;
 
