@@ -18,15 +18,14 @@ process.source = cms.Source("PoolSource",
 
 process.load("SlimmedNtuple.Ntupler.CfiFile_cfi")
 
-process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
-from Configuration.AlCa.GlobalTag import GlobalTag
-MC=True
-
-#Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
-if MC:
-    process.GlobalTag.globaltag ='94X_mc2017_realistic_v14'
-else:
-    process.GlobalTag.globaltag ='94X_dataRun2_v6'
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+#from Configuration.AlCa.GlobalTag import GlobalTag
+#MC=True
+##Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
+#if MC:
+#    process.GlobalTag.globaltag ='94X_mc2017_realistic_v14'
+#else:
+#    process.GlobalTag.globaltag ='94X_dataRun2_v6'
 
 process.demo = cms.EDAnalyzer('Ntupler')
 
