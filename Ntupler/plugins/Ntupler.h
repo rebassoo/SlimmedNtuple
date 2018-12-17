@@ -51,6 +51,7 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
 #include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
+#include "DataFormats/ProtonReco/interface/ProtonTrack.h"
 
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
@@ -91,6 +92,7 @@ private:
   // ----------member data ---------------------------
   edm::EDGetTokenT<std::vector<CTPPSLocalTrackLite> > pps_token_;
   edm::EDGetTokenT<reco::GenParticleCollection> gen_part_token_;
+  edm::EDGetTokenT<std::vector<reco::ProtonTrack>> reco_protons_token_;
 
   TTree * tree_;
 
@@ -105,6 +107,13 @@ private:
   std::vector<float> * gen_proton_xi_;
   std::vector<float> * gen_proton_t_;
 
+  std::vector<float> * proton_xi_;
+  std::vector<float> * proton_thy_;
+  std::vector<float> * proton_thx_;
+  std::vector<float> * proton_t_;
+  std::vector<int> * proton_ismultirp_;
+  std::vector<int> * proton_rpid_;
+  std::vector<int> * proton_arm_;
 
   int * run_;
   long int * ev_;
