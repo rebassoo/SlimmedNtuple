@@ -104,6 +104,7 @@ private:
   std::vector<float> * gen_proton_px_;
   std::vector<float> * gen_proton_py_;
   std::vector<float> * gen_proton_pz_;
+  std::vector<float> * gen_proton_energy_;
   std::vector<float> * gen_proton_xi_;
   std::vector<float> * gen_proton_t_;
 
