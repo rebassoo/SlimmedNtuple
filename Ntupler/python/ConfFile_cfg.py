@@ -14,7 +14,8 @@ process.source = cms.Source("PoolSource",
         duplicateCheckMode = cms.untracked.string('noDuplicateCheck'), # and this      
         fileNames = cms.untracked.vstring(
         #'file:step3_fpmc_MiniAOD.root'
-        'file:/home/users/rebassoo/work/2018_12_17_TestingUpdatedProtonRecoSim/CMSSW_9_4_11/src/Validation/CTPPS/test_2017/acceptance_test/ctppsSim.root'
+        #'file:/home/users/rebassoo/work/2018_12_17_TestingUpdatedProtonRecoSim/CMSSW_9_4_11/src/Validation/CTPPS/test_2017/acceptance_test/ctppsSim.root'
+        'file:/hadoop/cms/store/user/rebassoo/2018_12_17_SignalFiles2017Data/FastSimPPS/ctppsSim-a0w-2p5-e-6-12-17-18.root'
         )
 )
 
