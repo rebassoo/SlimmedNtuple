@@ -41,9 +41,9 @@ MC=True
 #To print out global tag: conddb list 94X_mc2017_realistic_v16
 #For v16 global tag uses v23 of Jet energy corrections. Newest is 32.
 if MC:
-    process.GlobalTag.globaltag ='94X_mc2017_realistic_v16'
+    process.GlobalTag.globaltag ='94X_mc2017_realistic_v17'
 else:
-    process.GlobalTag.globaltag ='94X_dataRun2_v6'
+    process.GlobalTag.globaltag ='94X_dataRun2_v11'
 
 from PhysicsTools.PatAlgos.tools.jetTools import updateJetCollection
 updateJetCollection(
