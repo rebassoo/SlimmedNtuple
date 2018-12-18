@@ -88,9 +88,11 @@ private:
   //virtual void beginRun(edm::Run const&, edm::EventSetup const&) override;
   bool isJetLepton(double,double);
   bool isJetLeptonAK8(double,double);
+  double calculateJERFactor(double,double,double,double,double,bool);
 
   // ----------member data ---------------------------
   boost::shared_ptr<FactorizedJetCorrector> jecAK8_;
+  boost::shared_ptr<FactorizedJetCorrector> jecAK8_withL1_;
   edm::EDGetTokenT<edm::View<pat::Jet>> jet_token_;
   edm::EDGetTokenT<edm::View<pat::Jet>> jetAK8_token_;
   edm::EDGetTokenT<edm::View<pat::Muon>> muon_token_;
@@ -102,6 +104,7 @@ private:
   edm::EDGetTokenT<reco::GenParticleCollection> gen_part_token_;
   edm::EDGetTokenT<reco::GenJetCollection> gen_jet_token_;
   edm::EDGetTokenT<pat::METCollection> met_token_;
+  edm::EDGetTokenT< bool >ecalBadCalibFilterUpdate_token;
   //edm::EDGetTokenT<edm::View<pat::Electron>> electron_token_;
   edm::EDGetTokenT<edm::View<reco::GsfElectron>> electron_token_;
   edm::EDGetTokenT<edm::View<pat::PackedCandidate>> pfcand_token_;
@@ -114,6 +117,9 @@ private:
 
   std::string jerAK8chsName_res_ ;
   std::string jerAK8chsName_sf_ ;
+  std::string jerAK4chsName_res_ ;
+  std::string jerAK4chsName_sf_ ;
+
 
   TTree * tree_;
 
@@ -191,6 +197,7 @@ private:
   int * lumiblock_;
   int * nVertices_;
   float * pileupWeight_;
+  float * mc_pu_trueinteractions_;
   float * mcWeight_;
   int * pfcand_nextracks_;
   int * pfcand_nextracks_noDRl_;
@@ -199,8 +206,11 @@ private:
   float * recoMWlep_;
   float * dphiWW_;
   float * recoMWW_;
+  float * recoRapidityWW_;
   float * WLeptonicPt_;
   float * WLeptonicPhi_;
+
+  //bool * ecalBadCalFilter_;
 
   HLTConfigProvider hltConfig_;
   HLTPrescaleProvider hltPrescaleProvider_;
