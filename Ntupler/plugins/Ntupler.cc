@@ -92,7 +92,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
        
     }
   
-   /*
+  /*
    std::vector<JetCorrectorParameters> vPar_withL1;
    for ( std::vector<std::string>::const_iterator payloadBegin = jecAK8PayloadNames_withL1_.begin(),
 	   payloadEnd = jecAK8PayloadNames_withL1_.end(),
@@ -100,7 +100,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
      JetCorrectorParameters pars(*ipayload);
      vPar_withL1.push_back(pars);
    }
-   */
+  */
+   
    std::vector<JetCorrectorParameters> vPar;
    for ( std::vector<std::string>::const_iterator payloadBegin = jecAK8PayloadNames_.begin(),
 	   payloadEnd = jecAK8PayloadNames_.end(),
@@ -113,7 +114,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
    // Make the FactorizedJetCorrector                                                                                                                                                      
    jecAK8_ = boost::shared_ptr<FactorizedJetCorrector> ( new FactorizedJetCorrector(vPar) );
    //jecAK8_withL1_ = boost::shared_ptr<FactorizedJetCorrector> ( new FactorizedJetCorrector(vPar_withL1) );
-
+   
 
    // Get JER smearing                                                                                                                                               
    if(isMC==true && year==2017) // Note - here we're using Summer16 for 2017 MC, until the 2017 version is ready
@@ -377,11 +378,12 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   jecAK8_withL1_->setRho   ( rho );
 	   jecAK8_withL1_->setNPV   ( vertices_->size() );
 	   double corr_with_L1 = jecAK8_withL1_->getCorrection();
+	   
+	   cout<<"Correction from Jet Corrector is: "<<corr_with_L1<<endl;
+	   cout<<"Uncorrected jet pt: "<<jet->correctedP4(0).pt()<<endl;
+	   cout<<"Uncorrected jet pt2: "<<jet->correctedJet(0).pt()<<endl;
+	   cout<<"Corrected jet pt: "<<jet->pt()<<endl;
 	   */
-	   //cout<<"Correction from Jet Corrector is: "<<corr_with_L1<<endl;
-	   //cout<<"Uncorrected jet pt: "<<jet->correctedP4(0).pt()<<endl;
-	   //cout<<"Uncorrected jet pt2: "<<jet->correctedJet(0).pt()<<endl;
-	   //cout<<"Corrected jet pt: "<<jet->pt()<<endl;
 	   pruned_masscorr = corr*pruned_mass;
 	   (*jet_corrmass_).push_back(pruned_masscorr);
 
