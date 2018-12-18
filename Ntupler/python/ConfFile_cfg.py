@@ -90,6 +90,7 @@ process.demo.isMC = cms.bool(MC)
 #process.demo.isMC = cms.bool(False)
 process.demo.year = cms.int32(2017)
 process.demo.era = cms.string("C")
+process.demo.mcName=cms.string("h_pileup_WJetsToLNu_1J_TuneCP5_13TeV_amcatnloFXFX_pythia8")
 
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 switchOnVIDElectronIdProducer(process,DataFormat.MiniAOD)
