@@ -35,13 +35,15 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   isMC = iConfig.getParameter<bool>("isMC");
   year = iConfig.getParameter<int>("year");
   era = iConfig.getParameter<std::string>("era");
+  mcName = iConfig.getParameter<std::string>("mcName");
 
   eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"));
   eleIdMapToken_veto_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-veto"));
 
   if(isMC == true)
     {
-      LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", "pileup", "pileup");
+      //LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", "pileup", "pileup");
+      LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", mcName, "pileup");
     }
   
   std::vector<std::string> jecAK8PayloadNames_;
