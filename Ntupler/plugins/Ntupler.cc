@@ -48,44 +48,44 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   std::vector<std::string> jecAK8PayloadNames_withL1_;
   if(isMC==false && year==2017 && era == "B")
     {
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2017 && era == "C")
     {
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L2L3Residual_AK8PFchs.txt");
 
     }
   if(isMC==false && year==2017 && era == "D")
     {
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L3Absolute_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2L3Residual_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L3Absolute_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2017 && era == "E")
     {
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2017 && era == "F")
     {
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L2L3Residual_AK8PFchs.txt");
     }
   
   if(isMC==true && year==2017)
     {
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017_V8_MC_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017_V8_MC_L3Absolute_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt");
        
-       //jecAK8PayloadNames_withL1_.push_back("Fall17_17Nov2017_V8_MC_L1FastJet_AK8PFchs.txt");
-       //jecAK8PayloadNames_withL1_.push_back("Fall17_17Nov2017_V8_MC_L2Relative_AK8PFchs.txt");
-       //jecAK8PayloadNames_withL1_.push_back("Fall17_17Nov2017_V8_MC_L3Absolute_AK8PFchs.txt");
+       //jecAK8PayloadNames_withL1_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L1FastJet_AK8PFchs.txt");
+       //jecAK8PayloadNames_withL1_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt");
+       //jecAK8PayloadNames_withL1_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt");
        
        
     }
@@ -116,11 +116,11 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
    // Get JER smearing                                                                                                                                               
    if(isMC==true && year==2017) // Note - here we're using Summer16 for 2017 MC, until the 2017 version is ready
      {                                     
-       jerAK8chsName_res_ = "Summer16_25nsV1_MC_PtResolution_AK8PFchs.txt";
-       jerAK8chsName_sf_ = "Summer16_25nsV1_MC_SF_AK8PFchs.txt";
+       jerAK8chsName_res_ = "2017-JEC-JER/Fall17_V3_MC_PtResolution_AK8PFchs.txt";
+       jerAK8chsName_sf_ = "2017-JEC-JER/Fall17_V3_MC_SF_AK8PFchs.txt";
 
-       jerAK4chsName_res_ = "Summer16_25nsV1_MC_PtResolution_AK4PFchs.txt";
-       jerAK4chsName_sf_ = "Summer16_25nsV1_MC_SF_AK4PFchs.txt";
+       jerAK4chsName_res_ = "2017-JEC-JER/Fall17_V3_MC_PtResolution_AK4PFchs.txt";
+       jerAK4chsName_sf_ = "2017-JEC-JER/Fall17_V3_MC_SF_AK8PFchs.txt";
 
 
      }
