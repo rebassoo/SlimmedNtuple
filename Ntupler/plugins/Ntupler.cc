@@ -22,6 +22,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   gen_part_token_(consumes<reco::GenParticleCollection>(edm::InputTag("prunedGenParticles"))),
   gen_jet_token_(consumes<reco::GenJetCollection>(edm::InputTag("slimmedGenJetsAK8"))),
   met_token_(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi"))),
+  //met_token_(consumes<pat::METCollection>(edm::InputTag("slimmedMETs"))),
+  ecalBadCalibFilterUpdate_token(consumes< bool >(edm::InputTag("ecalBadCalibReducedMINIAODFilter"))),
   //electron_token_(consumes<edm::View<pat::Electron>>(edm::InputTag("slimmedElectrons"))),
   electron_token_(consumes<edm::View<reco::GsfElectron>>(edm::InputTag("slimmedElectrons"))),
   pfcand_token_(consumes<edm::View<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"))),
@@ -37,49 +39,66 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"));
   eleIdMapToken_veto_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-veto"));
 
-   if(isMC == true)
-     {
-       LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", "pileup", "pileup");
-     }
-                                  
-   std::vector<std::string> jecAK8PayloadNames_;
-   if(isMC==false && year==2017 && era == "B")
-     {
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L3Absolute_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2L3Residual_AK8PFchs.txt");
-     }
-   if(isMC==false && year==2017 && era == "C")
-     {
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L3Absolute_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2L3Residual_AK8PFchs.txt");
-     }
-   if(isMC==false && year==2017 && era == "D")
-     {
+  if(isMC == true)
+    {
+      LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", "pileup", "pileup");
+    }
+  
+  std::vector<std::string> jecAK8PayloadNames_;
+  std::vector<std::string> jecAK8PayloadNames_withL1_;
+  if(isMC==false && year==2017 && era == "B")
+    {
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017B_V6_DATA_L2L3Residual_AK8PFchs.txt");
+    }
+  if(isMC==false && year==2017 && era == "C")
+    {
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017C_V6_DATA_L2L3Residual_AK8PFchs.txt");
+
+    }
+  if(isMC==false && year==2017 && era == "D")
+    {
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2Relative_AK8PFchs.txt");
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L3Absolute_AK8PFchs.txt");
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017D_V6_DATA_L2L3Residual_AK8PFchs.txt");
-     }
-   if(isMC==false && year==2017 && era == "E")
-     {
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L3Absolute_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2L3Residual_AK8PFchs.txt");
-     }
-   if(isMC==false && year==2017 && era == "F")
-     {
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L3Absolute_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2L3Residual_AK8PFchs.txt");
-     }
-
-   if(isMC==true && year==2017)
-     {
+    }
+  if(isMC==false && year==2017 && era == "E")
+    {
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017E_V6_DATA_L2L3Residual_AK8PFchs.txt");
+    }
+  if(isMC==false && year==2017 && era == "F")
+    {
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Fall17_17Nov2017F_V6_DATA_L2L3Residual_AK8PFchs.txt");
+    }
+  
+  if(isMC==true && year==2017)
+    {
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017_V8_MC_L2Relative_AK8PFchs.txt");
        jecAK8PayloadNames_.push_back("Fall17_17Nov2017_V8_MC_L3Absolute_AK8PFchs.txt");
-     }
-
+       
+       //jecAK8PayloadNames_withL1_.push_back("Fall17_17Nov2017_V8_MC_L1FastJet_AK8PFchs.txt");
+       //jecAK8PayloadNames_withL1_.push_back("Fall17_17Nov2017_V8_MC_L2Relative_AK8PFchs.txt");
+       //jecAK8PayloadNames_withL1_.push_back("Fall17_17Nov2017_V8_MC_L3Absolute_AK8PFchs.txt");
+       
+       
+    }
+  
+   /*
+   std::vector<JetCorrectorParameters> vPar_withL1;
+   for ( std::vector<std::string>::const_iterator payloadBegin = jecAK8PayloadNames_withL1_.begin(),
+	   payloadEnd = jecAK8PayloadNames_withL1_.end(),
+	   ipayload = payloadBegin; ipayload != payloadEnd; ++ipayload ) {
+     JetCorrectorParameters pars(*ipayload);
+     vPar_withL1.push_back(pars);
+   }
+   */
    std::vector<JetCorrectorParameters> vPar;
    for ( std::vector<std::string>::const_iterator payloadBegin = jecAK8PayloadNames_.begin(),
 	   payloadEnd = jecAK8PayloadNames_.end(),
@@ -88,8 +107,10 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
      vPar.push_back(pars);
    }
 
+
    // Make the FactorizedJetCorrector                                                                                                                                                      
    jecAK8_ = boost::shared_ptr<FactorizedJetCorrector> ( new FactorizedJetCorrector(vPar) );
+   //jecAK8_withL1_ = boost::shared_ptr<FactorizedJetCorrector> ( new FactorizedJetCorrector(vPar_withL1) );
 
 
    // Get JER smearing                                                                                                                                               
@@ -97,6 +118,11 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
      {                                     
        jerAK8chsName_res_ = "Summer16_25nsV1_MC_PtResolution_AK8PFchs.txt";
        jerAK8chsName_sf_ = "Summer16_25nsV1_MC_SF_AK8PFchs.txt";
+
+       jerAK4chsName_res_ = "Summer16_25nsV1_MC_PtResolution_AK4PFchs.txt";
+       jerAK4chsName_sf_ = "Summer16_25nsV1_MC_SF_AK4PFchs.txt";
+
+
      }
 
 }
@@ -117,53 +143,57 @@ Ntupler::~Ntupler()
 void
 Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
+  edm::Handle< bool > passecalBadCalibFilterUpdate ;
+  iEvent.getByToken(ecalBadCalibFilterUpdate_token,passecalBadCalibFilterUpdate);
+  bool    _passecalBadCalibFilterUpdate =  (*passecalBadCalibFilterUpdate );
+  //*ecalBadCalFilter_=_passecalBadCalibFilterUpdate;
+  if(!_passecalBadCalibFilterUpdate){return;}
+  using namespace edm;
+  using namespace std;
 
-   using namespace edm;
-   using namespace std;
 
-   // HLT
-   //cout<<"I get here"<<endl;
-   edm::Handle<edm::TriggerResults> hltResults;
-   iEvent.getByToken(hlt_token_,hltResults);
-   const edm::TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
-   std::string TriggerPrefix_mu = "HLT_IsoMu27_";
-   std::string TriggerPrefix_e = "HLT_Ele35_WPTight_Gsf_v";
-   bool passTrigger_mu=false;
-   bool passTrigger_e=false;
-   for(unsigned int i=0; i<trigNames.size();i++)
-     {
-       //cout<<"I get here 1"<<endl;
-       int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
-       //       int result = hltResults->accept(i);
-       std::string TriggerName = trigNames.triggerName(i);
-       //cout<<"TriggerName: "<<TriggerName<<endl;
-       if(TriggerName.find(TriggerPrefix_mu) != std::string::npos){
-	 if((hltResults->accept(i)>0)&&(prescale_value==1)){
-	   passTrigger_mu=true;
+  // HLT
+  //cout<<"I get here"<<endl;
+  edm::Handle<edm::TriggerResults> hltResults;
+  iEvent.getByToken(hlt_token_,hltResults);
+  const edm::TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
+  std::string TriggerPrefix_mu = "HLT_IsoMu27_";
+  std::string TriggerPrefix_e = "HLT_Ele35_WPTight_Gsf_v";
+  bool passTrigger_mu=false;
+  bool passTrigger_e=false;
+  for(unsigned int i=0; i<trigNames.size();i++)
+    {
+      //cout<<"I get here 1"<<endl;
+      int prescale_value=hltPrescaleProvider_.prescaleValue(iEvent, iSetup,trigNames.triggerName(i));
+      //       int result = hltResults->accept(i);
+      std::string TriggerName = trigNames.triggerName(i);
+      //cout<<"TriggerName: "<<TriggerName<<endl;
+      if(TriggerName.find(TriggerPrefix_mu) != std::string::npos){
+	if((hltResults->accept(i)>0)&&(prescale_value==1)){
+	  passTrigger_mu=true;
+	}
+      }
+      
+      if(TriggerName.find(TriggerPrefix_e) != std::string::npos){
+	if((hltResults->accept(i)>0)&&(prescale_value==1)){
+	  passTrigger_e=true;
 	 }
-       }
-       
-       if(TriggerName.find(TriggerPrefix_e) != std::string::npos){
-	 if((hltResults->accept(i)>0)&&(prescale_value==1)){
-	   passTrigger_e=true;
-	 }
-       }
-     }
-
-   // Run and vertex multiplicity info
-   *run_ = iEvent.id().run();
-   *ev_ = iEvent.id().event();
-   *lumiblock_ = iEvent.luminosityBlock();
-
-
-   edm::Handle< std::vector<reco::Vertex> > vertices_;
-   iEvent.getByToken(vertex_token_, vertices_);
-   reco::VertexRef vtx(vertices_, 0);
-
+      }
+    }
+  
+  // Run and vertex multiplicity info
+  *run_ = iEvent.id().run();
+  *ev_ = iEvent.id().event();
+  *lumiblock_ = iEvent.luminosityBlock();
+  
+  edm::Handle< std::vector<reco::Vertex> > vertices_;
+  iEvent.getByToken(vertex_token_, vertices_);
+  reco::VertexRef vtx(vertices_, 0);
+  
    //Get Muons
-   edm::Handle<edm::View<pat::Muon> > muonHandle;
-   iEvent.getByToken(muon_token_,muonHandle);
-   int numMuLoose=0;
+  edm::Handle<edm::View<pat::Muon> > muonHandle;
+  iEvent.getByToken(muon_token_,muonHandle);
+  int numMuLoose=0;
    for (const pat::Muon &MuonIt : *muonHandle) { 
      bool tightId=MuonIt.isTightMuon(*vtx);
      double iso = (MuonIt.pfIsolationR04().sumChargedHadronPt + max(0., MuonIt.pfIsolationR04().sumNeutralHadronEt + MuonIt.pfIsolationR04().sumPhotonEt - 0.5*MuonIt.pfIsolationR04().sumPUPt))/MuonIt.pt();
@@ -287,51 +317,11 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        double pruned_mass       = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:ak8PFJetsCHSPrunedMass");
        double tau1         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau1");
        double tau2         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau2");
-
-       float C_JER=1.0;
-
+       
+       double C_JER=1.0;
        if(isMC == true)
 	 {
-	   JME::JetResolution resolution_ak8;
-	   JME::JetResolutionScaleFactor resolution_ak8_sf;
-	   resolution_ak8 = JME::JetResolution(jerAK8chsName_res_);
-	   resolution_ak8_sf = JME::JetResolutionScaleFactor(jerAK8chsName_sf_);
-	   JME::JetParameters parameters_ak8;
-	   parameters_ak8.setJetPt(jet->pt());
-	   parameters_ak8.setJetEta(jet->eta());
-	   parameters_ak8.setRho(rho);
-      
-	   float jer_res= resolution_ak8.getResolution(parameters_ak8);
-	   float jer_sf = resolution_ak8_sf.getScaleFactor(parameters_ak8);
-	   float jer_sf_up = resolution_ak8_sf.getScaleFactor(parameters_ak8, Variation::UP);
-	   float jer_sf_down = resolution_ak8_sf.getScaleFactor(parameters_ak8, Variation::DOWN);
-	   
-	   (*jet_jer_res_).push_back(jer_res);
-	   (*jet_jer_sf_).push_back(jer_sf);
-	   (*jet_jer_sfup_).push_back(jer_sf_up);
-	   (*jet_jer_sfdown_).push_back(jer_sf_down);
-       
-	   TLorentzVector recojtmp, genjtmp;
-	   TRandom3 randomSrc;
-	   recojtmp.SetPtEtaPhiE(jet->pt(),jet->eta(),jet->phi(),jet->energy());
-
-	   int matchedgen=0;
-	   int indmatchedgen=-1;
-	   //Jet smearing calculation: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution
-	   //loop over gen jets
-	   for(uint ig=0; ig<(*gen_jet_pt_).size(); ig++){
-	     genjtmp.SetPtEtaPhiE((*gen_jet_pt_).at(ig),(*gen_jet_eta_).at(ig),(*gen_jet_phi_).at(ig),(*gen_jet_energy_).at(ig));
-	     if( (recojtmp.DeltaR(genjtmp) < (0.8/2.)) && (fabs(recojtmp.Pt() - genjtmp.Pt())<(3*jer_res*recojtmp.Pt()) ) ){
-	       matchedgen=1; 
-	       indmatchedgen=ig;
-	     } // 0.8 is cone radius
-	   }
-	   
-	   if(matchedgen == 1) { C_JER = 1 + (jer_sf -1 )*( (recojtmp.Pt() - (*gen_jet_pt_).at(indmatchedgen)) / recojtmp.Pt() );
-	     if(C_JER < 0) {C_JER = 0;}
-	   }
-	   else       
-	     {	   C_JER = 1 + randomSrc.Gaus(0, jer_res)*(sqrt(max(jer_sf*jer_sf - 1., 0.)));	 }
+	   C_JER=calculateJERFactor(jet->pt(),jet->eta(),jet->phi(),jet->energy(),rho,true);
 	 }//end of if MC
        
 
@@ -340,7 +330,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 bool isLepton=isJetLepton(jet->eta(),jet->phi());
 	 if(!isLepton){
 	   //(*jet_pt_).push_back(jet->pt());
-	   (*jet_pt_).push_back(jet->pt());
+	   (*jet_pt_).push_back(C_JER*jet->pt());
 	   (*jet_phi_).push_back(jet->phi());
 	   (*jet_eta_).push_back(jet->eta());
 	   (*jet_px_).push_back(jet->px());
@@ -372,10 +362,21 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   jecAK8_->setJetPt ( jet->correctedJet(0).pt() );
 	   jecAK8_->setJetE  ( jet->correctedJet(0).energy() );
 	   jecAK8_->setJetA  ( jet->correctedJet(0).jetArea() );
+	   //jecAK8_->setJetA  ( jet->jetArea() );
 	   jecAK8_->setRho   ( rho );
 	   jecAK8_->setNPV   ( vertices_->size() );
 	   corr = jecAK8_->getCorrection();
-	   //cout<<"Correction from Jet Corrector is: "<<corr<<endl;
+
+	   /*
+	   jecAK8_withL1_->setJetEta( jet->correctedJet(0).eta() );
+	   jecAK8_withL1_->setJetPt ( jet->correctedJet(0).pt() );
+	   jecAK8_withL1_->setJetE  ( jet->correctedJet(0).energy() );
+	   jecAK8_withL1_->setJetA  ( jet->correctedJet(0).jetArea() );
+	   jecAK8_withL1_->setRho   ( rho );
+	   jecAK8_withL1_->setNPV   ( vertices_->size() );
+	   double corr_with_L1 = jecAK8_withL1_->getCorrection();
+	   */
+	   //cout<<"Correction from Jet Corrector is: "<<corr_with_L1<<endl;
 	   //cout<<"Uncorrected jet pt: "<<jet->correctedP4(0).pt()<<endl;
 	   //cout<<"Uncorrected jet pt2: "<<jet->correctedJet(0).pt()<<endl;
 	   //cout<<"Corrected jet pt: "<<jet->pt()<<endl;
@@ -419,16 +420,12 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        (*pps_track_rpid_).push_back(raw_id);
      }
 
-   // Run and vertex multiplicity info
-   *run_ = iEvent.id().run();
-   *ev_ = iEvent.id().event();
-   *lumiblock_ = iEvent.luminosityBlock();
-
    *nVertices_=-1;
    *nVertices_=vertices_->size();
 
    // Fill pileup reweighting info if running on MC
    *pileupWeight_=1;
+   *mc_pu_trueinteractions_=-999;
    if(isMC == true)
      {
        float trueInteractions=0;
@@ -438,10 +435,11 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        //cout<<"True num interactions is: "<<PupInfo->begin()->getTrueNumInteractions()<<endl;                                                              
        trueInteractions=PupInfo->begin()->getTrueNumInteractions();
        *pileupWeight_ = LumiWeights->weight( trueInteractions );
+       *mc_pu_trueinteractions_ = trueInteractions;
      }
 
 
-      
+   
    if(isMC == true){
      
      edm::Handle<GenEventInfoProduct> genEvtInfo; 
@@ -517,21 +515,24 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      iEvent.getByLabel("slimmedJetsJetId", jetColl);
      int numbJets_id=0;
      int numJetsAK4_id=0;
+     double C_JER_AK4=1.0;
      for (unsigned int i=0; i<jetColl->size(); i++) {
-       const edm::Ptr<pat::Jet> jet = jetColl->ptrAt(i);
+       const edm::Ptr<pat::Jet> jet_ak4 = jetColl->ptrAt(i);
        if((*jet_eta_).size()==1){
+	 if(isMC==true){
+	   C_JER_AK4=calculateJERFactor(jet_ak4->pt(),jet_ak4->eta(),jet_ak4->phi(),jet_ak4->energy(),rho,true);}
 	 //cout<<"AK4 jet pt: "<<jet->pt()<<endl;
-	 if(jet->pt()>30&&fabs(jet->eta())<2.4){
-	   bool isLepton=isJetLepton(jet->eta(),jet->phi());
+	 if((jet_ak4->pt()*C_JER_AK4)>30&&fabs(jet_ak4->eta())<2.4){
+	   bool isLepton=isJetLepton(jet_ak4->eta(),jet_ak4->phi());
 	   if(!isLepton){
 	     //numJets_id++;  
 	     //if(jet->phi(),jet->eta())
-	     double deltaR=sqrt( ((*jet_eta_)[0]-jet->eta())*((*jet_eta_)[0]-jet->eta()) + ((*jet_phi_)[0]-jet->phi())*((*jet_phi_)[0]-jet->phi()) );
+	     double deltaR=sqrt( ((*jet_eta_)[0]-jet_ak4->eta())*((*jet_eta_)[0]-jet_ak4->eta()) + ((*jet_phi_)[0]-jet_ak4->phi())*((*jet_phi_)[0]-jet_ak4->phi()) );
 	     if(deltaR<0.8){
 	      continue;
 	     }
 	     else{numJetsAK4_id++;}
-	     std::vector<std::pair<std::string, float> > btag=jet->getPairDiscri();
+	     std::vector<std::pair<std::string, float> > btag=jet_ak4->getPairDiscri();
 	     int size_v=btag.size();
 	     for(int i=0;i<size_v;i++){
 	       if(btag[i].first=="pfCombinedInclusiveSecondaryVertexV2BJetTags"){
@@ -550,7 +551,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   //cout<<"Uncorrected energy: "<<jet->correctedP4(0).E()<<endl;
 	   //cout<<"Jet corrected pt: "<<jet->pt()<<endl;
 	   //cout<<"Uncorrected pt: "<<jet->correctedP4(0).Pt()<<endl;
-	   std::vector< std::string > jec_levels = jet->availableJECLevels();
+	   //std::vector< std::string > jec_levels = jet_ak4->availableJECLevels();
 	 //int size = jec_levels.size();
 	 //for(int i=0;i<size;i++){
 	 //  cout<<jec_levels[i]<<endl;
@@ -628,7 +629,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      double WLeptonic_E   = WLeptonic.E();
      */
      TLorentzVector p4SumJets;
-     p4SumJets = TLorentzVector((*jet_px_)[0],(*jet_py_)[0],(*jet_pz_)[0], (*jet_energy_)[0]);
+     //p4SumJets = TLorentzVector((*jet_px_)[0],(*jet_py_)[0],(*jet_pz_)[0], (*jet_energy_)[0]);
+     p4SumJets.SetPtEtaPhiE((*jet_pt_)[0],(*jet_eta_)[0],(*jet_phi_)[0], (*jet_energy_)[0]);
      double WJM = p4SumJets.M();
      double WJphi = p4SumJets.Phi();
      /*
@@ -660,7 +662,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      *WLeptonicPhi_=WLeptonic_phi;
      *WLeptonicPt_=WLeptonic_Pt;
      *recoMWW_=MWW_Nu;
-
+     *recoRapidityWW_=WW_p4_nu.Rapidity();
 
      tree_->Fill();
 
@@ -784,6 +786,61 @@ bool Ntupler::isJetLepton(double jet_eta, double jet_phi)
 
 }
 
+double Ntupler::calculateJERFactor(double jet_pt,double jet_eta,double jet_phi,double jet_energy,double rho,bool isAK8)
+{
+  double C_JER=1.;
+  JME::JetResolution resolution;
+  JME::JetResolutionScaleFactor resolution_sf;
+  if (isAK8 ==true){
+    resolution = JME::JetResolution(jerAK8chsName_res_);
+    resolution_sf = JME::JetResolutionScaleFactor(jerAK8chsName_sf_);
+  }
+  else{
+    resolution = JME::JetResolution(jerAK4chsName_res_);
+    resolution_sf = JME::JetResolutionScaleFactor(jerAK4chsName_sf_);
+  }
+  JME::JetParameters parameters;
+  parameters.setJetPt(jet_pt);
+  parameters.setJetEta(jet_eta);
+  parameters.setRho(rho);
+      
+  float jer_res= resolution.getResolution(parameters);
+  float jer_sf = resolution_sf.getScaleFactor(parameters);
+  float jer_sf_up = resolution_sf.getScaleFactor(parameters, Variation::UP);
+  float jer_sf_down = resolution_sf.getScaleFactor(parameters, Variation::DOWN);
+	   
+  if (isAK8 ==true){
+    (*jet_jer_res_).push_back(jer_res);
+    (*jet_jer_sf_).push_back(jer_sf);
+    (*jet_jer_sfup_).push_back(jer_sf_up);
+    (*jet_jer_sfdown_).push_back(jer_sf_down);
+  }
+  TLorentzVector recojtmp, genjtmp;
+  TRandom3 randomSrc;
+  recojtmp.SetPtEtaPhiE(jet_pt,jet_eta,jet_phi,jet_energy);
+  
+  int matchedgen=0;
+  int indmatchedgen=-1;
+  //Jet smearing calculation: https://twiki.cern.ch/twiki/bin/viewauth/CMS/JetResolution
+  //loop over gen jets
+  for(uint ig=0; ig<(*gen_jet_pt_).size(); ig++){
+    genjtmp.SetPtEtaPhiE((*gen_jet_pt_).at(ig),(*gen_jet_eta_).at(ig),(*gen_jet_phi_).at(ig),(*gen_jet_energy_).at(ig));
+    if( (recojtmp.DeltaR(genjtmp) < (0.8/2.)) && (fabs(recojtmp.Pt() - genjtmp.Pt())<(3*jer_res*recojtmp.Pt()) ) ){
+      matchedgen=1; 
+      indmatchedgen=ig;
+    } // 0.8 is cone radius
+  }
+  
+  if(matchedgen == 1) { C_JER = 1 + (jer_sf -1 )*( (recojtmp.Pt() - (*gen_jet_pt_).at(indmatchedgen)) / recojtmp.Pt() );
+    if(C_JER < 0) {C_JER = 0;}
+  }
+  else       
+    {	   C_JER = 1 + randomSrc.Gaus(0, jer_res)*(sqrt(max(jer_sf*jer_sf - 1., 0.)));	 }
+  
+  return C_JER;
+
+
+}
 
 
 // ------------ method called once each job just before starting event loop  ------------
@@ -830,9 +887,12 @@ Ntupler::beginJob()
   recoMWhad_ = new float;
   recoMWlep_ = new float;
   recoMWW_ = new float;
+  recoRapidityWW_ = new float;
   dphiWW_ = new float;
   WLeptonicPt_ = new float;
   WLeptonicPhi_ = new float;
+
+  //ecalBadCalFilter_ = new bool;
 
   jet_pt_ = new std::vector<float>;
   jet_px_ = new std::vector<float>;
@@ -876,6 +936,7 @@ Ntupler::beginJob()
   lumiblock_ = new int;
   nVertices_ = new int;
   pileupWeight_ = new float;
+  mc_pu_trueinteractions_ = new float;
   mcWeight_ = new float;
 
   tree_->Branch("muon_pt",&muon_pt_);
@@ -911,6 +972,7 @@ Ntupler::beginJob()
   tree_->Branch("recoMWhad",recoMWhad_,"recoMWhad/f");
   tree_->Branch("recoMWlep",recoMWlep_,"recoMWlep/f");
   tree_->Branch("recoMWW",recoMWW_,"recoMWW/f");
+  tree_->Branch("recoRapidityWW",recoRapidityWW_,"recoRapidityWW/f");
   tree_->Branch("dphiWW",dphiWW_,"dphiWW/f");
   tree_->Branch("WLeptonicPt",WLeptonicPt_,"WLeptonicPt/f");
   tree_->Branch("WLeptonicPhi",WLeptonicPhi_,"WLeptonicPhi/f");
@@ -948,10 +1010,12 @@ Ntupler::beginJob()
   tree_->Branch("gen_jet_energy",&gen_jet_energy_);
   tree_->Branch("nVertices",nVertices_,"nVertices/i");
   tree_->Branch("pileupWeight",pileupWeight_,"pileupWeight/f");
+  tree_->Branch("mc_pu_trueinteractions",mc_pu_trueinteractions_,"mc_pu_trueinteractions/f");
   tree_->Branch("mcWeight",mcWeight_,"mcWeight/f");
   tree_->Branch("run",run_,"run/I");
   tree_->Branch("event",ev_,"event/L");
   tree_->Branch("lumiblock",lumiblock_,"lumiblock/I");
+  //tree_->Branch("ecalBadCalFilter",ecalBadCalFilter_,"ecalBadCalFilter/O");
 
 
 }
@@ -998,6 +1062,7 @@ Ntupler::endJob()
   delete recoMWlep_;
   delete dphiWW_;
   delete recoMWW_;
+  delete recoRapidityWW_;
   delete WLeptonicPt_;
   delete WLeptonicPhi_;
 
