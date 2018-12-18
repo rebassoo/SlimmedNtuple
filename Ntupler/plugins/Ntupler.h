@@ -219,6 +219,7 @@ private:
   bool isMC;
   int year;
   std::string era;
+  std::string mcName;
 
   
 
