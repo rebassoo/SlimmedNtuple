@@ -1,6 +1,7 @@
 import FWCore.ParameterSet.Config as cms
 
 process = cms.Process("Demo")
+#process = cms.Process("CTPPSTestProtonReconstruction", eras.ctpps_2016)
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
@@ -16,9 +17,9 @@ process.source = cms.Source("PoolSource",
         #        'file:/tmp/jjhollar/QCD_HT700to1000_F6F5131E-CCF9-E711-B15F-0242AC130002.root'
         #'root://xrootd.t2.ucsd.edu:2040//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
-        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/17Nov2017-v1/40000/E664484F-7BDB-E711-A6A3-0025904C516C.root'
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/17Nov2017-v1/40000/E664484F-7BDB-E711-A6A3-0025904C516C.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
-        'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/70000/CEEB885D-0354-E811-B17D-0CC47A4C8E16.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/70000/CEEB885D-0354-E811-B17D-0CC47A4C8E16.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/00469E05-E055-E811-807F-008CFAF7174A.root'
         #'file:step3_fpmc_MiniAOD.root'
         )
@@ -33,9 +34,15 @@ process.hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
 
 process.load("SlimmedNtuple.Ntupler.METFilter_cfi")
 
+# proton reconstruction
+process.load("RecoCTPPS.ProtonReconstruction.year_2017_OF.ctppsProtonReconstructionOF_cfi")
+#process.ctppsProtonReconstructionOFDB.fitVtxY = False
+#process.ctppsProtonReconstructionOFDB.verbosity = 0
+
+
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
-MC=True
+MC=False
 
 #Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
 #To print out global tag: conddb list 94X_mc2017_realistic_v16
@@ -141,6 +148,7 @@ if MC:
         process.updatedPatJetsUpdatedJECAK8*
         process.slimmedJetsAK8JetId*
         process.slimmedJetsJetId*
+        process.ctppsProtonReconstructionOFDB*
         process.demo
         )
     
@@ -159,6 +167,7 @@ else:
         process.updatedPatJetsUpdatedJECAK8*
         process.slimmedJetsAK8JetId*
         process.slimmedJetsJetId*
+        process.ctppsProtonReconstructionOFDB*
         process.demo
         )
 
