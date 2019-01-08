@@ -51,6 +51,7 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
 #include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
+#include "DataFormats/ProtonReco/interface/ProtonTrack.h"
 
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
@@ -97,6 +98,7 @@ private:
   edm::EDGetTokenT<edm::View<pat::Jet>> jetAK8_token_;
   edm::EDGetTokenT<edm::View<pat::Muon>> muon_token_;
   edm::EDGetTokenT<std::vector<CTPPSLocalTrackLite> > pps_token_;
+  edm::EDGetTokenT<std::vector<reco::ProtonTrack>> reco_protons_token_;
   edm::EDGetTokenT<std::vector<reco::Vertex>> vertex_token_;
   edm::EDGetTokenT<double> rho_token_;
   edm::EDGetTokenT<edm::TriggerResults> hlt_token_;
@@ -182,8 +184,18 @@ private:
   std::vector<float> * gen_proton_px_;
   std::vector<float> * gen_proton_py_;
   std::vector<float> * gen_proton_pz_;
+  std::vector<float> * gen_proton_energy_;
   std::vector<float> * gen_proton_xi_;
   std::vector<float> * gen_proton_t_;
+
+  std::vector<float> * proton_xi_;
+  std::vector<float> * proton_thy_;
+  std::vector<float> * proton_thx_;
+  std::vector<float> * proton_t_;
+  std::vector<int> * proton_ismultirp_;
+  std::vector<int> * proton_rpid_;
+  std::vector<int> * proton_arm_;
+
 
   std::vector<float> * gen_jet_pt_;
   std::vector<float> * gen_jet_eta_;
