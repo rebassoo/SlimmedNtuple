@@ -13,4 +13,5 @@
 <use name="PhysicsTools/Utilities"/>
 <use name="JetMETCorrections/Modules"/>
 <use name="JetMETCorrections/Objects"/>
+<use name="DataFormats/ProtonReco"/>
 <flags EDM_PLUGIN="1"/>
