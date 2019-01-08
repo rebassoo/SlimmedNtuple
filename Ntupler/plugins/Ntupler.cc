@@ -15,6 +15,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   jetAK8_token_(consumes<edm::View<pat::Jet>>(edm::InputTag(("slimmedJetsAK8JetId")))),
   muon_token_(consumes<edm::View<pat::Muon>>(edm::InputTag("slimmedMuons"))),
   pps_token_(consumes<std::vector<CTPPSLocalTrackLite>>(edm::InputTag(("ctppsLocalTrackLiteProducer")))),
+  reco_protons_token_(consumes<std::vector<reco::ProtonTrack>>(edm::InputTag("ctppsProtonReconstructionOFDB"))),
   vertex_token_(consumes<std::vector<reco::Vertex>>(edm::InputTag("offlineSlimmedPrimaryVertices"))),
   rho_token_(consumes<double>(edm::InputTag(("fixedGridRhoAll")))),
   hlt_token_(consumes<edm::TriggerResults>(edm::InputTag("TriggerResults","","HLT"))),
@@ -424,6 +425,61 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        (*pps_track_rpid_).push_back(raw_id);
      }
 
+   // Full reco protons
+   edm::Handle<vector<reco::ProtonTrack>> recoProtons;
+   iEvent.getByToken(reco_protons_token_, recoProtons);
+       
+   // make single-RP-reco plots                                                                                                                                         
+   for (const auto & proton : *recoProtons)
+     {
+       int ismultirp = -999;
+       unsigned int decRPId = -999;
+       unsigned int armId = -999;
+       float th_y = -999;
+       float th_x = -999;
+       float t = -999;
+       float xi = -999;
+          
+       if (proton.valid())
+	 {
+	   th_y = (proton.direction().y()) / (proton.direction().mag());
+	   th_x = (proton.direction().x()) / (proton.direction().mag());
+	   xi = proton.xi();
+	          
+	   // t
+	   const double m = 0.938; // GeV                                                                                                                                               
+	   const double p = 6500.; // GeV                                                                                                                                               
+	          
+	   float t0 = 2.*m*m + 2.*p*p*(1.-xi) - 2.*sqrt( (m*m + p*p) * (m*m + p*p*(1.-xi)*(1.-xi)) );
+	   float th = sqrt(th_x * th_x + th_y * th_y);
+	   float S = sin(th/2.);
+	   t = t0 - 4. * p*p * (1.-xi) * S*S;
+	          
+	   if (proton.method == reco::ProtonTrack::rmSingleRP)
+	     {
+	       CTPPSDetId rpId(* proton.contributingRPIds.begin());
+	       decRPId = rpId.arm()*100 + rpId.station()*10 + rpId.rp();                                                                
+	       ismultirp = 0;
+	     }
+	   if (proton.method == reco::ProtonTrack::rmMultiRP)
+	     {
+	       CTPPSDetId rpId(* proton.contributingRPIds.begin());
+	       armId = rpId.arm();                                                                                                      
+	       ismultirp = 1;
+	     }
+
+	   (*proton_xi_).push_back(proton.xi());
+	   (*proton_thy_).push_back(th_y);
+	   (*proton_thx_).push_back(th_x);
+	   (*proton_t_).push_back(t);
+	   (*proton_ismultirp_).push_back(ismultirp);
+	   (*proton_rpid_).push_back(decRPId);
+	   (*proton_arm_).push_back(armId);
+	 }
+     }
+
+
+
    *nVertices_=-1;
    *nVertices_=vertices_->size();
 
@@ -484,12 +540,14 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     double thepz = mcIter->pz();
 	     double thepx = mcIter->px();
 	     double thepy = mcIter->py();
+	     double theenergy= mcIter->energy();
 
 	     (*gen_proton_xi_).push_back(thexi);
 	     (*gen_proton_t_).push_back(thet);
 	     (*gen_proton_pz_).push_back(thepz);
 	     (*gen_proton_py_).push_back(thepy);
 	     (*gen_proton_px_).push_back(thepx);
+	     (*gen_proton_energy_).push_back(theenergy);
 	   }
        }
      }
@@ -725,9 +783,19 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    (*gen_proton_px_).clear();
    (*gen_proton_py_).clear();
    (*gen_proton_pz_).clear();
+   (*gen_proton_energy_).clear();
    (*gen_proton_xi_).clear();
    (*gen_proton_t_).clear();
    
+   (*proton_xi_).clear();
+   (*proton_thy_).clear();
+   (*proton_thx_).clear();
+   (*proton_t_).clear();
+   (*proton_ismultirp_).clear();
+   (*proton_rpid_).clear();
+   (*proton_arm_).clear();
+
+
    (*gen_jet_pt_).clear();
    (*gen_jet_phi_).clear();
    (*gen_jet_eta_).clear();
@@ -925,8 +993,17 @@ Ntupler::beginJob()
   gen_proton_px_ = new std::vector<float>;
   gen_proton_py_ = new std::vector<float>;
   gen_proton_pz_ = new std::vector<float>;
+  gen_proton_energy_ = new std::vector<float>;
   gen_proton_xi_ = new std::vector<float>;
   gen_proton_t_ = new std::vector<float>;
+
+  proton_xi_ = new std::vector<float>;
+  proton_thy_ = new std::vector<float>;
+  proton_thx_ = new std::vector<float>;
+  proton_t_ = new std::vector<float>;
+  proton_ismultirp_ = new std::vector<int>;
+  proton_rpid_ = new std::vector<int>;
+  proton_arm_ = new std::vector<int>;
 
   gen_jet_pt_ = new std::vector<float>;
   gen_jet_phi_ = new std::vector<float>;
@@ -1006,8 +1083,16 @@ Ntupler::beginJob()
   tree_->Branch("gen_proton_px",&gen_proton_px_);
   tree_->Branch("gen_proton_py",&gen_proton_py_);
   tree_->Branch("gen_proton_pz",&gen_proton_pz_);
+  tree_->Branch("gen_proton_energy",&gen_proton_energy_);
   tree_->Branch("gen_proton_xi",&gen_proton_xi_);
   tree_->Branch("gen_proton_t",&gen_proton_t_);
+  tree_->Branch("proton_xi",&proton_xi_);
+  tree_->Branch("proton_thx",&proton_thx_);
+  tree_->Branch("proton_thy",&proton_thy_);
+  tree_->Branch("proton_t",&proton_t_);
+  tree_->Branch("proton_ismultirp_",&proton_ismultirp_);
+  tree_->Branch("proton_rpid",&proton_rpid_);
+  tree_->Branch("proton_arm",&proton_arm_);
   tree_->Branch("gen_jet_pt",&gen_jet_pt_);
   tree_->Branch("gen_jet_phi",&gen_jet_phi_);
   tree_->Branch("gen_jet_eta",&gen_jet_eta_);
