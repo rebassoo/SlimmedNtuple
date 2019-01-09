@@ -37,58 +37,72 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   year = iConfig.getParameter<int>("year");
   era = iConfig.getParameter<std::string>("era");
   mcName = iConfig.getParameter<std::string>("mcName");
+  isInteractive = iConfig.getParameter<bool>("isInteractive");
+
+  cout<<"Year: "<<year<<endl;
+  cout<<"era: "<<era<<endl;
+  cout<<"mcName: "<<mcName<<endl;
 
   eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"));
   eleIdMapToken_veto_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-veto"));
 
   if(isMC == true)
     {
+      //reco_protons_token_=consumes<std::vector<reco::ProtonTrack>>(edm::InputTag("ctppsProtonReconstructionOFDB"));
       //LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", "pileup", "pileup");
       LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", mcName, "pileup");
     }
   
   std::vector<std::string> jecAK8PayloadNames_;
   std::vector<std::string> jecAK8PayloadNames_withL1_;
+  std::string prefix;
+  if (isInteractive==true){
+    prefix="2017-JEC-JER/";
+  }
+  else{
+    prefix="";
+  }
+
   if(isMC==false && year==2017 && era == "B")
     {
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017B_V32_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017B_V32_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017B_V32_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2017 && era == "C")
     {
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017C_V32_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017C_V32_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017C_V32_DATA_L2L3Residual_AK8PFchs.txt");
 
     }
   if(isMC==false && year==2017 && era == "D")
     {
-       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L3Absolute_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2L3Residual_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017DE_V32_DATA_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017DE_V32_DATA_L3Absolute_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017DE_V32_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2017 && era == "E")
     {
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017DE_V32_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017DE_V32_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017DE_V32_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2017 && era == "F")
     {
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017F_V32_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017F_V32_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017F_V32_DATA_L2L3Residual_AK8PFchs.txt");
     }
   
   if(isMC==true && year==2017)
     {
-       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt");
-       jecAK8PayloadNames_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt");
+       jecAK8PayloadNames_.push_back(prefix+"Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt");
        
-       //jecAK8PayloadNames_withL1_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L1FastJet_AK8PFchs.txt");
-       //jecAK8PayloadNames_withL1_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt");
-       //jecAK8PayloadNames_withL1_.push_back("2017-JEC-JER/Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt");
+       //jecAK8PayloadNames_withL1_.push_back(prefix+"Fall17_17Nov2017_V32_MC_L1FastJet_AK8PFchs.txt");
+       //jecAK8PayloadNames_withL1_.push_back(prefix+"Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt");
+       //jecAK8PayloadNames_withL1_.push_back(prefix+"Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt");
        
        
     }
@@ -120,11 +134,11 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
    // Get JER smearing                                                                                                                                               
    if(isMC==true && year==2017) // Note - here we're using Summer16 for 2017 MC, until the 2017 version is ready
      {                                     
-       jerAK8chsName_res_ = "2017-JEC-JER/Fall17_V3_MC_PtResolution_AK8PFchs.txt";
-       jerAK8chsName_sf_ = "2017-JEC-JER/Fall17_V3_MC_SF_AK8PFchs.txt";
+       jerAK8chsName_res_ = prefix+"Fall17_V3_MC_PtResolution_AK8PFchs.txt";
+       jerAK8chsName_sf_ = prefix+"Fall17_V3_MC_SF_AK8PFchs.txt";
 
-       jerAK4chsName_res_ = "2017-JEC-JER/Fall17_V3_MC_PtResolution_AK4PFchs.txt";
-       jerAK4chsName_sf_ = "2017-JEC-JER/Fall17_V3_MC_SF_AK8PFchs.txt";
+       jerAK4chsName_res_ = prefix+"Fall17_V3_MC_PtResolution_AK4PFchs.txt";
+       jerAK4chsName_sf_ = prefix+"Fall17_V3_MC_SF_AK8PFchs.txt";
 
 
      }
@@ -408,77 +422,77 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    double METphi=MET->phi();
    *met_phi_=MET->phi();
 
-      
-
-   // Proton lite tracks
-   edm::Handle<std::vector<CTPPSLocalTrackLite> > ppsTracks;
-   iEvent.getByToken( pps_token_, ppsTracks );
-
-   for ( const auto& trk : *ppsTracks ) 
-     {
-       const CTPPSDetId detid( trk.getRPId() );
-       // transform the raw, 32-bit unsigned integer detId into the TOTEM "decimal" notation
-       const unsigned short raw_id = 100*detid.arm()+10*detid.station()+detid.rp();
-
-       (*pps_track_x_).push_back(trk.getX());
-       (*pps_track_y_).push_back(trk.getY());
-       (*pps_track_rpid_).push_back(raw_id);
-     }
-
-   // Full reco protons
-   edm::Handle<vector<reco::ProtonTrack>> recoProtons;
-   iEvent.getByToken(reco_protons_token_, recoProtons);
-       
-   // make single-RP-reco plots                                                                                                                                         
-   for (const auto & proton : *recoProtons)
-     {
-       int ismultirp = -999;
-       unsigned int decRPId = -999;
-       unsigned int armId = -999;
-       float th_y = -999;
-       float th_x = -999;
-       float t = -999;
-       float xi = -999;
-          
-       if (proton.valid())
-	 {
-	   th_y = (proton.direction().y()) / (proton.direction().mag());
-	   th_x = (proton.direction().x()) / (proton.direction().mag());
-	   xi = proton.xi();
+   //Look at proton tracks
+   if(isMC==false){
+     // Proton lite tracks
+     edm::Handle<std::vector<CTPPSLocalTrackLite> > ppsTracks;
+     iEvent.getByToken( pps_token_, ppsTracks );
+     
+     for ( const auto& trk : *ppsTracks ) 
+       {
+	 const CTPPSDetId detid( trk.getRPId() );
+	 // transform the raw, 32-bit unsigned integer detId into the TOTEM "decimal" notation
+	 const unsigned short raw_id = 100*detid.arm()+10*detid.station()+detid.rp();
+	 
+	 (*pps_track_x_).push_back(trk.getX());
+	 (*pps_track_y_).push_back(trk.getY());
+	 (*pps_track_rpid_).push_back(raw_id);
+       }
+     
+     // Full reco protons
+     edm::Handle<vector<reco::ProtonTrack>> recoProtons;
+     iEvent.getByToken(reco_protons_token_, recoProtons);
+     
+     // make single-RP-reco plots                                                                                                                                         
+     for (const auto & proton : *recoProtons)
+       {
+	 int ismultirp = -999;
+	 unsigned int decRPId = -999;
+	 unsigned int armId = -999;
+	 float th_y = -999;
+	 float th_x = -999;
+	 float t = -999;
+	 float xi = -999;
+	 
+	 if (proton.valid())
+	   {
+	     th_y = (proton.direction().y()) / (proton.direction().mag());
+	     th_x = (proton.direction().x()) / (proton.direction().mag());
+	     xi = proton.xi();
+	     
+	     // t
+	     const double m = 0.938; // GeV                                                                                                                                               
+	     const double p = 6500.; // GeV                                                                                                                                               
+	     
+	     float t0 = 2.*m*m + 2.*p*p*(1.-xi) - 2.*sqrt( (m*m + p*p) * (m*m + p*p*(1.-xi)*(1.-xi)) );
+	     float th = sqrt(th_x * th_x + th_y * th_y);
+	     float S = sin(th/2.);
+	     t = t0 - 4. * p*p * (1.-xi) * S*S;
 	          
-	   // t
-	   const double m = 0.938; // GeV                                                                                                                                               
-	   const double p = 6500.; // GeV                                                                                                                                               
-	          
-	   float t0 = 2.*m*m + 2.*p*p*(1.-xi) - 2.*sqrt( (m*m + p*p) * (m*m + p*p*(1.-xi)*(1.-xi)) );
-	   float th = sqrt(th_x * th_x + th_y * th_y);
-	   float S = sin(th/2.);
-	   t = t0 - 4. * p*p * (1.-xi) * S*S;
-	          
-	   if (proton.method == reco::ProtonTrack::rmSingleRP)
-	     {
-	       CTPPSDetId rpId(* proton.contributingRPIds.begin());
-	       decRPId = rpId.arm()*100 + rpId.station()*10 + rpId.rp();                                                                
-	       ismultirp = 0;
-	     }
-	   if (proton.method == reco::ProtonTrack::rmMultiRP)
-	     {
-	       CTPPSDetId rpId(* proton.contributingRPIds.begin());
-	       armId = rpId.arm();                                                                                                      
-	       ismultirp = 1;
-	     }
-
-	   (*proton_xi_).push_back(proton.xi());
-	   (*proton_thy_).push_back(th_y);
-	   (*proton_thx_).push_back(th_x);
-	   (*proton_t_).push_back(t);
-	   (*proton_ismultirp_).push_back(ismultirp);
-	   (*proton_rpid_).push_back(decRPId);
-	   (*proton_arm_).push_back(armId);
-	 }
-     }
-
-
+	     if (proton.method == reco::ProtonTrack::rmSingleRP)
+	       {
+		 CTPPSDetId rpId(* proton.contributingRPIds.begin());
+		 decRPId = rpId.arm()*100 + rpId.station()*10 + rpId.rp();                                                                
+		 ismultirp = 0;
+	       }
+	     if (proton.method == reco::ProtonTrack::rmMultiRP)
+	       {
+		 CTPPSDetId rpId(* proton.contributingRPIds.begin());
+		 armId = rpId.arm();                                                                                                      
+		 ismultirp = 1;
+	       }
+	     
+	     (*proton_xi_).push_back(proton.xi());
+	     (*proton_thy_).push_back(th_y);
+	     (*proton_thx_).push_back(th_x);
+	     (*proton_t_).push_back(t);
+	     (*proton_ismultirp_).push_back(ismultirp);
+	     (*proton_rpid_).push_back(decRPId);
+	     (*proton_arm_).push_back(armId);
+	   }
+       }
+     
+   }//end of looking at proton tracks in data
 
    *nVertices_=-1;
    *nVertices_=vertices_->size();
