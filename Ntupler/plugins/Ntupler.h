@@ -229,6 +229,7 @@ private:
   edm::LumiReWeighting *LumiWeights;
 
   bool isMC;
+  bool isInteractive;
   int year;
   std::string era;
   std::string mcName;
