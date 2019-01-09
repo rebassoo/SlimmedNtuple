@@ -1,14 +1,33 @@
 import FWCore.ParameterSet.Config as cms
-
 process = cms.Process("Demo")
 #process = cms.Process("CTPPSTestProtonReconstruction", eras.ctpps_2016)
+
+#Details for this here https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
+from FWCore.ParameterSet.VarParsing import VarParsing
+options = VarParsing ('analysis')
+options.register('pileupName',
+                 'WJetsToLNu_2J_TuneCP5_13TeV_amcatnloFXFX_pythia8',
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.string,
+                 "Name for pileup sample")
+options.register('era',
+                 'C',
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.string,
+                 "Era")
+options.register('interactive',
+                 1,
+                 VarParsing.multiplicity.singleton,
+                 VarParsing.varType.int,
+                 "Determines whether it is an interactive or crab run")
+options.parseArguments()
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
 #process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
@@ -17,8 +36,10 @@ process.source = cms.Source("PoolSource",
         #        'file:/tmp/jjhollar/QCD_HT700to1000_F6F5131E-CCF9-E711-B15F-0242AC130002.root'
         #'root://xrootd.t2.ucsd.edu:2040//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
-        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/17Nov2017-v1/40000/E664484F-7BDB-E711-A6A3-0025904C516C.root'
+        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/17Nov2017-v1/40000/E664484F-7BDB-E711-A6A3-0025904C516C.root'
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/EA6122AF-1137-E811-B552-FA163E28D344.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
+        #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/70000/CEEB885D-0354-E811-B17D-0CC47A4C8E16.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/00469E05-E055-E811-807F-008CFAF7174A.root'
         #'file:step3_fpmc_MiniAOD.root'
@@ -34,15 +55,18 @@ process.hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
 
 process.load("SlimmedNtuple.Ntupler.METFilter_cfi")
 
-# proton reconstruction
-process.load("RecoCTPPS.ProtonReconstruction.year_2017_OF.ctppsProtonReconstructionOF_cfi")
-#process.ctppsProtonReconstructionOFDB.fitVtxY = False
-#process.ctppsProtonReconstructionOFDB.verbosity = 0
-
 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
-MC=False
+MC=True
+
+# proton reconstruction
+if not MC:
+    process.load("RecoCTPPS.ProtonReconstruction.year_2017_OF.ctppsProtonReconstructionOF_cfi")
+    #process.ctppsProtonReconstructionOFDB.fitVtxY = False
+    #process.ctppsProtonReconstructionOFDB.verbosity = 0
+
+
 
 #Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
 #To print out global tag: conddb list 94X_mc2017_realistic_v16
@@ -91,13 +115,14 @@ runMetCorAndUncFromMiniAOD(process,
 
 
 process.demo = cms.EDAnalyzer('Ntupler')
-# Select data or MC - this controls which jet corrections are used and whether PU reweighting info is filled                                                          
-# Currently the only year+era options are 2017 for MC, and 2017B for data.                                                                                            
+# Select data or MC - this controls which jet corrections are used and whether PU reweighting info is filled                           
+#era="C"
 process.demo.isMC = cms.bool(MC)
-#process.demo.isMC = cms.bool(False)
 process.demo.year = cms.int32(2017)
-process.demo.era = cms.string("C")
-process.demo.mcName=cms.string("h_pileup_WJetsToLNu_1J_TuneCP5_13TeV_amcatnloFXFX_pythia8")
+process.demo.era = cms.string(options.era)
+process.demo.isInteractive = cms.bool(bool(options.interactive))
+#pileupName="WJetsToLNu_2J_TuneCP5_13TeV_amcatnloFXFX_pythia8"
+process.demo.mcName=cms.string("h_pileup_"+options.pileupName)
 
 from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
 switchOnVIDElectronIdProducer(process,DataFormat.MiniAOD)
@@ -148,7 +173,7 @@ if MC:
         process.updatedPatJetsUpdatedJECAK8*
         process.slimmedJetsAK8JetId*
         process.slimmedJetsJetId*
-        process.ctppsProtonReconstructionOFDB*
+        #process.ctppsProtonReconstructionOFDB*
         process.demo
         )
     
