@@ -34,6 +34,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   
   usesResource("TFileService");
   isMC = iConfig.getParameter<bool>("isMC");
+  isSignalMC = iConfig.getParameter<bool>("isSignalMC");
   year = iConfig.getParameter<int>("year");
   era = iConfig.getParameter<std::string>("era");
   mcName = iConfig.getParameter<std::string>("mcName");
@@ -345,7 +346,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
        if( (C_JER*jet->pt())>200&&fabs(jet->eta())<2.4){
        //if(jet->pt()>200&&fabs(jet->eta())<2.4){
-	 bool isLepton=isJetLepton(jet->eta(),jet->phi());
+	 bool isLepton=isJetLeptonAK8(jet->eta(),jet->phi());
 	 if(!isLepton){
 	   //(*jet_pt_).push_back(jet->pt());
 	   (*jet_pt_).push_back(C_JER*jet->pt());
@@ -354,7 +355,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   (*jet_px_).push_back(jet->px());
 	   (*jet_py_).push_back(jet->py());
 	   (*jet_pz_).push_back(jet->pz());
-	   (*jet_energy_).push_back(jet->energy());
+	   (*jet_energy_).push_back(C_JER*jet->energy());
 	   (*jet_mass_).push_back(pruned_mass);
 	   (*jet_tau1_).push_back(tau1);
 	   (*jet_tau2_).push_back(tau2);
@@ -423,7 +424,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    *met_phi_=MET->phi();
 
    //Look at proton tracks
-   if(isMC==false){
+   if(isMC==false||isSignalMC==true){
      // Proton lite tracks
      edm::Handle<std::vector<CTPPSLocalTrackLite> > ppsTracks;
      iEvent.getByToken( pps_token_, ppsTracks );
@@ -513,7 +514,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      }
 
 
-   
+   /*
    if(isMC == true){
      
      edm::Handle<GenEventInfoProduct> genEvtInfo; 
@@ -525,7 +526,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      *mcWeight_=theWeight;
      
    }
-   
+   */
 
    // Fill GEN infor if running on MC
    if(isMC == true)
