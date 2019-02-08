@@ -66,6 +66,10 @@ h_xi_diff_vs_xi_gen_56=TH2F("h_xi_diff_vs_xi_gen_56",";#xi_{gen};#xi_{reco}-#xi_
 h_xi_diff_vs_xi_gen_45_p=TH2F("h_xi_diff_vs_xi_gen_45_p",";#xi_{gen};#xi_{reco}-#xi_{gen}",200,0,1,100,-0.2,0.2)
 h_xi_diff_vs_xi_gen_56_p=TH2F("h_xi_diff_vs_xi_gen_56_p",";#xi_{gen};#xi_{reco}-#xi_{gen}",200,0,1,100,-0.2,0.2)
 
+h_xi_diff_divided_xi_gen_45=TH1F("h_xi_diff_divided_xi_gen_45","Multi-RP S45;#xi_{reco}-#xi_{gen}/#xi_{gen};",100,-1,1)
+h_xi_diff_divided_xi_gen_56=TH1F("h_xi_diff_divided_xi_gen_56","Multi-RP S56;#xi_{reco}-#xi_{gen}/#xi_{gen};",100,-1,1)
+h_xi_diff_divided_xi_gen_45_p=TH1F("h_xi_diff_divided_xi_gen_45_p","Pixel S45;#xi_{reco}-#xi_{gen}/#xi_{gen};",100,-1,1)
+h_xi_diff_divided_xi_gen_56_p=TH1F("h_xi_diff_divided_xi_gen_56_p","Pixel S56;#xi_{reco}-#xi_{gen}/#xi_{gen};",100,-1,1)
 
 
 #h_proton_eff_vs_mass
@@ -151,10 +155,12 @@ for e in chain:
                 xi_arm_45=e.proton_xi[ii]
                 #if (abs(xi_arm_45 - xi_45)/xi_45) < 0.1:
                 h_xi_diff_vs_xi_gen_45.Fill(xi_45,xi_arm_45-xi_45)
+                h_xi_diff_divided_xi_gen_45.Fill((xi_arm_45-xi_45)/xi_45)
                 arm45=True
             if e.proton_arm[ii]==1:
                 xi_arm_56=e.proton_xi[ii]
                 h_xi_diff_vs_xi_gen_56.Fill(xi_56,xi_arm_56-xi_56)
+                h_xi_diff_divided_xi_gen_56.Fill((xi_arm_56-xi_56)/xi_56)
                 #if (abs(xi_arm_56 - xi_56)/xi_56) < 0.1:
                 arm56=True
         if t == 3: 
@@ -164,6 +170,7 @@ for e in chain:
             count_45=count_45+1
             xi_pot_23=e.proton_xi[ii]
             h_xi_diff_vs_xi_gen_45_p.Fill(xi_45,e.proton_xi[ii]-xi_45)
+            h_xi_diff_divided_xi_gen_45_p.Fill((e.proton_xi[ii]-xi_45)/xi_45)
         if t == 103: 
             pot_103=True
         if t ==123:
@@ -171,6 +178,7 @@ for e in chain:
             count_56=count_56+1
             xi_pot_123=e.proton_xi[ii]
             h_xi_diff_vs_xi_gen_56_p.Fill(xi_56,e.proton_xi[ii]-xi_56)
+            h_xi_diff_divided_xi_gen_56_p.Fill((e.proton_xi[ii]-xi_56)/xi_56)
         ii=ii+1
         
     h_num_pixels_45.Fill(count_45)    
@@ -357,21 +365,31 @@ h_profile_56_p.GetYaxis().SetTitle("#xi_{reco}-#xi_{sim}")
 
 
 h_RMS_45.Draw("hist")
-#c1.Print("RMSArm45.pdf")
+c1.Print("RMSArm45.pdf")
 h_RMS_56.Draw("hist")
-#c1.Print("RMSArm56.pdf")
+c1.Print("RMSArm56.pdf")
 h_profile_45.Draw("hist")
 #c1.Print("profileArm45.pdf")
 h_profile_56.Draw("hist")
 #c1.Print("profileArm56.pdf")
 
 h_RMS_45_p.Draw("hist")
-#c1.Print("RMSArm45.pdf")
+c1.Print("RMSArm45_p.pdf")
 h_RMS_56_p.Draw("hist")
-#c1.Print("RMSArm56.pdf")
+c1.Print("RMSArm56_p.pdf")
 h_profile_45_p.Draw("hist")
 #c1.Print("profileArm45.pdf")
 h_profile_56_p.Draw("hist")
 #c1.Print("profileArm56.pdf")
 
+h_xi_diff_divided_xi_gen_45.Draw()
+c1.Print("xi_residual_45_multiRP.pdf")
 
+h_xi_diff_divided_xi_gen_56.Draw()
+c1.Print("xi_residual_56_multiRP.pdf")
+
+h_xi_diff_divided_xi_gen_45_p.Draw()
+c1.Print("xi_residual_45_pixel.pdf")
+
+h_xi_diff_divided_xi_gen_56_p.Draw()
+c1.Print("xi_residual_56_pixel.pdf")
