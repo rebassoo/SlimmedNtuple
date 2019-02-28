@@ -377,6 +377,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	   // Now apply corrections!
 	   double pruned_masscorr = 0;
 	   double corr = 0;
+	   //cout<<"jet pt Hollar: "<<jet->correctedP4(0).pt()<<endl;
+	   //cout<<"jet pt Finn: "<<jet->correctedJet(0).pt()<<endl;
 	   jecAK8_->setJetEta( jet->correctedJet(0).eta() );
 	   jecAK8_->setJetPt ( jet->correctedJet(0).pt() );
 	   jecAK8_->setJetE  ( jet->correctedJet(0).energy() );
@@ -597,7 +599,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        const edm::Ptr<pat::Jet> jet_ak4 = jetColl->ptrAt(i);
        if((*jet_eta_).size()==1){
 	 if(isMC==true){
-	   C_JER_AK4=calculateJERFactor(jet_ak4->pt(),jet_ak4->eta(),jet_ak4->phi(),jet_ak4->energy(),rho,true);}
+	   C_JER_AK4=calculateJERFactor(jet_ak4->pt(),jet_ak4->eta(),jet_ak4->phi(),jet_ak4->energy(),rho,false);}
 	 //cout<<"AK4 jet pt: "<<jet->pt()<<endl;
 	 if((jet_ak4->pt()*C_JER_AK4)>30&&fabs(jet_ak4->eta())<2.4){
 	   bool isLepton=isJetLepton(jet_ak4->eta(),jet_ak4->phi());
@@ -912,10 +914,20 @@ double Ntupler::calculateJERFactor(double jet_pt,double jet_eta,double jet_phi,d
   //loop over gen jets
   for(uint ig=0; ig<(*gen_jet_pt_).size(); ig++){
     genjtmp.SetPtEtaPhiE((*gen_jet_pt_).at(ig),(*gen_jet_eta_).at(ig),(*gen_jet_phi_).at(ig),(*gen_jet_energy_).at(ig));
-    if( (recojtmp.DeltaR(genjtmp) < (0.8/2.)) && (fabs(recojtmp.Pt() - genjtmp.Pt())<(3*jer_res*recojtmp.Pt()) ) ){
-      matchedgen=1; 
-      indmatchedgen=ig;
-    } // 0.8 is cone radius
+
+    if (isAK8==true){
+      if( (recojtmp.DeltaR(genjtmp) < (0.8/2.)) && (fabs(recojtmp.Pt() - genjtmp.Pt())<(3*jer_res*recojtmp.Pt()) ) ){
+	matchedgen=1; 
+	indmatchedgen=ig;
+      } // 0.8 is cone radius
+    }//end of looking for AK8 gen jet
+    else{
+      if( (recojtmp.DeltaR(genjtmp) < (0.4/2.)) && (fabs(recojtmp.Pt() - genjtmp.Pt())<(3*jer_res*recojtmp.Pt()) ) ){
+	matchedgen=1; 
+	indmatchedgen=ig;
+      } // 0.4 is cone radius
+    }//end of looking for AK4 gen jet
+
   }
   
   if(matchedgen == 1) { C_JER = 1 + (jer_sf -1 )*( (recojtmp.Pt() - (*gen_jet_pt_).at(indmatchedgen)) / recojtmp.Pt() );
