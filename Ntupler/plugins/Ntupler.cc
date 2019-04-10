@@ -43,6 +43,7 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   cout<<"Year: "<<year<<endl;
   cout<<"era: "<<era<<endl;
   cout<<"mcName: "<<mcName<<endl;
+  cout<<"isMC: "<<isMC<<endl;
 
   eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"));
   eleIdMapToken_veto_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-veto"));
@@ -315,6 +316,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      {
        //reco::Jet jet = (*jets)[ijet];;
        const edm::Ptr<pat::Jet> jet = jets->ptrAt(ijet);
+       //cout<<jet->pt()<<endl;
        // CMSSW_8_X samples
        //       double pruned_mass = (*jets)[ijet].userFloat("ak8PFJetsCHSPrunedMass");
        //       double tau1         = (*jets)[ijet].userFloat("NjettinessAK8:tau1");
@@ -333,9 +335,13 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        */
 
        // CMSSW_9_4_X
-       double pruned_mass       = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:ak8PFJetsCHSPrunedMass");
-       double tau1         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau1");
-       double tau2         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau2");
+       //double pruned_mass       = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:ak8PFJetsCHSPrunedMass");
+       //double tau1         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau1");
+       //double tau2         = (*jets)[ijet].userFloat("ak8PFJetsCHSValueMap:NjettinessAK8CHSTau2");
+       //From jet toolbox
+       double pruned_mass       = (*jets)[ijet].userFloat("ak8PFJetsCHSPrunedMass");
+       double tau1         = (*jets)[ijet].userFloat("NjettinessAK8CHS:tau1");
+       double tau2         = (*jets)[ijet].userFloat("NjettinessAK8CHS:tau2");
        
        double C_JER=1.0;
        if(isMC == true)
@@ -558,7 +564,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     double thepx = mcIter->px();
 	     double thepy = mcIter->py();
 	     double theenergy= mcIter->energy();
-
+	     //double vx = mcIter->vx(), vy = mcIter->vy(), vz = mcIter->vz();
+	     //cout<<"vx: "<<vx<<", "<<"vy: "<<vy<<", "<<"vz: "<<vz<<endl;
 	     (*gen_proton_xi_).push_back(thexi);
 	     (*gen_proton_t_).push_back(thet);
 	     (*gen_proton_pz_).push_back(thepz);
