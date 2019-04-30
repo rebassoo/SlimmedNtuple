@@ -1,11 +1,17 @@
 import FWCore.ParameterSet.Config as cms
-process = cms.Process("Demo")
+
+
+from Configuration.StandardSequences.Eras import eras
+process = cms.Process('CTPPSFastSimulation', eras.ctpps_2016)
+
+#process = cms.Process("Demo")
 #process = cms.Process("CTPPSTestProtonReconstruction", eras.ctpps_2016)
 
 #process.Timing = cms.Service("Timing",
 #  summaryOnly = cms.untracked.bool(False),
 #  useJobReport = cms.untracked.bool(True)
 #)
+
 
 #Details for this here https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
 from FWCore.ParameterSet.VarParsing import VarParsing
@@ -29,19 +35,32 @@ options.parseArguments()
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
+#process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'file:MINIAODFILE999'
+        #        'file:/tmp/jjhollar/0C08DB9E-3543-E811-BB4D-0CC47A4D75F4.root'
+        #        'file:/tmp/jjhollar/BulkGravToWW_narrow_M-1000_3A7945FC-1704-E811-9B66-008CFA110C5C.root'
+        #        'file:/tmp/jjhollar/QCD_HT700to1000_F6F5131E-CCF9-E711-B15F-0242AC130002.root'
+        #'root://xrootd.t2.ucsd.edu:2040//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
+        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/17Nov2017-v1/40000/E664484F-7BDB-E711-A6A3-0025904C516C.root'
+        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/EA6122AF-1137-E811-B552-FA163E28D344.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
+        #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/70000/CEEB885D-0354-E811-B17D-0CC47A4C8E16.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/00469E05-E055-E811-807F-008CFAF7174A.root'
+        #'file:step3_fpmc_MiniAOD.root'
+        #'file:/hadoop/cms/store/user/rebassoo/2018_12_17_SignalFiles2017Data/MINIAODSIM/step3_fpmc_exclww_a0W2point5e-6_alldecays_xi1to30pct_miniaodv2_1.root'
+        'file:/home/users/rebassoo/work/2018_12_17_TestingUpdatedProtonRecoSim/CMSSW_9_4_11/src/SlimmedNtuple/Ntupler/python/step3_fpmc_exclww_a0W2point5e-6_alldecays_xi1to30pct_miniaodv2_1.root'
         ),
         secondaryFileNames = cms.untracked.vstring(
-        'file:GENSIMFILE999'
+        'file:/home/users/rebassoo/work/2018_12_17_TestingUpdatedProtonRecoSim/CMSSW_9_4_11/src/SlimmedNtuple/Ntupler/python/step0_fpmc_exclww_a0W2point5e-6_alldecays_xi1to30pct_1.root'
         )
 )
-
 
 process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 
@@ -58,6 +77,7 @@ process.load("SlimmedNtuple.Ntupler.METFilter_cfi")
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 MC=True
+
 
 #FastSim
 process.RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService",
@@ -134,6 +154,15 @@ process.ctppsLHCInfoESSource = cms.ESSource("CTPPSLHCInfoESSource",
   beamEnergy = cms.double(6500),
   xangle = cms.double(0)
 )
+
+
+# JH - crossing angle 130                                                            
+#process.ctppsFastProtonSimulation.xangle = process.ctppsLHCInfoESSource.xangle = 130
+#process.ctppsFastProtonSimulation.empiricalAperture45_xi0 = 0.148
+#process.ctppsFastProtonSimulation.empiricalAperture56_xi0 = 0.18
+
+
+
 
 #Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
 #To print out global tag: conddb list 94X_mc2017_realistic_v16
@@ -263,10 +292,13 @@ runMetCorAndUncFromMiniAOD(process,
                            )
 
 
+
+
 process.demo = cms.EDAnalyzer('Ntupler')
 # Select data or MC - this controls which jet corrections are used and whether PU reweighting info is filled                           
+#era="C"
 process.demo.isMC = cms.bool(MC)
-process.demo.isSignalMC = cms.bool(False)
+process.demo.isSignalMC = cms.bool(True)
 process.demo.year = cms.int32(2017)
 process.demo.era = cms.string(options.era)
 process.demo.isInteractive = cms.bool(bool(options.interactive))
@@ -305,12 +337,11 @@ process.ecalBadCalibReducedMINIAODFilter = cms.EDFilter(
     )
 
 
+#process.out = cms.OutputModule('PoolOutputModule',
+#    fileName = cms.untracked.string('ctppsSim.root')
+#)
 
-process.out = cms.OutputModule('PoolOutputModule',
-    fileName = cms.untracked.string('ctppsSim.root')
-)
-
-
+#process.dump=cms.EDAnalyzer('EventContentAnalyzer')
 #process.transport = cms.Path(
 #    process.beamDivergenceVtxGenerator*
 #    process.ctppsFastProtonSimulation
@@ -320,23 +351,14 @@ process.out = cms.OutputModule('PoolOutputModule',
 #    * process.totemRPLocalTrackFitter
 #    * process.ctppsPixelLocalTracks
 #    * process.ctppsLocalTrackLiteProducer
-#
+#     *process.dump
 #)
 
-
-process.dump=cms.EDAnalyzer('EventContentAnalyzer')
-#Update for MET filter here: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFiltersRun2#How_to_run_ecal_BadCalibReducedM
 if MC:
     process.p = cms.Path(
-        process.beamDivergenceVtxGenerator*
-        process.ctppsFastProtonSimulation
-        *process.totemRPUVPatternFinder
-        * process.totemRPLocalTrackFitter
-        * process.ctppsPixelLocalTracks
-        * process.ctppsLocalTrackLiteProducer*
         process.totalEvents*
-        process.hltFilter*
         process.metFilterMC*
+        process.hltFilter*
         process.ecalBadCalibReducedMINIAODFilter*
         process.fullPatMetSequence*
         process.egmGsfElectronIDSequence*
@@ -344,28 +366,44 @@ if MC:
         process.slimmedJetsAK8JetId*
         process.slimmedAK4JetsSmeared*
         process.slimmedJetsJetId*
+        process.beamDivergenceVtxGenerator*
+        process.ctppsFastProtonSimulation*
+        process.totemRPUVPatternFinder
+        * process.totemRPLocalTrackFitter
+        * process.ctppsPixelLocalTracks
+        * process.ctppsLocalTrackLiteProducer*
+        process.ctppsProtonReconstructionOFDB*
         process.demo
         )
     
 else:
     process.p = cms.Path(
-        process.hltFilter*
+        #process.dump*
+        process.totalEvents*
         process.metFilter*
-        #process.totalEvents*
+        process.hltFilter*
         process.ecalBadCalibReducedMINIAODFilter*
         process.fullPatMetSequence*
         process.egmGsfElectronIDSequence*
-        #process.dump*
+        process.slimmedAK8JetsSmeared*
         process.slimmedJetsAK8JetId*
+        process.slimmedAK4JetsSmeared*
         process.slimmedJetsJetId*
+        process.beamDivergenceVtxGenerator*
+        process.ctppsFastProtonSimulation*
+        process.totemRPUVPatternFinder
+        * process.totemRPLocalTrackFitter
+        * process.ctppsPixelLocalTracks
+        * process.ctppsLocalTrackLiteProducer*
         process.ctppsProtonReconstructionOFDB*
         process.demo
         )
 
+
 #process.schedule = cms.Schedule(
 #    process.transport,
-#    process.simulation_step,
-#    process.p,
+#    process.simulation_step#,
+#    #process.p,
 #)
 
 def UseCrossingAngle150():
@@ -387,12 +425,6 @@ def UseCrossingAngle130():
   #process.ctppsAcceptancePlotter.outputFile = "acceptance_xangle_130.root"
 #
 UseCrossingAngle130()
-
-
-
-
-
-#print process.dumpPython()
 
 
 
