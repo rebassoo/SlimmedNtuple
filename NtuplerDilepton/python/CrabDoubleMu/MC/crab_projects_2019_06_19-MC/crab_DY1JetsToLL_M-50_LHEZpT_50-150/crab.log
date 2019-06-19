@@ -1,0 +1,185 @@
+/home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtupleDilepton/Ntupler/python/CrabDoubleMu/MC
+|---- jetToolbox: Initializing collection... (with postfix )
+|---- jetToolBox: Adding these btag discriminators: ['pfCombinedInclusiveSecondaryVertexV2BJetTags'] in the jet collection.
+|---- jetToolBox: JETTOOLBOX RUNNING ON MiniAOD FOR AK8 JETS USING CHS
+|---- jetToolBox: Applying these corrections: ('AK8PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'], 'None')
+|---- jetToolBox: Running ak8PFJetsCHSPrunedMass, NjettinessAK8CHS.
+|---- jetToolBox: Creating selectedPatJetsAK8PFCHS collection.
+|---- jetToolbox: Initializing collection... (with postfix )
+|---- jetToolBox: Adding these btag discriminators: ['pfCombinedInclusiveSecondaryVertexV2BJetTags'] in the jet collection.
+|---- jetToolBox: JETTOOLBOX RUNNING ON MiniAOD FOR AK4 JETS USING CHS
+|---- jetToolBox: Applying these corrections: ('AK4PFchs', ['L1FastJet', 'L2Relative', 'L3Absolute'], 'None')
+|---- jetToolBox: Running ak4PFJetsCHSPrunedMass, NjettinessAK4CHS.
+|---- jetToolBox: Creating selectedPatJetsAK4PFCHS collection.
+DEBUG 2019-06-19 10:09:41,858: 	 Executing command: 'submit'
+DEBUG 2019-06-19 10:09:41,865: 	 Found CRAB cache file /home/users/rebassoo/.crab3
+DEBUG 2019-06-19 10:09:41,886: 	 Checking credentials
+DEBUG 2019-06-19 10:09:41,887: 	 Found proxy file /tmp/x509up_u31045
+DEBUG 2019-06-19 10:09:41,887: 	 Getting proxy life time left
+DEBUG 2019-06-19 10:09:41,991: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u31045 -timeleft
+ output : 167592
+
+ error: 
+ retcode : 0
+DEBUG 2019-06-19 10:09:42,094: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u31045 -actimeleft
+ output : 167591
+
+ error: 
+ retcode : 0
+DEBUG 2019-06-19 10:09:42,095: 	 Proxy lifetime 167592 secs is different from voms extension lifetime 167591 secs for proxy: /tmp/x509up_u31045
+DEBUG 2019-06-19 10:09:42,095: 	 Proxy valid for 46:33:11 hours
+DEBUG 2019-06-19 10:09:42,222: 	 Executing : 
+ command : openssl x509 -in ~/.globus/usercert.pem -subject -noout
+ output : subject= /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=rebassoo/CN=673313/CN=Finn O'Neill Rebassoo
+
+ error: 
+ retcode : 0
+DEBUG 2019-06-19 10:09:42,222: 	 Checking credentials
+DEBUG 2019-06-19 10:09:42,222: 	 Found proxy file /tmp/x509up_u31045
+DEBUG 2019-06-19 10:09:42,222: 	 Getting proxy life time left
+DEBUG 2019-06-19 10:09:42,326: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u31045 -timeleft
+ output : 167591
+
+ error: 
+ retcode : 0
+DEBUG 2019-06-19 10:09:42,429: 	 Executing : 
+ command : voms-proxy-info -file /tmp/x509up_u31045 -actimeleft
+ output : 167591
+
+ error: 
+ retcode : 0
+DEBUG 2019-06-19 10:09:42,430: 	 Proxy valid for 46:33:11 hours
+DEBUG 2019-06-19 10:09:42,533: 	 Executing : 
+ command : env X509_USER_PROXY=/tmp/x509up_u31045 voms-proxy-info -fqan
+ output : /cms/Role=NULL/Capability=NULL
+/cms/uscms/Role=NULL/Capability=NULL
+
+ error: 
+ retcode : 0
+DEBUG 2019-06-19 10:09:45,637: 	 Registering user credentials for server /DC=ch/DC=cern/OU=computers/CN=vocms(052|058|030|0118|0105|0109).cern.ch|/DC=ch/DC=cern/OU=computers/CN=crab-(preprod|prod)-tw(02|01).cern.ch
+DEBUG 2019-06-19 10:09:45,744: 	 Executing : 
+ command : openssl x509 -in ~/.globus/usercert.pem -subject -noout
+ output : subject= /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=rebassoo/CN=673313/CN=Finn O'Neill Rebassoo
+
+ error: 
+ retcode : 0
+DEBUG 2019-06-19 10:09:45,745: 	 Getting myproxy life time left for myproxy.cern.ch
+DEBUG 2019-06-19 10:09:45,745: 	 Calculating hash of /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=rebassoo/CN=673313/CN=Finn O'Neill Rebassoo_cmsweb.cern.ch for credential name
+DEBUG 2019-06-19 10:09:47,051: 	 Executing : 
+ command : myproxy-info -l 2cc039343dd1b2d91f9f6b695d1c2e340e98a0d3 -s myproxy.cern.ch
+ output : username: 2cc039343dd1b2d91f9f6b695d1c2e340e98a0d3
+owner: /DC=ch/DC=cern/OU=Organic Units/OU=Users/CN=rebassoo/CN=673313/CN=Finn O'Neill Rebassoo
+  renewal policy: /DC=ch/DC=cern/OU=computers/CN=vocms(052|058|030|0118|0105|0109).cern.ch|/DC=ch/DC=cern/OU=computers/CN=crab-(preprod|prod)-tw(02|01).cern.ch
+  trusted retrieval policy: /DC=ch/DC=cern/OU=computers/CN=vocms(052|058|030|0118|0105|0109).cern.ch|/DC=ch/DC=cern/OU=computers/CN=crab-(preprod|prod)-tw(02|01).cern.ch
+  timeleft: 718:45:41  (29.9 days)
+
+ error: 
+ retcode : 0
+DEBUG 2019-06-19 10:09:47,052: 	 Myproxy is valid: 2587541
+DEBUG 2019-06-19 10:09:47,052: 	 Command use: submit
+DEBUG 2019-06-19 10:09:47,052: 	 Options use: ['--config', <WMCore.Configuration.Configuration object at 0x7f00d2c0ba90>]
+DEBUG 2019-06-19 10:09:48,961: 	 CRABClient version: 3.3.1904
+DEBUG 2019-06-19 10:09:48,961: 	 Instance is prod
+DEBUG 2019-06-19 10:09:48,961: 	 Server base url is cmsweb.cern.ch
+DEBUG 2019-06-19 10:09:48,961: 	 Command url /crabserver/prod/workflow
+DEBUG 2019-06-19 10:09:48,961: 	 Started submission
+DEBUG 2019-06-19 10:09:48,961: 	 Working on /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtupleDilepton/Ntupler/python/CrabDoubleMu/MC/crab_projects_2019_06_19-MC/crab_DY1JetsToLL_M-50_LHEZpT_50-150
+DEBUG 2019-06-19 10:09:51,135: 	 Loading required information from the environment
+DEBUG 2019-06-19 10:09:51,136: 	 Found CMSSW_9_4_12 for slc6_amd64_gcc630 with base /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12
+DEBUG 2019-06-19 10:09:51,136: 	 Loading required information from the environment
+DEBUG 2019-06-19 10:09:51,136: 	 Found CMSSW_9_4_12 for slc6_amd64_gcc630 with base /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12
+DEBUG 2019-06-19 10:09:51,153: 	 UNIQUE NAME: tarUUID a5c13451-1ad3-46b3-b0e0-b34fd0b44790 
+DEBUG 2019-06-19 10:09:51,154: 	 self.config: from WMCore.Configuration import Configuration
+config = Configuration()
+config.section_('General')
+config.General.workArea = 'crab_projects_2019_06_19-MC'
+config.General.transferOutputs = True
+config.General.transferLogs = True
+config.General.requestName = 'DY1JetsToLL_M-50_LHEZpT_50-150'
+config.section_('JobType')
+config.JobType.psetName = 'ConfFile_cfg.py'
+config.JobType.inputFiles = ['2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L2L3Residual_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L2Relative_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L3Absolute_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L2L3Residual_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L2Relative_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L3Absolute_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2L3Residual_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2Relative_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L3Absolute_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L2L3Residual_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L2Relative_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L3Absolute_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017_V32_MC_L1FastJet_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt', '2017-JEC-JER/Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt', '2017-JEC-JER/Fall17_V3_MC_PtResolution_AK4PFchs.txt', '2017-JEC-JER/Fall17_V3_MC_PtResolution_AK8PFchs.txt', '2017-JEC-JER/Fall17_V3_MC_SF_AK4PFchs.txt', '2017-JEC-JER/Fall17_V3_MC_SF_AK8PFchs.txt', 'PUHistos_data.root', 'PUHistos_mc.root']
+config.JobType.pyCfgParams = ['interactive=0', 'pileupName=DY1JetsToLL_M_50_LHEZpT_50_150_TuneCP5_13TeV_amcnloFXFX_pythia8']
+config.section_('Data')
+config.Data.inputDataset = '/DY1JetsToLL_M-50_LHEZpT_50-150_TuneCP5_13TeV-amcnloFXFX-pythia8/RunIIFall17MiniAODv2-MUOTrackFix_12Apr2018_94X_mc2017_realistic_v14_ext2-v1/MINIAODSIM'
+config.Data.unitsPerJob = 5
+config.Data.splitting = 'FileBased'
+config.Data.outLFNDirBase = '/store/user/rebassoo/'
+config.section_('Site')
+config.Site.storageSite = 'T2_US_UCSD'
+config.section_('User')
+config.section_('Debug')
+
+DEBUG 2019-06-19 10:09:51,154: 	 self.config.JobType.psetName: ConfFile_cfg.py
+INFO 2019-06-19 10:09:51,154: 	 Importing CMSSW configuration ConfFile_cfg.py
+DEBUG 2019-06-19 10:09:51,154: 	 Additional parameters for the CMSSW configuration are: ['interactive=0', 'pileupName=DY1JetsToLL_M_50_LHEZpT_50_150_TuneCP5_13TeV_amcnloFXFX_pythia8']
+INFO 2019-06-19 10:09:55,098: 	 Finished importing CMSSW configuration ConfFile_cfg.py
+DEBUG 2019-06-19 10:09:55,098: 	 Writing CMSSW configuration to /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtupleDilepton/Ntupler/python/CrabDoubleMu/MC/crab_projects_2019_06_19-MC/crab_DY1JetsToLL_M-50_LHEZpT_50-150/inputs/PSet.py
+DEBUG 2019-06-19 10:09:55,780: 	 The following EDM output files will be collected: []
+DEBUG 2019-06-19 10:09:55,780: 	 The following TFile output files will be collected: ['SlimmedNtuple.root']
+DEBUG 2019-06-19 10:09:55,780: 	 The following user output files will be collected: []
+DEBUG 2019-06-19 10:09:55,780: 	 Loading required information from the environment
+DEBUG 2019-06-19 10:09:55,780: 	 Found CMSSW_9_4_12 for slc6_amd64_gcc630 with base /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12
+DEBUG 2019-06-19 10:09:55,780: 	 Making tarball in /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtupleDilepton/Ntupler/python/CrabDoubleMu/MC/crab_projects_2019_06_19-MC/crab_DY1JetsToLL_M-50_LHEZpT_50-150/inputs/a5c13451-1ad3-46b3-b0e0-b34fd0b44790default.tgz
+DEBUG 2019-06-19 10:09:55,815: 	 Checking directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/lib
+DEBUG 2019-06-19 10:09:55,815: 	 Adding directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/lib to tarball
+DEBUG 2019-06-19 10:09:59,265: 	 Checking directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/biglib
+DEBUG 2019-06-19 10:09:59,265: 	 Adding directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/biglib to tarball
+DEBUG 2019-06-19 10:09:59,266: 	 Checking directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/module
+DEBUG 2019-06-19 10:09:59,317: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/CondFormats/CTPPSOpticsObjects/data to tarball
+DEBUG 2019-06-19 10:09:59,753: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/CondFormats/CTPPSOpticsObjects/interface to tarball
+DEBUG 2019-06-19 10:09:59,819: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/CondFormats/DataRecord/interface to tarball
+DEBUG 2019-06-19 10:10:00,157: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/CondFormats/RunInfo/interface to tarball
+DEBUG 2019-06-19 10:10:00,170: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/DataFormats/ProtonReco/interface to tarball
+DEBUG 2019-06-19 10:10:00,176: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/IOMC/EventVertexGenerators/interface to tarball
+DEBUG 2019-06-19 10:10:00,209: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/IOMC/ParticleGuns/interface to tarball
+DEBUG 2019-06-19 10:10:00,232: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/RecoCTPPS/ProtonReconstruction/data to tarball
+DEBUG 2019-06-19 10:10:00,267: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/RecoCTPPS/ProtonReconstruction/interface to tarball
+DEBUG 2019-06-19 10:10:00,325: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/RecoCTPPS/TotemRPLocal/interface to tarball
+DEBUG 2019-06-19 10:10:00,338: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SimCTPPS/OpticsParameterisation/data to tarball
+DEBUG 2019-06-19 10:10:00,369: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/Validation/CTPPS/test_2016/rp_positions/data to tarball
+DEBUG 2019-06-19 10:10:00,825: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/RecoEgamma/ElectronIdentification/data to tarball
+DEBUG 2019-06-19 10:10:00,839: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/RecoEgamma/ElectronIdentification/interface to tarball
+DEBUG 2019-06-19 10:10:01,038: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/PhysicsTools/PatAlgos/interface to tarball
+DEBUG 2019-06-19 10:10:01,117: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/RecoMET/METFilters/data to tarball
+DEBUG 2019-06-19 10:10:01,118: 	 Adding data directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/RecoMET/METFilters/interface to tarball
+DEBUG 2019-06-19 10:10:01,264: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L2L3Residual_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,265: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L2Relative_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,268: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017B_V32_DATA_L3Absolute_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,268: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L2L3Residual_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,269: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L2Relative_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,272: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017C_V32_DATA_L3Absolute_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,273: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2L3Residual_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,274: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L2Relative_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,277: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017DE_V32_DATA_L3Absolute_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,278: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L2L3Residual_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,279: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L2Relative_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,395: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017F_V32_DATA_L3Absolute_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,396: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017_V32_MC_L1FastJet_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,397: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,400: 	 Adding file 2017-JEC-JER/Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,401: 	 Adding file 2017-JEC-JER/Fall17_V3_MC_PtResolution_AK4PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,402: 	 Adding file 2017-JEC-JER/Fall17_V3_MC_PtResolution_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,403: 	 Adding file 2017-JEC-JER/Fall17_V3_MC_SF_AK4PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,404: 	 Adding file 2017-JEC-JER/Fall17_V3_MC_SF_AK8PFchs.txt to tarball
+DEBUG 2019-06-19 10:10:01,404: 	 Adding file PUHistos_data.root to tarball
+DEBUG 2019-06-19 10:10:01,405: 	 Adding file PUHistos_mc.root to tarball
+DEBUG 2019-06-19 10:10:01,601: 	 Uploading archive /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtupleDilepton/Ntupler/python/CrabDoubleMu/MC/crab_projects_2019_06_19-MC/crab_DY1JetsToLL_M-50_LHEZpT_50-150/inputs/a5c13451-1ad3-46b3-b0e0-b34fd0b44790default.tgz (6.625977.1 MB) to the CRAB cache. Using URI https://cmsweb.cern.ch/crabcache
+DEBUG 2019-06-19 10:10:12,928: 	 Loading required information from the environment
+DEBUG 2019-06-19 10:10:12,929: 	 Found CMSSW_9_4_12 for slc6_amd64_gcc630 with base /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12
+DEBUG 2019-06-19 10:10:12,929: 	 Making tarball in /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtupleDilepton/Ntupler/python/CrabDoubleMu/MC/crab_projects_2019_06_19-MC/crab_DY1JetsToLL_M-50_LHEZpT_50-150/inputs/debugFiles.tgz
+DEBUG 2019-06-19 10:10:12,938: 	 Uploading archive /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtupleDilepton/Ntupler/python/CrabDoubleMu/MC/crab_projects_2019_06_19-MC/crab_DY1JetsToLL_M-50_LHEZpT_50-150/inputs/debugFiles.tgz (4 KB) to the CRAB cache. Using URI https://cmsweb.cern.ch/crabcache
+DEBUG 2019-06-19 10:10:15,019: 	 Result uploading input files: bfeafee0fc3a8a9009babfe2eb7c97132252e28bd8189ce487d84e6a5a37ebb0.tar.gz 
+WARNING 2019-06-19 10:10:15,019: 	 Warning: The following output files will not be published, as they are not EDM files: ['SlimmedNtuple.root']
+INFO 2019-06-19 10:10:15,019: 	 Sending the request to the server
+DEBUG 2019-06-19 10:10:15,019: 	 Submitting {'maxjobruntime': 1250, 'extrajdl': [], 'ignorelocality': 0, 'savelogsflag': 1, 'useparent': 0, 'asyncdest': 'T2_US_UCSD', 'algoargs': 5, 'cachefilename': 'bfeafee0fc3a8a9009babfe2eb7c97132252e28bd8189ce487d84e6a5a37ebb0.tar.gz', 'numcores': 1, 'addoutputfiles': [], 'generator': 'pythia', 'maxmemory': 2000, 'publishdbsurl': 'https://cmsweb.cern.ch/dbs/prod/phys03/DBSWriter', 'priority': 10, 'jobsw': 'CMSSW_9_4_12', 'edmoutfiles': [], 'userfiles': [], 'primarydataset': '', 'inputdata': '/DY1JetsToLL_M-50_LHEZpT_50-150_TuneCP5_13TeV-amcnloFXFX-pythia8/RunIIFall17MiniAODv2-MUOTrackFix_12Apr2018_94X_mc2017_realistic_v14_ext2-v1/MINIAODSIM', 'lfn': '/store/user/rebassoo/', 'dryrun': 0, 'workflow': 'crab_DY1JetsToLL_M-50_LHEZpT_50-150', 'cacheurl': u'https://cmsweb.cern.ch/crabcache', 'nonprodsw': 0, 'tfileoutfiles': ['SlimmedNtuple.root'], 'oneEventMode': 0, 'debugfilename': '78748c8c18c1a7342c3a48421b9d21490005ac10f19c6ebc2b0db22f0b905ef9.tar.gz', 'saveoutput': 1, 'publication': 1, 'jobarch': 'slc6_amd64_gcc630', 'totalunits': 0, 'splitalgo': 'FileBased', 'ignoreglobalblacklist': 0, 'nonvaliddata': 0, 'dbsurl': 'https://cmsweb.cern.ch/dbs/prod/global/DBSReader', 'publishgroupname': 0, 'jobtype': 'Analysis', 'publishname2': ''} 
+DEBUG 2019-06-19 10:10:15,020: 	 Encoded submit request: maxjobruntime=1250&ignorelocality=0&savelogsflag=1&useparent=0&asyncdest=T2_US_UCSD&algoargs=5&cachefilename=bfeafee0fc3a8a9009babfe2eb7c97132252e28bd8189ce487d84e6a5a37ebb0.tar.gz&numcores=1&generator=pythia&maxmemory=2000&publishdbsurl=https%3A%2F%2Fcmsweb.cern.ch%2Fdbs%2Fprod%2Fphys03%2FDBSWriter&priority=10&jobsw=CMSSW_9_4_12&primarydataset=&inputdata=%2FDY1JetsToLL_M-50_LHEZpT_50-150_TuneCP5_13TeV-amcnloFXFX-pythia8%2FRunIIFall17MiniAODv2-MUOTrackFix_12Apr2018_94X_mc2017_realistic_v14_ext2-v1%2FMINIAODSIM&lfn=%2Fstore%2Fuser%2Frebassoo%2F&dryrun=0&workflow=crab_DY1JetsToLL_M-50_LHEZpT_50-150&cacheurl=https%3A%2F%2Fcmsweb.cern.ch%2Fcrabcache&nonprodsw=0&oneEventMode=0&debugfilename=78748c8c18c1a7342c3a48421b9d21490005ac10f19c6ebc2b0db22f0b905ef9.tar.gz&saveoutput=1&publication=1&jobarch=slc6_amd64_gcc630&totalunits=0&splitalgo=FileBased&ignoreglobalblacklist=0&nonvaliddata=0&dbsurl=https%3A%2F%2Fcmsweb.cern.ch%2Fdbs%2Fprod%2Fglobal%2FDBSReader&publishgroupname=0&jobtype=Analysis&publishname2=&tfileoutfiles=SlimmedNtuple.root
+DEBUG 2019-06-19 10:10:17,204: 	 Result: {u'result': [{u'RequestName': u'190619_171016:rebassoo_crab_DY1JetsToLL_M-50_LHEZpT_50-150'}]}
+INFO 2019-06-19 10:10:17,206: 	 Success: Your task has been delivered to the CRAB3 server.
+INFO 2019-06-19 10:10:17,206: 	 Task name: 190619_171016:rebassoo_crab_DY1JetsToLL_M-50_LHEZpT_50-150
+INFO 2019-06-19 10:10:17,207: 	 Project dir: crab_projects_2019_06_19-MC/crab_DY1JetsToLL_M-50_LHEZpT_50-150
+INFO 2019-06-19 10:10:17,207: 	 Please use 'crab status -d crab_projects_2019_06_19-MC/crab_DY1JetsToLL_M-50_LHEZpT_50-150' to check how the submission process proceeds.
+DEBUG 2019-06-19 10:10:17,207: 	 About to return

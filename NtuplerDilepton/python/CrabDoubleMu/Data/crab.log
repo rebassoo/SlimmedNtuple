@@ -1,0 +1,54 @@
+DEBUG 2019-04-30 11:48:28,904: 	 Executing command: 'status'
+DEBUG 2019-04-30 11:48:28,904: 	 Found CRAB cache file /home/users/rebassoo/.crab3
+ERROR 2019-04-30 11:48:28,906: 	 Cannot find .requestcache file in CRAB project directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtuple/Ntupler/python/CrabSingleMu/Data/crab_projects_2019_04_26_RunF-Recovery-notUCSD-3rd
+ERROR 2019-04-30 11:48:28,906: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 590, in validateOptions
+    self.loadLocalCache()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 452, in loadLocalCache
+    raise ex
+CachefileNotFoundException: Cannot find .requestcache file in CRAB project directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtuple/Ntupler/python/CrabSingleMu/Data/crab_projects_2019_04_26_RunF-Recovery-notUCSD-3rd
+DEBUG 2019-04-30 11:48:46,460: 	 Executing command: 'status'
+DEBUG 2019-04-30 11:48:46,460: 	 Found CRAB cache file /home/users/rebassoo/.crab3
+ERROR 2019-04-30 11:48:46,463: 	 Cannot find .requestcache file in CRAB project directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtuple/Ntupler/python/CrabSingleMu/Data/crab_projects_2019_04_26_RunF-Recovery-notUCSD-3rd
+ERROR 2019-04-30 11:48:46,463: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 590, in validateOptions
+    self.loadLocalCache()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 452, in loadLocalCache
+    raise ex
+CachefileNotFoundException: Cannot find .requestcache file in CRAB project directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtuple/Ntupler/python/CrabSingleMu/Data/crab_projects_2019_04_26_RunF-Recovery-notUCSD-3rd
+DEBUG 2019-04-30 11:51:10,662: 	 Executing command: 'status'
+DEBUG 2019-04-30 11:51:10,662: 	 Found CRAB cache file /home/users/rebassoo/.crab3
+ERROR 2019-04-30 11:51:10,664: 	 Cannot find .requestcache file in CRAB project directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtuple/Ntupler/python/CrabSingleMu/Data/crab_projects_2019_04_28_RunC-Recovery-notUCSD-3rd
+ERROR 2019-04-30 11:51:10,664: 	 Caught exception
+Traceback (most recent call last):
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 161, in <module>
+    client()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/bin/crab", line 146, in __call__
+    self.cmd = sub_cmd(self.logger, args[1:])
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/status.py", line 40, in __init__
+    SubCommand.__init__(self, logger, cmdargs)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 268, in __init__
+    SubCommand.validateOptions(self)
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 590, in validateOptions
+    self.loadLocalCache()
+  File "/cvmfs/cms.cern.ch/crab3/slc6_amd64_gcc493/cms/crabclient/3.3.1904/lib/python2.7/site-packages/CRABClient/Commands/SubCommand.py", line 452, in loadLocalCache
+    raise ex
+CachefileNotFoundException: Cannot find .requestcache file in CRAB project directory /home/users/rebassoo/work/2019_03_14_AddingCHSJetsProper/CMSSW_9_4_12/src/SlimmedNtuple/Ntupler/python/CrabSingleMu/Data/crab_projects_2019_04_28_RunC-Recovery-notUCSD-3rd
