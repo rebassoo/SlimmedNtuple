@@ -217,7 +217,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    for (const pat::Muon &MuonIt : *muonHandle) { 
      bool tightId=MuonIt.isTightMuon(*vtx);
      double iso = (MuonIt.pfIsolationR04().sumChargedHadronPt + max(0., MuonIt.pfIsolationR04().sumNeutralHadronEt + MuonIt.pfIsolationR04().sumPhotonEt - 0.5*MuonIt.pfIsolationR04().sumPUPt))/MuonIt.pt();
-     if(tightId&&MuonIt.pt()>50&&fabs(MuonIt.eta())<2.4&&iso<0.1){
+     if(tightId&&MuonIt.pt()>35&&fabs(MuonIt.eta())<2.4&&iso<0.1){
        (*muon_px_).push_back(MuonIt.px());
        (*muon_py_).push_back(MuonIt.py());
        (*muon_pz_).push_back(MuonIt.pz());
@@ -581,7 +581,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool passes_muon=false;
    bool passes_electron=false;
    //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&(*electron_pt_).size()==0&&passTrigger_mu){
-   if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&num_ele_veto==0&&passTrigger_mu){
+   if((*muon_pt_).size()==2&&(*jet_eta_).size()==1&&numMuLoose==1&&num_ele_veto==0&&passTrigger_mu){
      passes_muon=true;
    }
    //if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&(*muon_pt_).size()==0&&passTrigger_e){
@@ -665,8 +665,9 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     double deltaR_e=1000;
 	     if(passes_muon){
 	       deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
-	       if(deltaR_mu>0.3){count_pv=count_pv+1;}
-	       if(!(deltaR_mu<0.3&&fabs(pfcand.pdgId())==13)){count_pv_noDRl=count_pv_noDRl+1;}
+	       deltaR_mu_2=sqrt(  (pfcand.eta()-(*muon_eta_)[1])*(pfcand.eta()-(*muon_eta_)[1]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[1])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[1]));
+	       if(!(deltaR_mu<0.3&&fabs(pfcand.pdgId())==13)&&!(deltaR_mu_2<0.3&&fabs(pfcand.pdgId())==13)){count_pv_noDRl=count_pv_noDRl+1;}
+	       if(deltaR_mu>0.3&&deltaR_mu_2>0.3){count_pv=count_pv+1;}
 	     }
 	     if(passes_electron){
 	       deltaR_e=sqrt(  (pfcand.eta()-(*electron_eta_)[0])*(pfcand.eta()-(*electron_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0]));
@@ -684,14 +685,15 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
      TLorentzVector LeptonP4;
      if(passes_muon){
-       LeptonP4=TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]);}
+       LeptonP4=TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]);
+       LeptonP4_2=TLorentzVector((*muon_px_)[1],(*muon_py_)[1],(*muon_pz_)[1],(*muon_e_)[1]);}
      if(passes_electron){
        LeptonP4=TLorentzVector((*electron_px_)[0],(*electron_py_)[0],(*electron_pz_)[0],(*electron_e_)[0]);}
      //
      //Neutrino 
-     TLorentzVector Neutrino_nominal = Nu4Momentum(LeptonP4, METPt, METphi);   // Neutrino Method   
-     double E_nu=sqrt(MET->corPx()*MET->corPx()+MET->corPy()*MET->corPy()+Neutrino_nominal.Pz()*Neutrino_nominal.Pz());
-     TLorentzVector Neutrino = TLorentzVector(*met_x_,*met_y_,Neutrino_nominal.Pz(),E_nu); 
+     //TLorentzVector Neutrino_nominal = Nu4Momentum(LeptonP4, METPt, METphi);   // Neutrino Method   
+     //double E_nu=sqrt(MET->corPx()*MET->corPx()+MET->corPy()*MET->corPy()+Neutrino_nominal.Pz()*Neutrino_nominal.Pz());
+     //TLorentzVector Neutrino = TLorentzVector(*met_x_,*met_y_,Neutrino_nominal.Pz(),E_nu); 
      /*
      double Neutrino_Px  = Neutrino.Px();
      double Neutrino_Py  = Neutrino.Py();
@@ -703,7 +705,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      */
 
      //W lep with neutrino - W leptonic
-     TLorentzVector WLeptonic = Neutrino + LeptonP4;
+     //TLorentzVector WLeptonic = Neutrino + LeptonP4;
+     TLorentzVector WLeptonic = LeptonP4 + LeptonP4_2;
      double WLeptonic_Pt  = WLeptonic.Pt();
      double WLeptonic_M   = WLeptonic.M();
      double WLeptonic_phi = WLeptonic.Phi();
