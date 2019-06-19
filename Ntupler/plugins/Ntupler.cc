@@ -427,8 +427,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    //*met_=patMET.corPt();
    *met_x_=MET->corPx();
    *met_y_=MET->corPy();
-   double METPt=MET->corPt();
-   double METphi=MET->phi();
+   //double METPt=MET->corPt();
+   //double METphi=MET->phi();
    *met_phi_=MET->phi();
 
    //Look at proton tracks
@@ -662,6 +662,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     //cout<<"vtx->position().z(): "<<vtx->position().z()<<endl;
 	     //if ((abs(pfcand.vertex().z()-vtx->position().z())<0.02) && (abs(pfcand.vertex().x()-vtx->position().x())<0.006) && (abs(pfcand.vertex().y()-vtx->position().y())<0.006)){
 	     double deltaR_mu=1000;
+	     double deltaR_mu_2=1000;
 	     double deltaR_e=1000;
 	     if(passes_muon){
 	       deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
@@ -684,6 +685,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      
 
      TLorentzVector LeptonP4;
+     TLorentzVector LeptonP4_2;
      if(passes_muon){
        LeptonP4=TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]);
        LeptonP4_2=TLorentzVector((*muon_px_)[1],(*muon_py_)[1],(*muon_pz_)[1],(*muon_e_)[1]);}
