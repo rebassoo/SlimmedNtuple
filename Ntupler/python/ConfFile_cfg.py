@@ -46,12 +46,12 @@ process.load('Configuration.StandardSequences.MagneticField_38T_cff')
 
 process.load('Configuration.StandardSequences.GeometryDB_cff')
 
-process.load("SlimmedNtuple.Ntupler.CfiFile_cfi")
+process.load("SlimmedNtupleDilepton.Ntupler.CfiFile_cfi")
 
-process.load("SlimmedNtuple.Ntupler.HLTFilter_cfi")
+process.load("SlimmedNtupleDilepton.Ntupler.HLTFilter_cfi")
 process.hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
 
-process.load("SlimmedNtuple.Ntupler.METFilter_cfi")
+process.load("SlimmedNtupleDilepton.Ntupler.METFilter_cfi")
 
 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
@@ -210,7 +210,7 @@ my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElect
 for idmod in my_id_modules:
     setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
-process.load("SlimmedNtuple.TotalEvents.CfiFile_cfi")
+process.load("SlimmedNtupleDilepton.TotalEvents.CfiFile_cfi")
 
 process.load("RecoMET.METFilters.ecalBadCalibFilter_cfi")
 
