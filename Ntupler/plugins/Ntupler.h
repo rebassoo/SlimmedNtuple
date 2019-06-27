@@ -51,7 +51,7 @@
 #include "DataFormats/PatCandidates/interface/PackedCandidate.h"
 #include "DataFormats/CTPPSReco/interface/CTPPSLocalTrackLite.h"
 #include "DataFormats/CTPPSDetId/interface/CTPPSDetId.h"
-#include "DataFormats/ProtonReco/interface/ProtonTrack.h"
+#include "DataFormats/ProtonReco/interface/ForwardProton.h"
 
 #include "DataFormats/Common/interface/TriggerResults.h"
 #include "FWCore/Common/interface/TriggerNames.h"
@@ -98,7 +98,8 @@ private:
   edm::EDGetTokenT<edm::View<pat::Jet>> jetAK8_token_;
   edm::EDGetTokenT<edm::View<pat::Muon>> muon_token_;
   edm::EDGetTokenT<std::vector<CTPPSLocalTrackLite> > pps_token_;
-  edm::EDGetTokenT<std::vector<reco::ProtonTrack>> reco_protons_token_;
+  edm::EDGetTokenT<std::vector<reco::ForwardProton> > recoProtonsSingleRPToken_;
+  edm::EDGetTokenT<std::vector<reco::ForwardProton> > recoProtonsMultiRPToken_;
   edm::EDGetTokenT<std::vector<reco::Vertex>> vertex_token_;
   edm::EDGetTokenT<double> rho_token_;
   edm::EDGetTokenT<edm::TriggerResults> hlt_token_;
@@ -196,6 +197,15 @@ private:
   std::vector<int> * proton_rpid_;
   std::vector<int> * proton_arm_;
 
+  std::vector<float> * proton_time_;
+  std::vector<float> * proton_trackx1_;
+  std::vector<float> * proton_tracky1_;
+  std::vector<float> * proton_trackx2_;
+  std::vector<float> * proton_tracky2_;
+  std::vector<int> * proton_trackpixshift1_;
+  std::vector<int> * proton_trackpixshift2_;
+  std::vector<int> * proton_rpid1_;
+  std::vector<int> * proton_rpid2_;
 
   std::vector<float> * gen_jet_pt_;
   std::vector<float> * gen_jet_eta_;

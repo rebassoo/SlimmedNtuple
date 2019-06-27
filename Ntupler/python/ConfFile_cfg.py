@@ -31,11 +31,12 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
 
 process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/EA6122AF-1137-E811-B552-FA163E28D344.root'
+        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/EA6122AF-1137-E811-B552-FA163E28D344.root'
+        'file:EA6122AF-1137-E811-B552-FA163E28D344.root'
         #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/00469E05-E055-E811-807F-008CFAF7174A.root'
@@ -58,13 +59,13 @@ process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
 MC=False
 
-# proton reconstruction
-if not MC:
-    process.load("RecoCTPPS.ProtonReconstruction.year_2017_OF.ctppsProtonReconstructionOF_cfi")
-    #process.ctppsProtonReconstructionOFDB.fitVtxY = False
-    #process.ctppsProtonReconstructionOFDB.verbosity = 0
 
-
+# If using full proton re-reco (legacy) - local RP reconstruction chain with standard settings                                                                                            
+process.load("RecoCTPPS.Configuration.recoCTPPS_cff")
+process.ctppsLocalTrackLiteProducer.includePixels = cms.bool(True)
+process.ctppsLocalTrackLiteProducer.includeStrips = cms.bool(True)
+process.ctppsProtons.doSingleRPReconstruction = cms.bool(True)
+process.ctppsProtons.doMultiRPReconstruction = cms.bool(True)
 
 #Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
 #To print out global tag: conddb list 94X_mc2017_realistic_v16
@@ -72,7 +73,8 @@ if not MC:
 if MC:
     process.GlobalTag.globaltag ='94X_mc2017_realistic_v17'
 else:
-    process.GlobalTag.globaltag ='94X_dataRun2_v11'
+    #process.GlobalTag.globaltag ='94X_dataRun2_v11'
+    process.GlobalTag.globaltag ='106X_dataRun2_testPPS_v1'
 
 
 ### ADD SOME NEW JET COLLECTIONS                                                                                                              
@@ -89,7 +91,7 @@ jetToolbox( process, 'ak8', 'ak8JetSubs', 'noOutput',
                 addTrimming=False, addFiltering=False,
                 addSoftDropSubjets=False,
                 addNsub=True, maxTau=4,                       # add Nsubjettiness tau1, tau2, tau3, tau4                                      
-                Cut='pt > 100.0',
+                Cut='pt > 10.0',
                 bTagDiscriminators=['pfCombinedInclusiveSecondaryVertexV2BJetTags'],
                 #bTagDiscriminators=['pfCombinedSecondaryVertexV2BJetTags'],
                 # added L1FastJet on top of the example config file
@@ -256,8 +258,8 @@ if MC:
     
 else:
     process.p = cms.Path(
-        process.hltFilter*
-        process.metFilter*
+        #process.hltFilter*
+        #process.metFilter*
         #process.totalEvents*
         process.ecalBadCalibReducedMINIAODFilter*
         process.fullPatMetSequence*
@@ -265,7 +267,16 @@ else:
         #process.dump*
         process.slimmedJetsAK8JetId*
         process.slimmedJetsJetId*
-        process.ctppsProtonReconstructionOFDB*
+        #process.ctppsProtonReconstructionOFDB*
+
+        #process.totemRPUVPatternFinder *
+        #process.totemRPLocalTrackFitter *
+        #process.ctppsDiamondRecHits *
+        #process.ctppsDiamondLocalTracks *
+        #process.ctppsPixelLocalReconstruction *
+        #process.ctppsLocalTrackLiteProducer *
+        process.ctppsProtons *
+        #process.dump#*
         process.demo
         )
 
