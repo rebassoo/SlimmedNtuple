@@ -26,8 +26,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   met_token_(consumes<pat::METCollection>(edm::InputTag("slimmedMETsPuppi"))),
   //met_token_(consumes<pat::METCollection>(edm::InputTag("slimmedMETs"))),
   ecalBadCalibFilterUpdate_token(consumes< bool >(edm::InputTag("ecalBadCalibReducedMINIAODFilter"))),
-  //electron_token_(consumes<edm::View<pat::Electron>>(edm::InputTag("slimmedElectrons"))),
-  electron_token_(consumes<edm::View<reco::GsfElectron>>(edm::InputTag("slimmedElectrons"))),
+  electron_token_(consumes<edm::View<pat::Electron>>(edm::InputTag("slimmedElectrons"))),
+  //electron_token_(consumes<edm::View<reco::GsfElectron>>(edm::InputTag("slimmedElectrons"))),
   pfcand_token_(consumes<edm::View<pat::PackedCandidate>>(edm::InputTag("packedPFCandidates"))),
   mcweight_token_(consumes<GenEventInfoProduct>(edm::InputTag("generator"))),
   hltPrescaleProvider_(iConfig, consumesCollector(), *this)
@@ -46,8 +46,8 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
   cout<<"mcName: "<<mcName<<endl;
   cout<<"isMC: "<<isMC<<endl;
 
-  eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"));
-  eleIdMapToken_veto_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-veto"));
+  //eleIdMapToken_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-tight"));
+  //eleIdMapToken_veto_=consumes<edm::ValueMap<bool> >(edm::InputTag("egmGsfElectronIDs:cutBasedElectronID-Fall17-94X-V2-veto"));
 
   if(isMC == true)
     {
@@ -201,7 +201,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 }
       }
     }
-  
   // Run and vertex multiplicity info
   *run_ = iEvent.id().run();
   *ev_ = iEvent.id().event();
@@ -210,7 +209,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle< std::vector<reco::Vertex> > vertices_;
   iEvent.getByToken(vertex_token_, vertices_);
   reco::VertexRef vtx(vertices_, 0);
-  
    //Get Muons
   edm::Handle<edm::View<pat::Muon> > muonHandle;
   iEvent.getByToken(muon_token_,muonHandle);
@@ -237,13 +235,16 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    }//end of looping over muons
 
    //Get Electrons
+   /*
    //Tight id
    edm::Handle<edm::ValueMap<bool> > ele_id_decisions;
    iEvent.getByToken(eleIdMapToken_ ,ele_id_decisions);
    //Veto id
    edm::Handle<edm::ValueMap<bool> > ele_id_decisions_veto;
    iEvent.getByToken(eleIdMapToken_veto_ ,ele_id_decisions_veto);
-   edm::Handle<edm::View<reco::GsfElectron> > electronHandle;
+   */
+   //edm::Handle<edm::View<reco::GsfElectron> > electronHandle;
+   edm::Handle<edm::View<pat::Electron> > electronHandle;
    iEvent.getByToken(electron_token_,electronHandle);
    unsigned int n = electronHandle->size();
    //cout<<"I get before electrons: "<<endl;
@@ -255,8 +256,10 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      //dz_.push_back( theTrack->dz( firstGoodVertex->position() ) );
      //dxy_.push_back( theTrack->dxy( firstGoodVertex->position() ) );
      //bool passConvVeto = !ConversionTools::hasMatchedConversion(*ele,conversions_h,theBeamSpot->position());
-     bool isPassEleId = (*ele_id_decisions)[el];
-     
+
+     //bool isPassEleId = (*ele_id_decisions)[el];
+     bool isPassEleId = el->electronID("cutBasedElectronID-Fall17-94X-V2-tight");
+     //bool isPassEleId = el->isElectron("cutBasedElectronID-Fall17-94X-V2-tight");
      //if(el->pt()>30){ 
        //       cout<<"electron pt is: "<<el->pt()<<endl;
      //}
@@ -274,13 +277,13 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        (*electron_charge_).push_back(el->charge());
      }
 
-     bool isPassEleId_veto = (*ele_id_decisions_veto)[el];
+     //bool isPassEleId_veto = (*ele_id_decisions_veto)[el];
+     bool isPassEleId_veto = el->electronID("cutBasedElectronID-Fall17-94X-V2-veto");
      if(isPassEleId_veto&&el->pt()>35&&fabs(el->superCluster()->eta())<2.4){ 
        num_ele_veto++;
      }
 
    }
-
    //Get Gen Jets
    if(isMC == true){
      edm::Handle<reco::GenJetCollection> genJet;
@@ -416,7 +419,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	 }}//endof looking at if by lepton and if pt>200 GeV
      }
-
    *num_bjets_ak8_=numbJetsAk8_id;
 
   
@@ -443,7 +445,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 const CTPPSDetId detid( trk.getRPId() );
 	 // transform the raw, 32-bit unsigned integer detId into the TOTEM "decimal" notation
 	 const unsigned short raw_id = 100*detid.arm()+10*detid.station()+detid.rp();
-	 
+	 //cout<<"pps track x: "<<trk.getX();
 	 (*pps_track_x_).push_back(trk.getX());
 	 (*pps_track_y_).push_back(trk.getY());
 	 (*pps_track_rpid_).push_back(raw_id);
@@ -488,7 +490,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     tracky1 = (*proton.contributingLocalTracks().begin())->getY();
 
 	     CTPPSpixelLocalTrackReconstructionInfo pixtrackinfo1 = (*proton.contributingLocalTracks().begin())->getPixelTrackRecoInfo();
-	     if(pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::notShiftedRun || pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::noShiftedPlanes || 
+	     if(pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::notShiftedRun || pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::noShiftedPlanes ||
 		pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::invalid)
 	       pixshift1 = 0;
 	     else
@@ -499,6 +501,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     ismultirp = 0;
 
 	     (*proton_xi_).push_back(xi);
+	     //cout<<"Single Pot proton_xi_"<<xi<<endl;
 	     (*proton_thy_).push_back(th_y);
 	     (*proton_thx_).push_back(th_x);
 	     (*proton_t_).push_back(t);
@@ -562,6 +565,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     ismultirp = 1;
 
 	     (*proton_xi_).push_back(xi);
+	     //cout<<"Multi Pot proton_xi_"<<xi<<endl;
 	     (*proton_thy_).push_back(th_y);
 	     (*proton_thx_).push_back(th_x);
 	     (*proton_t_).push_back(t);
@@ -582,8 +586,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
    }
 
-
-     
    *nVertices_=-1;
    *nVertices_=vertices_->size();
 
@@ -657,8 +659,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        }
      }
 
-
-
    bool passes_muon=false;
    bool passes_electron=false;
    //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&(*electron_pt_).size()==0&&passTrigger_mu){
@@ -673,11 +673,9 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    //if(channel=="electron"&&passes_electron){passFatJet=true;}
    //if(channel=="muon"&&passes_muon){passFatJet=true;}
    if(passes_muon||passes_electron){passFatJet=true;}
-
    //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
    //Only store samples that pass Fat Jet
    if(passFatJet){
-
      edm::Handle<edm::View<pat::Jet> > jetColl; // PAT      
      iEvent.getByLabel("slimmedJetsJetId", jetColl);
      int numbJets_id=0;
@@ -832,7 +830,6 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      *recoRapidityWW_=WW_p4_nu.Rapidity();
 
      tree_->Fill();
-
 
    }
 
@@ -1128,6 +1125,16 @@ Ntupler::beginJob()
   proton_rpid_ = new std::vector<int>;
   proton_arm_ = new std::vector<int>;
 
+  proton_time_ = new std::vector<float>;
+  proton_trackx1_ = new std::vector<float>;
+  proton_tracky1_ = new std::vector<float>;
+  proton_trackx2_ = new std::vector<float>;
+  proton_tracky2_ = new std::vector<float>;
+  proton_trackpixshift1_ = new std::vector<int>;
+  proton_trackpixshift2_ = new std::vector<int>;
+  proton_rpid1_ = new std::vector<int>;
+  proton_rpid2_ = new std::vector<int>;
+
   gen_jet_pt_ = new std::vector<float>;
   gen_jet_phi_ = new std::vector<float>;
   gen_jet_eta_ = new std::vector<float>;
@@ -1306,6 +1313,7 @@ Ntupler::endJob()
   delete pps_track_x_;
   delete pps_track_y_;
   delete pps_track_rpid_;
+  
   delete proton_xi_;
   delete proton_thy_;
   delete proton_thx_;
@@ -1322,6 +1330,7 @@ Ntupler::endJob()
   delete proton_trackpixshift2_;
   delete proton_rpid1_;
   delete proton_rpid2_;
+  
   delete gen_W_pt_;
   delete gen_W_charge_;
   delete gen_proton_px_;
