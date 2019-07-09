@@ -42,6 +42,8 @@
 #include "JetMETCorrections/Objects/interface/JetCorrectionsRecord.h"
 #include "JetMETCorrections/Modules/interface/JetResolution.h"
 #include "CondFormats/JetMETObjects/interface/JetResolutionObject.h"
+#include "CondFormats/RunInfo/interface/LHCInfo.h"
+#include "CondFormats/DataRecord/interface/LHCInfoRcd.h"
 
 #include "DataFormats/Candidate/interface/Candidate.h"
 #include "DataFormats/PatCandidates/interface/Jet.h"
@@ -217,6 +219,9 @@ private:
   int * run_;
   long int * ev_;
   int * lumiblock_;
+  float * crossingAngle_;
+  float * betaStar_;
+  float * instLumi_;
   int * nVertices_;
   float * pileupWeight_;
   float * mc_pu_trueinteractions_;

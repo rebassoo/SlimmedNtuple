@@ -1,6 +1,9 @@
 import FWCore.ParameterSet.Config as cms
-process = cms.Process("Demo")
+#process = cms.Process("Demo")
 #process = cms.Process("CTPPSTestProtonReconstruction", eras.ctpps_2016)
+from Configuration.StandardSequences.Eras import eras
+process = cms.Process("Demo", eras.Run2_2017)
+
 
 #process.Timing = cms.Service("Timing",
 #  summaryOnly = cms.untracked.bool(False),
@@ -33,77 +36,128 @@ process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
 process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
 
-process.source = cms.Source("PoolSource",
+MC=False
+if MC:
+  process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
+      #This file below is from /GGToWW_bSM-A0W1e-6_13TeV-fpmc-herwig6/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM
+      "file:/home/users/rebassoo/work/2019_07_02_JanRecent-2ndTry/CMSSW_10_6_0/src/test-Finn/062366B6-DF2B-E911-BB28-C45444922958.root"
+      #"root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAODv2/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/4C6E31C1-1742-E811-9CE3-002590491B22.root"
+      #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
+    )
+  )
+
+
+if not MC:
+  process.source = cms.Source("PoolSource",
+      fileNames = cms.untracked.vstring(
         'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/EA6122AF-1137-E811-B552-FA163E28D344.root'
         #'file:EA6122AF-1137-E811-B552-FA163E28D344.root'
         #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/34D2D750-5037-E811-B6AA-FA163E516F5B.root'
         #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/00469E05-E055-E811-807F-008CFAF7174A.root'
-        ),
-        secondaryFileNames = cms.untracked.vstring(
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40003/1C82A25C-C8D8-E711-8FA6-02163E019B54.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40003/40564C61-C2D8-E711-91A7-02163E019CDB.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/18E6A929-10DA-E711-B4DE-02163E019BF5.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/4CBF455E-0FDA-E711-8573-02163E01352C.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/545B0594-11DA-E711-88BE-02163E019CD8.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/687423EA-15DA-E711-A0A6-02163E019C95.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/C0D24DD8-05DA-E711-ACC4-02163E011B0D.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/8852ED33-F6D8-E711-8FA2-02163E01A6C4.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/944EA579-FAD8-E711-BD8B-02163E014737.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/EA4A4045-F6D8-E711-A4D5-02163E01A35D.root',
-            'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/F03EBC89-FAD8-E711-BCB3-02163E011A7C.root'
-            #
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40002/3410C69B-6AD8-E711-A723-02163E019B35.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40002/3C8D9D7B-6AD8-E711-97D9-02163E0145AF.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40002/66408612-6DD8-E711-92A5-02163E011E06.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40002/8E70B11B-63D8-E711-BD64-02163E019C75.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40002/ACED5982-68D8-E711-83E4-02163E011955.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40002/F2EABD0D-6DD8-E711-AEAB-02163E012817.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/F868F294-8FDA-E711-971C-FA163E44A4DB.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40006/429D078F-B6DA-E711-A7EA-FA163E3B3BD6.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40006/505EF460-C9DA-E711-96F3-FA163E32411F.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40006/6C6DB2AD-C0DA-E711-884B-FA163E21FB72.root',
-            #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40006/94AC6C7F-BEDA-E711-98B3-FA163E18B68C.root'
-        ),
-        skipEvents=cms.untracked.uint32(2000)
-)
+      ),
+      secondaryFileNames = cms.untracked.vstring(
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40003/1C82A25C-C8D8-E711-8FA6-02163E019B54.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40003/40564C61-C2D8-E711-91A7-02163E019CDB.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/18E6A929-10DA-E711-B4DE-02163E019BF5.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/4CBF455E-0FDA-E711-8573-02163E01352C.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/545B0594-11DA-E711-88BE-02163E019CD8.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/687423EA-15DA-E711-A0A6-02163E019C95.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/C0D24DD8-05DA-E711-ACC4-02163E011B0D.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/8852ED33-F6D8-E711-8FA2-02163E01A6C4.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/944EA579-FAD8-E711-BD8B-02163E014737.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/EA4A4045-F6D8-E711-A4D5-02163E01A35D.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/F03EBC89-FAD8-E711-BCB3-02163E011A7C.root'
+      ),
+      skipEvents=cms.untracked.uint32(2000)
+  )
 
 process.load('Configuration.StandardSequences.MagneticField_38T_cff')
-
 process.load('Configuration.StandardSequences.GeometryDB_cff')
 
 process.load("SlimmedNtuple.Ntupler.CfiFile_cfi")
-
 process.load("SlimmedNtuple.Ntupler.HLTFilter_cfi")
 process.hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
-
 process.load("SlimmedNtuple.Ntupler.METFilter_cfi")
 
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+#from Configuration.AlCa.GlobalTag import GlobalTag
+
+
+# If using full proton re-reco (legacy) - local RP reconstruction chain with standard settings         
+process.load("RecoCTPPS.Configuration.recoCTPPS_cff")
+#process.ctppsLocalTrackLiteProducer.includePixels = cms.bool(True)
+#process.ctppsLocalTrackLiteProducer.includeStrips = cms.bool(True)
+##process.ctppsLocalTrackLiteProducer.includeDiamonds = cms.bool(True)
+#process.ctppsProtons.doSingleRPReconstruction = cms.bool(True)
+#process.ctppsProtons.tagLocalTrackLite = cms.InputTag("ctppsLocalTrackLiteProducer","","Demo")
+
+
+# remove locally-defined conditions -> consume conditions from GT
+del process.ctppsOpticalFunctionsESSource
+del process.esPreferLocalOptics
+
+del process.ctppsRPAlignmentCorrectionsDataESSourceXML
+del process.esPreferLocalAlignment
 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
-MC=False
 
+# define global tag (for LHC data reconstruction)
+if not MC:
+  process.GlobalTag = GlobalTag(process.GlobalTag, "106X_dataRun2_v11")
 
-# If using full proton re-reco (legacy) - local RP reconstruction chain with standard settings                                                                                            
-process.load("RecoCTPPS.Configuration.recoCTPPS_cff")
-process.ctppsLocalTrackLiteProducer.includePixels = cms.bool(True)
-process.ctppsLocalTrackLiteProducer.includeStrips = cms.bool(True)
-#process.ctppsLocalTrackLiteProducer.includeDiamonds = cms.bool(True)
-process.ctppsProtons.doSingleRPReconstruction = cms.bool(True)
-process.ctppsProtons.doMultiRPReconstruction = cms.bool(True)
-
-#Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
-#To print out global tag: conddb list 94X_mc2017_realistic_v16
-#For v16 global tag uses v23 of Jet energy corrections. Newest is 32.
+# conditions for simu are not DB, load them from local sources
 if MC:
-    process.GlobalTag.globaltag ='94X_mc2017_realistic_v17'
-else:
-    #process.GlobalTag.globaltag ='94X_dataRun2_v11'
-    #process.GlobalTag.globaltag ='106X_dataRun2_testPPS_v1'
-    process.GlobalTag.globaltag ='106X_dataRun2_v11'
+  # load base settings
+  process.load("direct_simu_reco_cff")
+
+  process.GlobalTag = GlobalTag(process.GlobalTag, "94X_mc2017_realistic_v17")
+
+  # update settings of beam-smearing module
+  process.beamDivergenceVtxGenerator.src = cms.InputTag("")
+  process.beamDivergenceVtxGenerator.srcGenParticle = cms.VInputTag(
+    cms.InputTag("genPUProtons", "genPUProtons"),
+    cms.InputTag("prunedGenParticles")
+  )
+
+  # do not apply vertex smearing again
+  process.ctppsBeamParametersESSource.vtxStddevX = 0
+  process.ctppsBeamParametersESSource.vtxStddevY = 0
+  process.ctppsBeamParametersESSource.vtxStddevZ = 0
+
+  # undo CMS vertex shift
+  process.ctppsBeamParametersESSource.vtxOffsetX45 = +0.2475 * 1E-1
+  process.ctppsBeamParametersESSource.vtxOffsetY45 = -0.6924 * 1E-1
+  process.ctppsBeamParametersESSource.vtxOffsetZ45 = -8.1100 * 1E-1
+
+  # define alignment
+  process.ctppsRPAlignmentCorrectionsDataESSourceXML.MisalignedFiles = ["test-Finn/alignment.xml"]
+  process.ctppsRPAlignmentCorrectionsDataESSourceXML.RealFiles = ["test-Finn/alignment.xml"]
+
+  # update reco settings
+  process.totemRPUVPatternFinder.tagRecHit = cms.InputTag('ctppsDirectProtonSimulation')
+  process.ctppsPixelLocalTracks.label = "ctppsDirectProtonSimulation"
+  process.ctppsLocalTrackLiteProducer.includeDiamonds = False
+
+  def UseCrossingAngle(xangle):
+    process.ctppsLHCInfoESSource.xangle = xangle
+    process.ctppsBeamParametersESSource.halfXangleX45 = xangle * 1E-6
+    process.ctppsBeamParametersESSource.halfXangleX56 = xangle * 1E-6
+
+  UseCrossingAngle(150)
+
+##Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
+##To print out global tag: conddb list 94X_mc2017_realistic_v16
+##For v16 global tag uses v23 of Jet energy corrections. Newest is 32.
+#if MC:
+#    process.GlobalTag.globaltag ='94X_mc2017_realistic_v17'
+#else:
+#    #process.GlobalTag.globaltag ='94X_dataRun2_v11'
+#    #process.GlobalTag.globaltag ='106X_dataRun2_testPPS_v1'
+#    process.GlobalTag.globaltag ='106X_dataRun2_v11'
 
 
 ### ADD SOME NEW JET COLLECTIONS                                                                                                              
@@ -219,10 +273,10 @@ process.slimmedJetsJetId = cms.EDFilter("PFJetIDSelectionFunctorFilter",
                                            )
 
 
-from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
-runMetCorAndUncFromMiniAOD(process,
-                           isData= not MC
-                           )
+from RecoEgamma.EgammaTools.EgammaPostRecoTools import setupEgammaPostRecoSeq
+setupEgammaPostRecoSeq(process,
+                       runVID=True, #saves CPU time by not needlessly re-running VID, if you want the Fall17V2 IDs, set this to True or remove (default is True)
+                       era='2017-Nov17ReReco')  
 
 
 process.demo = cms.EDAnalyzer('Ntupler')
@@ -241,10 +295,12 @@ process.demo.mcName=cms.string("h_pileup_"+options.pileupName)
 #for idmod in my_id_modules:
 #    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
 
-from RecoEgamma.EgammaTools.EgammaPostRecoTools import setupEgammaPostRecoSeq
-setupEgammaPostRecoSeq(process,
-                       runVID=True, #saves CPU time by not needlessly re-running VID, if you want the Fall17V2 IDs, set this to True or remove (default is True)
-                       era='2017-Nov17ReReco')  
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+runMetCorAndUncFromMiniAOD(process,
+                           isData= not MC
+                           )
+
+
 
 process.load("SlimmedNtuple.TotalEvents.CfiFile_cfi")
 
@@ -281,13 +337,21 @@ if MC:
         process.metFilterMC*
         process.ecalBadCalibReducedMINIAODFilter*
         process.fullPatMetSequence*
-        process.egmGsfElectronIDSequence*
+        process.egammaPostRecoSeq*
+        #process.egmGsfElectronIDSequence*
         process.slimmedAK8JetsSmeared*
         process.slimmedJetsAK8JetId*
         process.slimmedAK4JetsSmeared*
         process.slimmedJetsJetId*
-        #process.ctppsProtonReconstructionOFDB*
-        process.demo
+        process.beamDivergenceVtxGenerator
+        * process.ctppsDirectProtonSimulation
+        * process.totemRPUVPatternFinder
+        * process.totemRPLocalTrackFitter
+        * process.ctppsPixelLocalTracks
+        * process.ctppsLocalTrackLiteProducer
+        #* process.dump
+        * process.ctppsProtons
+        *process.demo
         )
     
 else:
@@ -302,16 +366,23 @@ else:
         #process.dump*
         process.slimmedJetsAK8JetId*
         process.slimmedJetsJetId*
-        process.totemRPUVPatternFinder *
-        process.totemRPLocalTrackFitter *
-        process.ctppsDiamondRecHits *
-        process.ctppsDiamondLocalTracks *
-        #process.ctppsPixelLocalReconstruction *
-        process.ctppsPixelLocalTracks*
-        process.ctppsLocalTrackLiteProducer *
-        process.ctppsProtons *
-        #process.dump#*
-        process.demo
+        process.totemRPUVPatternFinder
+        * process.totemRPLocalTrackFitter
+        * process.ctppsDiamondRecHits
+        * process.ctppsDiamondLocalTracks
+        * process.ctppsPixelLocalTracks
+        * process.ctppsLocalTrackLiteProducer
+        * process.ctppsProtons
+#        process.totemRPUVPatternFinder *
+#        process.totemRPLocalTrackFitter *
+#        process.ctppsDiamondRecHits *
+#        process.ctppsDiamondLocalTracks *
+#        #process.ctppsPixelLocalReconstruction *
+#        process.ctppsPixelLocalTracks*
+#        process.ctppsLocalTrackLiteProducer *
+#        process.ctppsProtons *
+#        #process.dump#*
+        *process.demo
         )
 
 

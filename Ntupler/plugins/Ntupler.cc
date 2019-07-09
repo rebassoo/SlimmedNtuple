@@ -205,6 +205,16 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   *run_ = iEvent.id().run();
   *ev_ = iEvent.id().event();
   *lumiblock_ = iEvent.luminosityBlock();
+
+  //get beam-crossing angle and LHC conditions
+  edm::ESHandle<LHCInfo> hLHCInfo;
+  std::string lhcInfoLabel("");
+  iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
+  if(hLHCInfo.isValid()){
+    *crossingAngle_=hLHCInfo->crossingAngle();
+    *betaStar_=hLHCInfo->betaStar();
+    *instLumi_=hLHCInfo->instLumi();
+  }
   
   edm::Handle< std::vector<reco::Vertex> > vertices_;
   iEvent.getByToken(vertex_token_, vertices_);
@@ -435,156 +445,156 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    *met_phi_=MET->phi();
 
    //Look at proton tracks
-   if(isMC==false||isSignalMC==true){
-     // Proton lite tracks
-     edm::Handle<std::vector<CTPPSLocalTrackLite> > ppsTracks;
-     iEvent.getByToken( pps_token_, ppsTracks );
+   //if(isMC==false||isSignalMC==true||isMC==true){
+   // Proton lite tracks
+   edm::Handle<std::vector<CTPPSLocalTrackLite> > ppsTracks;
+   iEvent.getByToken( pps_token_, ppsTracks );
      
-     for ( const auto& trk : *ppsTracks ) 
-       {
-	 const CTPPSDetId detid( trk.getRPId() );
-	 // transform the raw, 32-bit unsigned integer detId into the TOTEM "decimal" notation
-	 const unsigned short raw_id = 100*detid.arm()+10*detid.station()+detid.rp();
-	 //cout<<"pps track x: "<<trk.getX();
-	 (*pps_track_x_).push_back(trk.getX());
-	 (*pps_track_y_).push_back(trk.getY());
-	 (*pps_track_rpid_).push_back(raw_id);
-       }
+   for ( const auto& trk : *ppsTracks ) 
+     {
+       const CTPPSDetId detid( trk.getRPId() );
+       // transform the raw, 32-bit unsigned integer detId into the TOTEM "decimal" notation
+       const unsigned short raw_id = 100*detid.arm()+10*detid.station()+detid.rp();
+       //cout<<"pps track x: "<<trk.getX();
+       (*pps_track_x_).push_back(trk.getX());
+       (*pps_track_y_).push_back(trk.getY());
+       (*pps_track_rpid_).push_back(raw_id);
+     }
 
 
      // Full reco protons
-     edm::Handle<vector<reco::ForwardProton>> recoMultiRPProtons;
-     iEvent.getByToken(recoProtonsMultiRPToken_, recoMultiRPProtons);
-     edm::Handle<vector<reco::ForwardProton>> recoSingleRPProtons;
-     iEvent.getByToken(recoProtonsSingleRPToken_, recoSingleRPProtons);
+   edm::Handle<vector<reco::ForwardProton>> recoMultiRPProtons;
+   iEvent.getByToken(recoProtonsMultiRPToken_, recoMultiRPProtons);
+   edm::Handle<vector<reco::ForwardProton>> recoSingleRPProtons;
+   iEvent.getByToken(recoProtonsSingleRPToken_, recoSingleRPProtons);
        
-     int ismultirp = -999;
-     unsigned int decRPId = -999;
-     unsigned int armId = -999;
-     float th_y = -999;
-     float th_x = -999;
-     float t = -999;
-     float xi = -999;
-     float trackx1 = -999.;
-     float tracky1 = -999.;
-     float trackx2 = -999.;
-     float tracky2 = -999.;
-     unsigned int trackrpid1 = -999;
-     unsigned int trackrpid2 = -999;
-     int pixshift1 = -999;
-     int pixshift2 = -999;
-     float time = -999.;
+   int ismultirp = -999;
+   unsigned int decRPId = -999;
+   unsigned int armId = -999;
+   float th_y = -999;
+   float th_x = -999;
+   float t = -999;
+   float xi = -999;
+   float trackx1 = -999.;
+   float tracky1 = -999.;
+   float trackx2 = -999.;
+   float tracky2 = -999.;
+   unsigned int trackrpid1 = -999;
+   unsigned int trackrpid2 = -999;
+   int pixshift1 = -999;
+   int pixshift2 = -999;
+   float time = -999.;
 
-     // Single-RP
-     for (const auto & proton : *recoSingleRPProtons)
-       {
-	 if (proton.validFit())
-	   {
-	     th_y = proton.thetaY();
-	     th_x = proton.thetaX();
-	     xi = proton.xi();
-	     t = proton.t();
-	     time = proton.time(); 
+   // Single-RP
+   for (const auto & proton : *recoSingleRPProtons)
+     {
+       if (proton.validFit())
+	 {
+	   th_y = proton.thetaY();
+	   th_x = proton.thetaX();
+	   xi = proton.xi();
+	   t = proton.t();
+	   time = proton.time(); 
 
-	     trackx1 = (*proton.contributingLocalTracks().begin())->getX();
-	     tracky1 = (*proton.contributingLocalTracks().begin())->getY();
+	   trackx1 = (*proton.contributingLocalTracks().begin())->getX();
+	   tracky1 = (*proton.contributingLocalTracks().begin())->getY();
 
-	     CTPPSpixelLocalTrackReconstructionInfo pixtrackinfo1 = (*proton.contributingLocalTracks().begin())->getPixelTrackRecoInfo();
-	     if(pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::notShiftedRun || pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::noShiftedPlanes ||
-		pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::invalid)
-	       pixshift1 = 0;
-	     else
-	       pixshift1 = 1;
+	   CTPPSpixelLocalTrackReconstructionInfo pixtrackinfo1 = (*proton.contributingLocalTracks().begin())->getPixelTrackRecoInfo();
+	   if(pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::notShiftedRun || pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::noShiftedPlanes ||
+	      pixtrackinfo1 == CTPPSpixelLocalTrackReconstructionInfo::invalid)
+	     pixshift1 = 0;
+	   else
+	     pixshift1 = 1;
 
-	     CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
-	     decRPId = rpId.arm()*100 + rpId.station()*10 + rpId.rp();
-	     ismultirp = 0;
+	   CTPPSDetId rpId((*proton.contributingLocalTracks().begin())->getRPId());
+	   decRPId = rpId.arm()*100 + rpId.station()*10 + rpId.rp();
+	   ismultirp = 0;
 
-	     (*proton_xi_).push_back(xi);
-	     //cout<<"Single Pot proton_xi_"<<xi<<endl;
-	     (*proton_thy_).push_back(th_y);
-	     (*proton_thx_).push_back(th_x);
-	     (*proton_t_).push_back(t);
-	     (*proton_ismultirp_).push_back(ismultirp);
-	     (*proton_rpid_).push_back(decRPId);
-	     (*proton_arm_).push_back(armId);
-
-	     (*proton_time_).push_back(time);
-	     (*proton_trackx1_).push_back(trackx1);
-	     (*proton_tracky1_).push_back(tracky1);
-	     (*proton_trackpixshift1_).push_back(pixshift1);
-	     (*proton_rpid1_).push_back(decRPId);
-	   }
-       }
+	   (*proton_xi_).push_back(xi);
+	   //cout<<"Single Pot proton_xi_"<<xi<<endl;
+	   (*proton_thy_).push_back(th_y);
+	   (*proton_thx_).push_back(th_x);
+	   (*proton_t_).push_back(t);
+	   (*proton_ismultirp_).push_back(ismultirp);
+	   (*proton_rpid_).push_back(decRPId);
+	   (*proton_arm_).push_back(armId);
+	   
+	   (*proton_time_).push_back(time);
+	   (*proton_trackx1_).push_back(trackx1);
+	   (*proton_tracky1_).push_back(tracky1);
+	   (*proton_trackpixshift1_).push_back(pixshift1);
+	   (*proton_rpid1_).push_back(decRPId);
+	 }
+     }
 
      // Multi-RP
-     for (const auto & proton : *recoMultiRPProtons)
-       {
-	 if (proton.validFit())
-	   {
-	     th_y = proton.thetaY();
-	     th_x = proton.thetaX();
-	     xi = proton.xi();
-	     t = proton.t();
-	     time = proton.time();
+   for (const auto & proton : *recoMultiRPProtons)
+     {
+       if (proton.validFit())
+	 {
+	   th_y = proton.thetaY();
+	   th_x = proton.thetaX();
+	   xi = proton.xi();
+	   t = proton.t();
+	   time = proton.time();
 
-	     int ij=0;
-	     for (const auto &tr : proton.contributingLocalTracks())
-	       {
-		 CTPPSDetId rpIdJ(tr->getRPId());
-		 unsigned int rpDecIdJ = rpIdJ.arm()*100 + rpIdJ.station()*10 + rpIdJ.rp();
+	   int ij=0;
+	   for (const auto &tr : proton.contributingLocalTracks())
+	     {
+	       CTPPSDetId rpIdJ(tr->getRPId());
+	       unsigned int rpDecIdJ = rpIdJ.arm()*100 + rpIdJ.station()*10 + rpIdJ.rp();
+	       
+	       CTPPSpixelLocalTrackReconstructionInfo pixtrackinfo = (*proton.contributingLocalTracks().begin())->getPixelTrackRecoInfo();
 
-		 CTPPSpixelLocalTrackReconstructionInfo pixtrackinfo = (*proton.contributingLocalTracks().begin())->getPixelTrackRecoInfo();
+	       if(ij == 0)
+		 {
+		   trackx1 = tr->getX();
+		   tracky1 = tr->getY();
+		   trackrpid1 = rpDecIdJ;
+		   armId = rpIdJ.arm();
+		   if(pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::notShiftedRun || pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::noShiftedPlanes ||
+		      pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::invalid)
+		     pixshift1 = 0;
+		   else
+		     pixshift1 = 1;
+		 }
+	       if(ij == 1)
+		 {
+		   trackx2 = tr->getX();
+		   tracky2 = tr->getY();
+		   trackrpid2 = rpDecIdJ;
+		   if(pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::notShiftedRun || pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::noShiftedPlanes ||
+		      pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::invalid)
+		     pixshift2 = 0;
+		   else
+		     pixshift2 = 1;
+		 }
+	       ij++;
+	     }
 
-		 if(ij == 0)
-		   {
-		     trackx1 = tr->getX();
-		     tracky1 = tr->getY();
-		     trackrpid1 = rpDecIdJ;
-		     armId = rpIdJ.arm();
-		     if(pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::notShiftedRun || pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::noShiftedPlanes ||
-			pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::invalid)
-		       pixshift1 = 0;
-		     else
-		       pixshift1 = 1;
-		   }
-		 if(ij == 1)
-		   {
-		     trackx2 = tr->getX();
-		     tracky2 = tr->getY();
-		     trackrpid2 = rpDecIdJ;
-		     if(pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::notShiftedRun || pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::noShiftedPlanes ||
-			pixtrackinfo == CTPPSpixelLocalTrackReconstructionInfo::invalid)
-		       pixshift2 = 0;
-		     else
-		       pixshift2 = 1;
-		   }
-		 ij++;
-	       }
+	   ismultirp = 1;
 
-	     ismultirp = 1;
-
-	     (*proton_xi_).push_back(xi);
-	     //cout<<"Multi Pot proton_xi_"<<xi<<endl;
-	     (*proton_thy_).push_back(th_y);
-	     (*proton_thx_).push_back(th_x);
-	     (*proton_t_).push_back(t);
-	     (*proton_ismultirp_).push_back(ismultirp);
-	     (*proton_rpid_).push_back(decRPId);
-	     (*proton_arm_).push_back(armId);
-
-	     (*proton_time_).push_back(time);
-	     (*proton_trackx1_).push_back(trackx1);
-	     (*proton_tracky1_).push_back(tracky1);
-	     (*proton_trackx2_).push_back(trackx2);
-	     (*proton_tracky2_).push_back(tracky2);
-	     (*proton_trackpixshift1_).push_back(pixshift1);
-	     (*proton_trackpixshift2_).push_back(pixshift2);
-	     (*proton_rpid1_).push_back(trackrpid1);
-	     (*proton_rpid2_).push_back(trackrpid2);
-	   }
-       }
-   }
+	   (*proton_xi_).push_back(xi);
+	   //cout<<"Multi Pot proton_xi_"<<xi<<endl;
+	   (*proton_thy_).push_back(th_y);
+	   (*proton_thx_).push_back(th_x);
+	   (*proton_t_).push_back(t);
+	   (*proton_ismultirp_).push_back(ismultirp);
+	   (*proton_rpid_).push_back(decRPId);
+	   (*proton_arm_).push_back(armId);
+	   
+	   (*proton_time_).push_back(time);
+	   (*proton_trackx1_).push_back(trackx1);
+	   (*proton_tracky1_).push_back(tracky1);
+	   (*proton_trackx2_).push_back(trackx2);
+	   (*proton_tracky2_).push_back(tracky2);
+	   (*proton_trackpixshift1_).push_back(pixshift1);
+	   (*proton_trackpixshift2_).push_back(pixshift2);
+	   (*proton_rpid1_).push_back(trackrpid1);
+	   (*proton_rpid2_).push_back(trackrpid2);
+	 }
+     }
+   //}
 
    *nVertices_=-1;
    *nVertices_=vertices_->size();
@@ -1145,6 +1155,9 @@ Ntupler::beginJob()
   ev_ = new long int;
   run_ = new int;
   lumiblock_ = new int;
+  crossingAngle_ = new float;
+  betaStar_ = new float;
+  instLumi_ = new float;
   nVertices_ = new int;
   pileupWeight_ = new float;
   mc_pu_trueinteractions_ = new float;
@@ -1243,6 +1256,9 @@ Ntupler::beginJob()
   tree_->Branch("run",run_,"run/I");
   tree_->Branch("event",ev_,"event/L");
   tree_->Branch("lumiblock",lumiblock_,"lumiblock/I");
+  tree_->Branch("crossingAngle",crossingAngle_,"crossingAngle/f");
+  tree_->Branch("betaStar",betaStar_,"betaStar/f");
+  tree_->Branch("instLumi",instLumi_,"instLumi/f");
   //tree_->Branch("ecalBadCalFilter",ecalBadCalFilter_,"ecalBadCalFilter/O");
 
 
