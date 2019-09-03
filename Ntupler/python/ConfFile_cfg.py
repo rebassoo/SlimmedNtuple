@@ -10,6 +10,10 @@ process = cms.Process("Demo", eras.Run2_2017)
 #  useJobReport = cms.untracked.bool(True)
 #)
 
+process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",
+    ignoreTotal = cms.untracked.int32(1)
+)
+
 #Details for this here https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
 from FWCore.ParameterSet.VarParsing import VarParsing
 options = VarParsing ('analysis')
@@ -34,15 +38,16 @@ process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(1000) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(2000) )
 
-MC=False
+MC=True
 if MC:
   process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
       #This file below is from /GGToWW_bSM-A0W1e-6_13TeV-fpmc-herwig6/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM
-      "file:/home/users/rebassoo/work/2019_07_02_JanRecent-2ndTry/CMSSW_10_6_0/src/test-Finn/062366B6-DF2B-E911-BB28-C45444922958.root"
+      #"file:/home/users/rebassoo/work/2019_07_02_JanRecent-2ndTry/CMSSW_10_6_0/src/test-Finn/062366B6-DF2B-E911-BB28-C45444922958.root"
       #"root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAODv2/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/4C6E31C1-1742-E811-9CE3-002590491B22.root"
+      "root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAODv2/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/90000/FE7ABAEB-4A42-E811-87A3-0CC47AD98D26.root"
       #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
     )
   )
@@ -96,11 +101,11 @@ process.load("RecoCTPPS.Configuration.recoCTPPS_cff")
 
 
 # remove locally-defined conditions -> consume conditions from GT
-del process.ctppsOpticalFunctionsESSource
-del process.esPreferLocalOptics
+#del process.ctppsOpticalFunctionsESSource
+#del process.esPreferLocalOptics
 
-del process.ctppsRPAlignmentCorrectionsDataESSourceXML
-del process.esPreferLocalAlignment
+#del process.ctppsRPAlignmentCorrectionsDataESSourceXML
+#del process.esPreferLocalAlignment
 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
