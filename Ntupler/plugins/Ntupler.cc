@@ -207,15 +207,16 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   *lumiblock_ = iEvent.luminosityBlock();
 
   //get beam-crossing angle and LHC conditions
-  edm::ESHandle<LHCInfo> hLHCInfo;
-  std::string lhcInfoLabel("");
-  iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
-  if(hLHCInfo.isValid()){
-    *crossingAngle_=hLHCInfo->crossingAngle();
-    *betaStar_=hLHCInfo->betaStar();
-    *instLumi_=hLHCInfo->instLumi();
+  if(isMC==false){
+    edm::ESHandle<LHCInfo> hLHCInfo;
+    std::string lhcInfoLabel("");
+    iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
+    if(hLHCInfo.isValid()){
+      *crossingAngle_=hLHCInfo->crossingAngle();
+      *betaStar_=hLHCInfo->betaStar();
+      *instLumi_=hLHCInfo->instLumi();
+    }
   }
-  
   edm::Handle< std::vector<reco::Vertex> > vertices_;
   iEvent.getByToken(vertex_token_, vertices_);
   reco::VertexRef vtx(vertices_, 0);
