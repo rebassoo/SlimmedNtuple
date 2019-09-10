@@ -207,16 +207,16 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   *lumiblock_ = iEvent.luminosityBlock();
 
   //get beam-crossing angle and LHC conditions
-  if(isMC==false){
-    edm::ESHandle<LHCInfo> hLHCInfo;
-    std::string lhcInfoLabel("");
-    iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
-    if(hLHCInfo.isValid()){
-      *crossingAngle_=hLHCInfo->crossingAngle();
-      *betaStar_=hLHCInfo->betaStar();
-      *instLumi_=hLHCInfo->instLumi();
+  //if(isMC==false){
+  edm::ESHandle<LHCInfo> hLHCInfo;
+  std::string lhcInfoLabel("");
+  iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
+  if(hLHCInfo.isValid()){
+    *crossingAngle_=hLHCInfo->crossingAngle();
+    *betaStar_=hLHCInfo->betaStar();
+    *instLumi_=hLHCInfo->instLumi();
     }
-  }
+  //}
   edm::Handle< std::vector<reco::Vertex> > vertices_;
   iEvent.getByToken(vertex_token_, vertices_);
   reco::VertexRef vtx(vertices_, 0);
@@ -224,26 +224,26 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   edm::Handle<edm::View<pat::Muon> > muonHandle;
   iEvent.getByToken(muon_token_,muonHandle);
   int numMuLoose=0;
-   for (const pat::Muon &MuonIt : *muonHandle) { 
-     bool tightId=MuonIt.isTightMuon(*vtx);
-     double iso = (MuonIt.pfIsolationR04().sumChargedHadronPt + max(0., MuonIt.pfIsolationR04().sumNeutralHadronEt + MuonIt.pfIsolationR04().sumPhotonEt - 0.5*MuonIt.pfIsolationR04().sumPUPt))/MuonIt.pt();
-     if(tightId&&MuonIt.pt()>50&&fabs(MuonIt.eta())<2.4&&iso<0.1){
-       (*muon_px_).push_back(MuonIt.px());
-       (*muon_py_).push_back(MuonIt.py());
-       (*muon_pz_).push_back(MuonIt.pz());
-       (*muon_e_).push_back(MuonIt.energy());
-       (*muon_charge_).push_back(MuonIt.charge());
-       (*muon_pt_).push_back(MuonIt.pt());
-       (*muon_eta_).push_back(MuonIt.eta());
-       (*muon_phi_).push_back(MuonIt.phi());
-       (*muon_iso_).push_back(iso);
-       (*muon_dxy_).push_back(fabs(MuonIt.muonBestTrack()->dxy(vtx->position())));
-       (*muon_dz_).push_back(fabs(MuonIt.muonBestTrack()->dz(vtx->position())));
-     }
-     bool looseId=MuonIt.isLooseMuon();
+  for (const pat::Muon &MuonIt : *muonHandle) { 
+    bool tightId=MuonIt.isTightMuon(*vtx);
+    double iso = (MuonIt.pfIsolationR04().sumChargedHadronPt + max(0., MuonIt.pfIsolationR04().sumNeutralHadronEt + MuonIt.pfIsolationR04().sumPhotonEt - 0.5*MuonIt.pfIsolationR04().sumPUPt))/MuonIt.pt();
+    if(tightId&&MuonIt.pt()>35&&fabs(MuonIt.eta())<2.4&&iso<0.1){
+      (*muon_px_).push_back(MuonIt.px());
+      (*muon_py_).push_back(MuonIt.py());
+      (*muon_pz_).push_back(MuonIt.pz());
+      (*muon_e_).push_back(MuonIt.energy());
+      (*muon_charge_).push_back(MuonIt.charge());
+      (*muon_pt_).push_back(MuonIt.pt());
+      (*muon_eta_).push_back(MuonIt.eta());
+      (*muon_phi_).push_back(MuonIt.phi());
+      (*muon_iso_).push_back(iso);
+      (*muon_dxy_).push_back(fabs(MuonIt.muonBestTrack()->dxy(vtx->position())));
+      (*muon_dz_).push_back(fabs(MuonIt.muonBestTrack()->dz(vtx->position())));
+    }
+    bool looseId=MuonIt.isLooseMuon();
     if(looseId&&MuonIt.pt()>20&&fabs(MuonIt.eta())<2.4&&iso<0.1){numMuLoose++;}
-
-   }//end of looping over muons
+    
+  }//end of looping over muons
 
    //Get Electrons
    /*
@@ -275,7 +275,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        //       cout<<"electron pt is: "<<el->pt()<<endl;
      //}
      
-     if(isPassEleId&&el->pt()>50&&fabs(el->superCluster()->eta())<2.4){ 
+     if(isPassEleId&&el->pt()>40&&fabs(el->superCluster()->eta())<2.4){ 
        (*electron_pt_).push_back(el->pt());
        (*electron_dxy_).push_back(fabs(el->gsfTrack()->dxy(vtx->position())));
        (*electron_dz_).push_back(fabs(el->gsfTrack()->dz(vtx->position())));
@@ -672,19 +672,21 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    bool passes_muon=false;
    bool passes_electron=false;
+   bool passes_dimuon=false;
+   bool passes_dielectron=false;
    //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&(*electron_pt_).size()==0&&passTrigger_mu){
-   if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&num_ele_veto==0&&passTrigger_mu){
-     passes_muon=true;
-   }
    //if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&(*muon_pt_).size()==0&&passTrigger_e){
-   if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&num_ele_veto==1&&(*muon_pt_).size()==0&&passTrigger_e){
-     passes_electron=true;
-   }
-   bool passFatJet=false;
    //if(channel=="electron"&&passes_electron){passFatJet=true;}
    //if(channel=="muon"&&passes_muon){passFatJet=true;}
-   if(passes_muon||passes_electron){passFatJet=true;}
    //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
+   if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&num_ele_veto==0&&passTrigger_mu){     passes_muon=true;   }
+   //if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&num_ele_veto==1&&(*muon_pt_).size()==0&&passTrigger_e){ passes_electron=true; }
+   if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&num_ele_veto==1&&numMuLoose==0&&passTrigger_e){ passes_electron=true; }
+   if((*muon_pt_).size()==2&&(*jet_eta_).size()==1&&numMuLoose==2&&num_ele_veto==0&&passTrigger_mu){     passes_dimuon=true;   }
+   if((*electron_pt_).size()==2&&(*jet_eta_).size()==1&&numMuLoose==0&&num_ele_veto==2&&passTrigger_e){     passes_dielectron=true;   }
+   bool passFatJet=false;
+   if(passes_muon||passes_electron||passes_dimuon||passes_dielectron){passFatJet=true;}
+
    //Only store samples that pass Fat Jet
    if(passFatJet){
      edm::Handle<edm::View<pat::Jet> > jetColl; // PAT      
@@ -752,16 +754,24 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     //cout<<"vtx->position().z(): "<<vtx->position().z()<<endl;
 	     //if ((abs(pfcand.vertex().z()-vtx->position().z())<0.02) && (abs(pfcand.vertex().x()-vtx->position().x())<0.006) && (abs(pfcand.vertex().y()-vtx->position().y())<0.006)){
 	     double deltaR_mu=1000;
+	     double deltaR_mu_2=1000;
 	     double deltaR_e=1000;
-	     if(passes_muon){
+	     double deltaR_e_2=1000;
+	     if(passes_muon||passes_dimuon){
 	       deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
-	       if(deltaR_mu>0.3){count_pv=count_pv+1;}
-	       if(!(deltaR_mu<0.3&&fabs(pfcand.pdgId())==13)){count_pv_noDRl=count_pv_noDRl+1;}
+	       deltaR_mu_2=sqrt(  (pfcand.eta()-(*muon_eta_)[1])*(pfcand.eta()-(*muon_eta_)[1]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[1])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[1]));
+	       if(deltaR_mu>0.3&&passes_muon){count_pv=count_pv+1;}
+	       if(deltaR_mu>0.3&&deltaR_mu_2>0.3&&passes_dimuon){count_pv=count_pv+1;}
+	       if(!(deltaR_mu<0.3&&fabs(pfcand.pdgId())==13)&&passes_muon){count_pv_noDRl=count_pv_noDRl+1;}
+	       if(!(deltaR_mu<0.3&&fabs(pfcand.pdgId())==13)&&!(deltaR_mu_2<0.3&&fabs(pfcand.pdgId())==13)&&passes_dimuon){count_pv_noDRl=count_pv_noDRl+1;}
 	     }
 	     if(passes_electron){
 	       deltaR_e=sqrt(  (pfcand.eta()-(*electron_eta_)[0])*(pfcand.eta()-(*electron_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0]));
-	       if(deltaR_e>0.3){count_pv=count_pv+1;}
-	       if(!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)){count_pv_noDRl=count_pv_noDRl+1;}
+	       deltaR_e_2=sqrt(  (pfcand.eta()-(*electron_eta_)[1])*(pfcand.eta()-(*electron_eta_)[1]) + deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[1])*deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[1]));
+	       if(deltaR_e>0.3&&passes_electron){count_pv=count_pv+1;}
+	       if(deltaR_e>0.3&&deltaR_e_2>0.3&&passes_dielectron){count_pv=count_pv+1;}
+	       if(!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)&&passes_electron){count_pv_noDRl=count_pv_noDRl+1;}
+	       if(!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)&&!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)&&passes_dielectron){count_pv_noDRl=count_pv_noDRl+1;}
 	     }
 	     //}//end of requiring pfcand vertex close to primary vertex
 	   }
@@ -773,15 +783,24 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      
 
      TLorentzVector LeptonP4;
-     if(passes_muon){
+     if(passes_muon||passes_dimuon){
        LeptonP4=TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]);}
-     if(passes_electron){
+     if(passes_electron||passes_dielectron){
        LeptonP4=TLorentzVector((*electron_px_)[0],(*electron_py_)[0],(*electron_pz_)[0],(*electron_e_)[0]);}
      //
      //Neutrino 
-     TLorentzVector Neutrino_nominal = Nu4Momentum(LeptonP4, METPt, METphi);   // Neutrino Method   
-     double E_nu=sqrt(MET->corPx()*MET->corPx()+MET->corPy()*MET->corPy()+Neutrino_nominal.Pz()*Neutrino_nominal.Pz());
-     TLorentzVector Neutrino = TLorentzVector(*met_x_,*met_y_,Neutrino_nominal.Pz(),E_nu); 
+     TLorentzVector SecondLeptonP4;
+     if(passes_muon||passes_electron){
+       TLorentzVector Neutrino_nominal = Nu4Momentum(LeptonP4, METPt, METphi);   // Neutrino Method   
+       double E_nu=sqrt(MET->corPx()*MET->corPx()+MET->corPy()*MET->corPy()+Neutrino_nominal.Pz()*Neutrino_nominal.Pz());
+       SecondLeptonP4 = TLorentzVector(*met_x_,*met_y_,Neutrino_nominal.Pz(),E_nu); 
+     }
+     if(passes_dimuon){
+       SecondLeptonP4 = TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]); 
+     }
+     if(passes_dielectron){
+       SecondLeptonP4 = TLorentzVector((*electron_px_)[0],(*electron_py_)[0],(*electron_pz_)[0],(*electron_e_)[0]); 
+     }
      /*
      double Neutrino_Px  = Neutrino.Px();
      double Neutrino_Py  = Neutrino.Py();
@@ -793,7 +812,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      */
 
      //W lep with neutrino - W leptonic
-     TLorentzVector WLeptonic = Neutrino + LeptonP4;
+     TLorentzVector WLeptonic = LeptonP4 + SecondLeptonP4;
      double WLeptonic_Pt  = WLeptonic.Pt();
      double WLeptonic_M   = WLeptonic.M();
      double WLeptonic_phi = WLeptonic.Phi();
@@ -843,7 +862,12 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      tree_->Fill();
 
    }
-
+   else{
+     //if(passes_dimuon||passes_dielectron){ tree_->Fill();}
+     //if((*muon_pt_).size()==2&&numMuLoose==2&&num_ele_veto==0&&passTrigger_mu){ tree_->Fill();}
+     //if((*electron_pt_).size()==2&&numMuLoose==0&&num_ele_veto==1&&passTrigger_e){tree_->Fill();}
+   }
+   
 
    (*muon_pt_).clear();
    (*muon_eta_).clear();
