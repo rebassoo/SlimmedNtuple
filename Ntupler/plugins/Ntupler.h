@@ -234,6 +234,8 @@ private:
   float * dphiWW_;
   float * recoMWW_;
   float * recoRapidityWW_;
+  float * recoWWpt_;
+  float * genWWpt_;
   float * WLeptonicPt_;
   float * WLeptonicPhi_;
 

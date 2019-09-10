@@ -635,7 +635,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      {
        edm::Handle<reco::GenParticleCollection> genP;
        iEvent.getByLabel("prunedGenParticles",genP);
-
+       TLorentzVector Wplus;
+       TLorentzVector Wminus;
        for (reco::GenParticleCollection::const_iterator mcIter=genP->begin(); mcIter != genP->end(); mcIter++ ) {
 
 	 if((fabs(mcIter->pdgId()) == 24) && (mcIter->status() == 22))
@@ -647,8 +648,13 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     //cout<<"W status is:"<<mcIter->status()<<endl;
 	     //cout<<"W mother is:"<<mcIter->mother()->pdgId()<<endl;
 	     // cout<<"W charge is:"<<mcIter->charge()<<endl;
+	     if (mcIter->charge() > 0){
+	       Wplus=TLorentzVector(mcIter->px(),mcIter->py(),mcIter->pz(),mcIter->energy());
+	     }
+	     else{
+	       Wminus=TLorentzVector(mcIter->px(),mcIter->py(),mcIter->pz(),mcIter->energy());
+	     }
 	   }
-
 
 	 if((mcIter->pdgId() == 2212) && (fabs(mcIter->pz()) > 3000) && (mcIter->status() == 1))
 	   {
@@ -667,20 +673,15 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     (*gen_proton_px_).push_back(thepx);
 	     (*gen_proton_energy_).push_back(theenergy);
 	   }
-       }
-     }
+       }//end of looping over gen particles
+       *genWWpt_=(Wplus+Wminus).Pt();
+     }//is MC
 
    bool passes_muon=false;
    bool passes_electron=false;
    bool passes_dimuon=false;
    bool passes_dielectron=false;
-   //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&(*electron_pt_).size()==0&&passTrigger_mu){
-   //if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&(*muon_pt_).size()==0&&passTrigger_e){
-   //if(channel=="electron"&&passes_electron){passFatJet=true;}
-   //if(channel=="muon"&&passes_muon){passFatJet=true;}
-   //if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1){
    if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&num_ele_veto==0&&passTrigger_mu){     passes_muon=true;   }
-   //if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&num_ele_veto==1&&(*muon_pt_).size()==0&&passTrigger_e){ passes_electron=true; }
    if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&num_ele_veto==1&&numMuLoose==0&&passTrigger_e){ passes_electron=true; }
    if((*muon_pt_).size()==2&&(*jet_eta_).size()==1&&numMuLoose==2&&num_ele_veto==0&&passTrigger_mu){     passes_dimuon=true;   }
    if((*electron_pt_).size()==2&&(*jet_eta_).size()==1&&numMuLoose==0&&num_ele_veto==2&&passTrigger_e){     passes_dielectron=true;   }
@@ -759,19 +760,19 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     double deltaR_e_2=1000;
 	     if(passes_muon||passes_dimuon){
 	       deltaR_mu=sqrt(  (pfcand.eta()-(*muon_eta_)[0])*(pfcand.eta()-(*muon_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[0]));
-	       deltaR_mu_2=sqrt(  (pfcand.eta()-(*muon_eta_)[1])*(pfcand.eta()-(*muon_eta_)[1]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[1])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[1]));
+	       if(passes_dimuon) {deltaR_mu_2=sqrt(  (pfcand.eta()-(*muon_eta_)[1])*(pfcand.eta()-(*muon_eta_)[1]) + deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[1])*deltaPhi(pfcand.phiAtVtx(),(*muon_phi_)[1]));}
 	       if(deltaR_mu>0.3&&passes_muon){count_pv=count_pv+1;}
 	       if(deltaR_mu>0.3&&deltaR_mu_2>0.3&&passes_dimuon){count_pv=count_pv+1;}
 	       if(!(deltaR_mu<0.3&&fabs(pfcand.pdgId())==13)&&passes_muon){count_pv_noDRl=count_pv_noDRl+1;}
 	       if(!(deltaR_mu<0.3&&fabs(pfcand.pdgId())==13)&&!(deltaR_mu_2<0.3&&fabs(pfcand.pdgId())==13)&&passes_dimuon){count_pv_noDRl=count_pv_noDRl+1;}
 	     }
-	     if(passes_electron){
+	     if(passes_electron||passes_dielectron){
 	       deltaR_e=sqrt(  (pfcand.eta()-(*electron_eta_)[0])*(pfcand.eta()-(*electron_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[0]));
-	       deltaR_e_2=sqrt(  (pfcand.eta()-(*electron_eta_)[1])*(pfcand.eta()-(*electron_eta_)[1]) + deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[1])*deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[1]));
+	       if(passes_dielectron){deltaR_e_2=sqrt(  (pfcand.eta()-(*electron_eta_)[1])*(pfcand.eta()-(*electron_eta_)[1]) + deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[1])*deltaPhi(pfcand.phiAtVtx(),(*electron_phi_)[1]));}
 	       if(deltaR_e>0.3&&passes_electron){count_pv=count_pv+1;}
 	       if(deltaR_e>0.3&&deltaR_e_2>0.3&&passes_dielectron){count_pv=count_pv+1;}
 	       if(!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)&&passes_electron){count_pv_noDRl=count_pv_noDRl+1;}
-	       if(!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)&&!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)&&passes_dielectron){count_pv_noDRl=count_pv_noDRl+1;}
+	       if(!(deltaR_e<0.3&&fabs(pfcand.pdgId())==11)&&!(deltaR_e_2<0.3&&fabs(pfcand.pdgId())==11)&&passes_dielectron){count_pv_noDRl=count_pv_noDRl+1;}
 	     }
 	     //}//end of requiring pfcand vertex close to primary vertex
 	   }
@@ -796,67 +797,36 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        SecondLeptonP4 = TLorentzVector(*met_x_,*met_y_,Neutrino_nominal.Pz(),E_nu); 
      }
      if(passes_dimuon){
-       SecondLeptonP4 = TLorentzVector((*muon_px_)[0],(*muon_py_)[0],(*muon_pz_)[0],(*muon_e_)[0]); 
+       SecondLeptonP4 = TLorentzVector((*muon_px_)[1],(*muon_py_)[1],(*muon_pz_)[1],(*muon_e_)[1]); 
      }
      if(passes_dielectron){
-       SecondLeptonP4 = TLorentzVector((*electron_px_)[0],(*electron_py_)[0],(*electron_pz_)[0],(*electron_e_)[0]); 
+       SecondLeptonP4 = TLorentzVector((*electron_px_)[1],(*electron_py_)[1],(*electron_pz_)[1],(*electron_e_)[1]); 
      }
-     /*
-     double Neutrino_Px  = Neutrino.Px();
-     double Neutrino_Py  = Neutrino.Py();
-     double Neutrino_Pz  = Neutrino.Pz();
-     double Neutrino_Pt  = Neutrino.Pt();
-     double Neutrino_phi = Neutrino.Phi();
-     double Neutrino_eta = Neutrino.Eta();
-     double Neutrino_E   = Neutrino.E();
-     */
 
      //W lep with neutrino - W leptonic
      TLorentzVector WLeptonic = LeptonP4 + SecondLeptonP4;
      double WLeptonic_Pt  = WLeptonic.Pt();
      double WLeptonic_M   = WLeptonic.M();
      double WLeptonic_phi = WLeptonic.Phi();
-     /*
-     double WLeptonic_Px  = WLeptonic.Px();
-     double WLeptonic_Py  = WLeptonic.Py();
-     double WLeptonic_Pz  = WLeptonic.Pz();
-     double WLeptonic_eta = WLeptonic.Eta();
-     double WLeptonic_E   = WLeptonic.E();
-     */
      TLorentzVector p4SumJets;
      //p4SumJets = TLorentzVector((*jet_px_)[0],(*jet_py_)[0],(*jet_pz_)[0], (*jet_energy_)[0]);
      p4SumJets.SetPtEtaPhiE((*jet_pt_)[0],(*jet_eta_)[0],(*jet_phi_)[0], (*jet_energy_)[0]);
      double WJM = p4SumJets.M();
      double WJphi = p4SumJets.Phi();
-     /*
-     double WJpx = p4SumJets.Px();
-     double WJpy = p4SumJets.Py();
-     double WJpz = p4SumJets.Pz();
-     double WJpt = p4SumJets.Pt();
-     double WJE = p4SumJets.E();
-     double WJeta = p4SumJets.Eta();
-     */
        //
        // WW
        //
      TLorentzVector WW_p4_nu  = WLeptonic + p4SumJets;               // Wlep with Nu
      double MWW_Nu  = WW_p4_nu.M();
-     /*
-     double DWWphi_Nu = abs(deltaPhi(WLeptonic.Phi(),p4SumJets.Phi()));
-     double WW_Y_Nu  = 0.5*log((WW_p4_nu.E()+WW_p4_nu.Pz())/(WW_p4_nu.E()-WW_p4_nu.Pz()));
-     double WW_DR_Nu  = pow((pow((deltaPhi(WLeptonic.Phi(),p4SumJets.Phi())),2)+(pow((WLeptonic.Eta()-p4SumJets.Eta()),2))),0.5);
-     double WWacop_Nu  = (1-(abs(deltaPhi(p4SumJets.Phi(),WLeptonic.Phi())))/(TMath::Pi()));
-     */
-
      *recoMWhad_=WJM;
-     //cout<<" I get here 2"<<endl;
-     //cout<<"WLeptonic.M(): "<<WLeptonic.M()<<endl;
+
      *recoMWlep_=WLeptonic_M;
      double dphi=deltaPhi(WLeptonic_phi,WJphi);
      *dphiWW_=dphi;
      *WLeptonicPhi_=WLeptonic_phi;
      *WLeptonicPt_=WLeptonic_Pt;
      *recoMWW_=MWW_Nu;
+     *recoWWpt_=WW_p4_nu.Pt();
      *recoRapidityWW_=WW_p4_nu.Rapidity();
 
      tree_->Fill();
@@ -1113,7 +1083,9 @@ Ntupler::beginJob()
 
   recoMWhad_ = new float;
   recoMWlep_ = new float;
-  recoMWW_ = new float;
+  recoMWW_ = new float;  
+  recoWWpt_ = new float;
+  genWWpt_ = new float;
   recoRapidityWW_ = new float;
   dphiWW_ = new float;
   WLeptonicPt_ = new float;
@@ -1222,6 +1194,8 @@ Ntupler::beginJob()
   tree_->Branch("recoMWlep",recoMWlep_,"recoMWlep/f");
   tree_->Branch("recoMWW",recoMWW_,"recoMWW/f");
   tree_->Branch("recoRapidityWW",recoRapidityWW_,"recoRapidityWW/f");
+  tree_->Branch("recoWWpt",recoWWpt_,"recoWWpt_/f");
+  tree_->Branch("genWWpt",genWWpt_,"genWWpt_/f");
   tree_->Branch("dphiWW",dphiWW_,"dphiWW/f");
   tree_->Branch("WLeptonicPt",WLeptonicPt_,"WLeptonicPt/f");
   tree_->Branch("WLeptonicPhi",WLeptonicPhi_,"WLeptonicPhi/f");
@@ -1325,6 +1299,17 @@ Ntupler::endJob()
   delete num_bjets_ak4_;
   delete num_jets_ak4_;
 
+  delete run_;
+  delete ev_;
+  delete lumiblock_;
+  delete crossingAngle_;
+  delete betaStar_;
+  delete instLumi_;
+  delete nVertices_;
+  delete pileupWeight_;
+  delete mc_pu_trueinteractions_;
+  delete mcWeight_;
+
   delete pfcand_nextracks_;
   delete pfcand_nextracks_noDRl_;
   delete recoMWhad_;
@@ -1332,6 +1317,8 @@ Ntupler::endJob()
   delete dphiWW_;
   delete recoMWW_;
   delete recoRapidityWW_;
+  delete recoWWpt_;
+  delete genWWpt_;
   delete WLeptonicPt_;
   delete WLeptonicPhi_;
 
@@ -1378,6 +1365,7 @@ Ntupler::endJob()
   delete gen_proton_py_;
   delete gen_proton_pz_;
   delete gen_proton_xi_;
+  delete gen_proton_energy_;
   delete gen_proton_t_;
   delete gen_jet_pt_;
   delete gen_jet_phi_;
