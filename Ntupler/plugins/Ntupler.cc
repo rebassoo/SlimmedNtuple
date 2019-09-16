@@ -207,16 +207,16 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   *lumiblock_ = iEvent.luminosityBlock();
 
   //get beam-crossing angle and LHC conditions
-  //if(isMC==false){
-  edm::ESHandle<LHCInfo> hLHCInfo;
-  std::string lhcInfoLabel("");
-  iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
-  if(hLHCInfo.isValid()){
-    *crossingAngle_=hLHCInfo->crossingAngle();
-    *betaStar_=hLHCInfo->betaStar();
-    *instLumi_=hLHCInfo->instLumi();
+  if(isMC==false){
+    edm::ESHandle<LHCInfo> hLHCInfo;
+    std::string lhcInfoLabel("");
+    iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
+    if(hLHCInfo.isValid()){
+      *crossingAngle_=hLHCInfo->crossingAngle();
+      *betaStar_=hLHCInfo->betaStar();
+      *instLumi_=hLHCInfo->instLumi();
     }
-  //}
+  }
   edm::Handle< std::vector<reco::Vertex> > vertices_;
   iEvent.getByToken(vertex_token_, vertices_);
   reco::VertexRef vtx(vertices_, 0);
@@ -682,10 +682,10 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool passes_dimuon=false;
    bool passes_dielectron=false;
    if((*muon_pt_).size()==1&&(*jet_eta_).size()==1&&numMuLoose==1&&num_ele_veto==0&&passTrigger_mu){ 
-     if(*muon_pt_[0]>50){       passes_muon=true;   }
+     if((*muon_pt_)[0]>50){       passes_muon=true;   }
    }
-   if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&num_ele_veto==1&&numMuLoose==0&&passTrigger_e){ passes_electron=true; }
-     if(*electron_pt_[0]>50){       passes_electron=true;   }
+   if((*electron_pt_).size()==1&&(*jet_eta_).size()==1&&num_ele_veto==1&&numMuLoose==0&&passTrigger_e){
+     if((*electron_pt_)[0]>50){       passes_electron=true;   }
    }
    if((*muon_pt_).size()==2&&(*jet_eta_).size()==1&&numMuLoose==2&&num_ele_veto==0&&passTrigger_mu){     passes_dimuon=true;   }
    if((*electron_pt_).size()==2&&(*jet_eta_).size()==1&&numMuLoose==0&&num_ele_veto==2&&passTrigger_e){     passes_dielectron=true;   }
