@@ -10,9 +10,9 @@ process = cms.Process("Demo", eras.Run2_2017)
 #  useJobReport = cms.untracked.bool(True)
 #)
 
-process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",
-    ignoreTotal = cms.untracked.int32(1)
-)
+#process.SimpleMemoryCheck = cms.Service("SimpleMemoryCheck",
+#    ignoreTotal = cms.untracked.int32(1)
+#)
 
 #Details for this here https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
 from FWCore.ParameterSet.VarParsing import VarParsing
@@ -75,8 +75,8 @@ if not MC:
         'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/944EA579-FAD8-E711-BD8B-02163E014737.root',
         'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/EA4A4045-F6D8-E711-A4D5-02163E01A35D.root',
         'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/F03EBC89-FAD8-E711-BCB3-02163E011A7C.root'
-      ),
-      skipEvents=cms.untracked.uint32(2000)
+      )#,
+      #skipEvents=cms.untracked.uint32(2000)
   )
 
 process.load('Configuration.StandardSequences.MagneticField_38T_cff')
