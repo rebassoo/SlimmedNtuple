@@ -1,4 +1,5 @@
 import FWCore.ParameterSet.Config as cms
+#import os
 
 # beam parameters as declared by LHC
 ctppsLHCInfoESSource = cms.ESSource("CTPPSLHCInfoESSource",
@@ -27,6 +28,11 @@ ctppsBeamParametersESSource = cms.ESSource("CTPPSBeamParametersESSource",
   beamDivX56 = cms.double(30E-6),
   beamDivY45 = cms.double(30E-6),
   beamDivY56 = cms.double(30E-6),
+  #beamDivX45 = cms.double(20E-6),
+  #beamDivX56 = cms.double(20E-6),
+  #beamDivY45 = cms.double(20E-6),
+  #beamDivY56 = cms.double(20E-6),
+
 
   #  half crossing angle  (rad)
   halfXangleX45 = cms.double(-1),
@@ -75,8 +81,10 @@ ctppsOpticalFunctionsESSource.configuration.append(config_2017)
 from Geometry.VeryForwardGeometry.geometryRPFromDD_2017_cfi import *
 
 from CalibPPS.ESProducers.ctppsRPAlignmentCorrectionsDataESSourceXML_cfi import *
-ctppsRPAlignmentCorrectionsDataESSourceXML.MisalignedFiles = ["$CWD/alignment.xml"]
-ctppsRPAlignmentCorrectionsDataESSourceXML.RealFiles = ["$CWD/alignment.xml"]
+#cwd = os.getcwd()
+cwd = "$CWD"
+ctppsRPAlignmentCorrectionsDataESSourceXML.MisalignedFiles = ["{0}/alignment.xml".format(cwd)]
+ctppsRPAlignmentCorrectionsDataESSourceXML.RealFiles = ["{0}/alignment.xml".format(cwd)]
 
 # particle-data table
 from SimGeneral.HepPDTESSource.pythiapdt_cfi import *
