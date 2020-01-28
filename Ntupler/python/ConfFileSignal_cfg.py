@@ -1,17 +1,15 @@
 import FWCore.ParameterSet.Config as cms
-
-
-from Configuration.StandardSequences.Eras import eras
-process = cms.Process('CTPPSFastSimulation', eras.ctpps_2016)
-
+import glob
 #process = cms.Process("Demo")
 #process = cms.Process("CTPPSTestProtonReconstruction", eras.ctpps_2016)
+from Configuration.StandardSequences.Eras import eras
+#from Configuration.Eras.Modifier_ctpps_2016_cff import ctpps_2016
+process = cms.Process("Demo", eras.Run2_2017)
 
 #process.Timing = cms.Service("Timing",
 #  summaryOnly = cms.untracked.bool(False),
 #  useJobReport = cms.untracked.bool(True)
 #)
-
 
 #Details for this here https://twiki.cern.ch/twiki/bin/view/CMSPublic/CRAB3ConfigurationFile
 from FWCore.ParameterSet.VarParsing import VarParsing
@@ -35,142 +33,215 @@ options.parseArguments()
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 process.MessageLogger.cerr.threshold = ''
-#process.MessageLogger.cerr.FwkReport.reportEvery = 1
 process.MessageLogger.cerr.FwkReport.reportEvery = 1000
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(100) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(500) )
 
-process.source = cms.Source("PoolSource",
+MC=True
+#files=glob.glob("/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/*.root")
+#print files
+#long_string=""
+#for i in files:
+#  long_string="'file:"+i+"',\n"+long_string
+#print long_string
+if MC:
+  process.source = cms.Source("PoolSource",
     fileNames = cms.untracked.vstring(
-        #        'file:/tmp/jjhollar/0C08DB9E-3543-E811-BB4D-0CC47A4D75F4.root'
-        #        'file:/tmp/jjhollar/BulkGravToWW_narrow_M-1000_3A7945FC-1704-E811-9B66-008CFA110C5C.root'
-        #        'file:/tmp/jjhollar/QCD_HT700to1000_F6F5131E-CCF9-E711-B15F-0242AC130002.root'
-        #'root://xrootd.t2.ucsd.edu:2040//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
-        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
-        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/17Nov2017-v1/40000/E664484F-7BDB-E711-A6A3-0025904C516C.root'
-        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/EA6122AF-1137-E811-B552-FA163E28D344.root'
-        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
+      #This file below is from /GGToWW_bSM-A0W1e-6_13TeV-fpmc-herwig6/RunIIFall17MiniAODv2-PU2017_12Apr2018_94X_mc2017_realistic_v14-v2/MINIAODSIM
+      #"file:/home/users/rebassoo/work/2019_07_02_JanRecent-2ndTry/CMSSW_10_6_0/src/test-Finn/062366B6-DF2B-E911-BB28-C45444922958.root"
+      #"file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/"
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_8.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_7.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_6.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_5.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_40.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_4.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_39.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_38.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_37.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_36.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_35.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_34.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_33.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_32.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_31.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_30.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_3.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_29.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_28.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_27.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_26.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_25.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_23.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_21.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_20.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_2.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_19.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_18.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_17.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_16.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_15.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_14.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_13.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_12.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_10.root',
+'file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_1.root'
+      #long_string
+      #"file:/hadoop/cms/store/user/rebassoo/2020_01_27_SamplesFromMauricio/MiniAOD_mu_FPMC_WW_13TeV_noXiCut_1.0e-6_0.0_1.root"
+      #"root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAODv2/TTJets_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/4C6E31C1-1742-E811-9CE3-002590491B22.root"
+      #"root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAODv2/WW_TuneCP5_13TeV-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/70000/7A3A16D3-9942-E811-9A3D-0025905A60AA.root"
+      #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
+    )
+  )
+
+
+if not MC:
+  process.source = cms.Source("PoolSource",
+      fileNames = cms.untracked.vstring(
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/EA6122AF-1137-E811-B552-FA163E28D344.root'
+        #'file:EA6122AF-1137-E811-B552-FA163E28D344.root'
+        #'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/MINIAOD/31Mar2018-v1/30000/34D2D750-5037-E811-B6AA-FA163E516F5B.root'
         #'root://cms-xrd-global.cern.ch//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/100000/0299C20A-7736-E811-ABC8-008CFAE453D8.root'
-        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAOD/WJetsToLNu_2J_TuneCP5_13TeV-amcatnloFXFX-pythia8/MINIAODSIM/PU2017_94X_mc2017_realistic_v11-v1/70000/CEEB885D-0354-E811-B17D-0CC47A4C8E16.root'
+        #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-200To400_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/B4005649-E955-E811-BE7B-0CC47A7C353E.root'
         #'root://cmsxrootd.fnal.gov//store/mc/RunIIFall17MiniAODv2/WJetsToLNu_HT-1200To2500_TuneCP5_13TeV-madgraphMLM-pythia8/MINIAODSIM/PU2017_12Apr2018_94X_mc2017_realistic_v14-v1/10000/00469E05-E055-E811-807F-008CFAF7174A.root'
-        #'file:step3_fpmc_MiniAOD.root'
-        #'file:/hadoop/cms/store/user/rebassoo/2018_12_17_SignalFiles2017Data/MINIAODSIM/step3_fpmc_exclww_a0W2point5e-6_alldecays_xi1to30pct_miniaodv2_1.root'
-        'file:/home/users/rebassoo/work/2018_12_17_TestingUpdatedProtonRecoSim/CMSSW_9_4_11/src/SlimmedNtuple/Ntupler/python/step3_fpmc_exclww_a0W2point5e-6_alldecays_xi1to30pct_miniaodv2_1.root'
-        ),
-        secondaryFileNames = cms.untracked.vstring(
-        'file:/home/users/rebassoo/work/2018_12_17_TestingUpdatedProtonRecoSim/CMSSW_9_4_11/src/SlimmedNtuple/Ntupler/python/step0_fpmc_exclww_a0W2point5e-6_alldecays_xi1to30pct_1.root'
-        )
-)
+      ),
+      secondaryFileNames = cms.untracked.vstring(
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40003/1C82A25C-C8D8-E711-8FA6-02163E019B54.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40003/40564C61-C2D8-E711-91A7-02163E019CDB.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/18E6A929-10DA-E711-B4DE-02163E019BF5.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/4CBF455E-0FDA-E711-8573-02163E01352C.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/545B0594-11DA-E711-88BE-02163E019CD8.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/687423EA-15DA-E711-A0A6-02163E019C95.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/40005/C0D24DD8-05DA-E711-ACC4-02163E011B0D.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/8852ED33-F6D8-E711-8FA2-02163E01A6C4.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/944EA579-FAD8-E711-BD8B-02163E014737.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/EA4A4045-F6D8-E711-A4D5-02163E01A35D.root',
+        'root://cms-xrd-global.cern.ch//store/data/Run2017C/SingleMuon/AOD/17Nov2017-v1/60002/F03EBC89-FAD8-E711-BCB3-02163E011A7C.root'
+      ),
+      skipEvents=cms.untracked.uint32(2000)
+  )
 
 process.load('Configuration.StandardSequences.MagneticField_38T_cff')
-
 process.load('Configuration.StandardSequences.GeometryDB_cff')
 
 process.load("SlimmedNtuple.Ntupler.CfiFile_cfi")
-
 process.load("SlimmedNtuple.Ntupler.HLTFilter_cfi")
 process.hltFilter.TriggerResultsTag = cms.InputTag("TriggerResults","","HLT")
-
 process.load("SlimmedNtuple.Ntupler.METFilter_cfi")
 
+#process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
+#from Configuration.AlCa.GlobalTag import GlobalTag
+
+
+# If using full proton re-reco (legacy) - local RP reconstruction chain with standard settings         
+process.load("RecoCTPPS.Configuration.recoCTPPS_cff")
+#process.ctppsLocalTrackLiteProducer.includePixels = cms.bool(True)
+#process.ctppsLocalTrackLiteProducer.includeStrips = cms.bool(True)
+##process.ctppsLocalTrackLiteProducer.includeDiamonds = cms.bool(True)
+#process.ctppsProtons.doSingleRPReconstruction = cms.bool(True)
+#process.ctppsProtons.tagLocalTrackLite = cms.InputTag("ctppsLocalTrackLiteProducer","","Demo")
+
+
+# remove locally-defined conditions -> consume conditions from GT
+del process.ctppsOpticalFunctionsESSource
+del process.esPreferLocalOptics
+
+del process.ctppsRPAlignmentCorrectionsDataESSourceXML
+del process.esPreferLocalAlignment
 
 process.load('Configuration.StandardSequences.FrontierConditions_GlobalTag_cff')
 from Configuration.AlCa.GlobalTag import GlobalTag
-MC=True
 
+# define global tag (for LHC data reconstruction)
+if not MC:
+  process.GlobalTag = GlobalTag(process.GlobalTag, "106X_dataRun2_v11")
 
-#FastSim
-process.RandomNumberGeneratorService = cms.Service("RandomNumberGeneratorService",
-    sourceSeed = cms.PSet(initialSeed =cms.untracked.uint32(98765)),
-    generator = cms.PSet(initialSeed = cms.untracked.uint32(98766)),
-    SmearingGenerator = cms.PSet(initialSeed =cms.untracked.uint32(3849)),
-    beamDivergenceVtxGenerator = cms.PSet(initialSeed =cms.untracked.uint32(3849))  
-)
-
-# geometry
-process.load("Geometry.VeryForwardGeometry.geometryRP_cfi")
-del(process.XMLIdealGeometryESSource_CTPPS.geomXMLFiles[-1])
-process.XMLIdealGeometryESSource_CTPPS.geomXMLFiles.append("Validation/CTPPS/test_2017/RP_Dist_Beam_Cent.xml")
-
-# fast simulation
-process.load('SimCTPPS.OpticsParameterisation.year_2017_OF.ctppsFastProtonSimulation_cfi')
-#process.ctppsFastProtonSimulation.hepMCTag = cms.InputTag('generatorSmeared')
-process.ctppsFastProtonSimulation.hepMCTag = cms.InputTag('beamDivergenceVtxGenerator')
-#process.ctppsFastProtonSimulation.hepMCTag = cms.InputTag('source')
-
-process.ctppsFastProtonSimulation.xangle = 0
-process.ctppsFastProtonSimulation.produceScoringPlaneHits = False
-process.ctppsFastProtonSimulation.produceRecHits = True
-process.ctppsFastProtonSimulation.checkApertures = False
-process.ctppsFastProtonSimulation.useEmpiricalApertures = True 
-process.ctppsFastProtonSimulation.produceHitsRelativeToBeam = True 
-process.ctppsFastProtonSimulation.roundToPitch = True
-
-# beam-smearing settings
-process.load("IOMC.EventVertexGenerators.beamDivergenceVtxGenerator_cfi")
-#process.beamDivergenceVtxGenerator.src = cms.InputTag("generator", "unsmeared")
-#process.beamDivergenceVtxGenerator.src = cms.InputTag("source", "")
-process.beamDivergenceVtxGenerator.src = cms.InputTag('generatorSmeared')
-process.beamDivergenceVtxGenerator.simulateBeamDivergence = True
-process.beamDivergenceVtxGenerator.simulateVertex = True
-
-# values in rad
-process.beamDivergenceVtxGenerator.beamDivergenceX = 20E-6
-process.beamDivergenceVtxGenerator.beamDivergenceY = 20E-6
-
-# values in cm
-process.beamDivergenceVtxGenerator.vertexMeanX = 0.02476
-process.beamDivergenceVtxGenerator.vertexMeanY = -0.06920
-process.beamDivergenceVtxGenerator.vertexMeanZ = -0.8775
-
-process.beamDivergenceVtxGenerator.vertexSigmaX = 0.
-process.beamDivergenceVtxGenerator.vertexSigmaY = 0.
-process.beamDivergenceVtxGenerator.vertexSigmaZ = 0.
-
-
-# local track reco
-process.load('RecoCTPPS.TotemRPLocal.totemRPUVPatternFinder_cfi')
-process.totemRPUVPatternFinder.tagRecHit = cms.InputTag('ctppsFastProtonSimulation')
-
-process.load('RecoCTPPS.TotemRPLocal.totemRPLocalTrackFitter_cfi')
-
-process.load("RecoCTPPS.PixelLocal.ctppsPixelLocalTracks_cfi")
-process.ctppsPixelLocalTracks.label = "ctppsFastProtonSimulation"
-
-process.load('RecoCTPPS.TotemRPLocal.ctppsLocalTrackLiteProducer_cff')
-process.ctppsLocalTrackLiteProducer.includeDiamonds = False
-
-
-
-# proton reconstruction
-#if not MC:
-process.load("RecoCTPPS.ProtonReconstruction.year_2017_OF.ctppsProtonReconstructionOF_cfi")
-process.ctppsProtonReconstructionOFDB.applyExperimentalAlignment = False 
-# do not use alignment for LHC data
-#process.ctppsProtonReconstructionOFDB.fitVtxY = False
-#process.ctppsProtonReconstructionOFDB.verbosity = 0
-
-process.ctppsLHCInfoESSource = cms.ESSource("CTPPSLHCInfoESSource",
-  beamEnergy = cms.double(6500),
-  xangle = cms.double(0)
-)
-
-
-# JH - crossing angle 130                                                            
-#process.ctppsFastProtonSimulation.xangle = process.ctppsLHCInfoESSource.xangle = 130
-#process.ctppsFastProtonSimulation.empiricalAperture45_xi0 = 0.148
-#process.ctppsFastProtonSimulation.empiricalAperture56_xi0 = 0.18
-
-
-
-
-#Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
-#To print out global tag: conddb list 94X_mc2017_realistic_v16
-#For v16 global tag uses v23 of Jet energy corrections. Newest is 32.
+# conditions for simu are not DB, load them from local sources
 if MC:
-    process.GlobalTag.globaltag ='94X_mc2017_realistic_v17'
-else:
-    process.GlobalTag.globaltag ='94X_dataRun2_v11'
+  # load base settings
+  process.load("direct_simu_reco_cff")
+
+  #process.GlobalTag = GlobalTag(process.GlobalTag, "94X_mc2017_realistic_v17")
+  process.GlobalTag = GlobalTag(process.GlobalTag, "106X_mc2017_realistic_v6")
+
+  # update settings of beam-smearing module
+  process.beamDivergenceVtxGenerator.src = cms.InputTag("")
+  process.beamDivergenceVtxGenerator.srcGenParticle = cms.VInputTag(
+    #cms.InputTag("genPUProtons", "genPUProtons"),
+    cms.InputTag("prunedGenParticles")
+  )
+
+  # change LS often - to allow changes of ES data
+  #process.source.numberEventsInLuminosityBlock = cms.untracked.uint32(10)
+
+  # override LHCInfo source
+  process.load("CalibPPS.ESProducers.ctppsLHCInfoRandomXangleESSource_cfi")
+  process.ctppsLHCInfoRandomXangleESSource.generateEveryNEvents = 1
+  process.ctppsLHCInfoRandomXangleESSource.xangleHistogramFile = "xangle_hist.root"
+  process.ctppsLHCInfoRandomXangleESSource.xangleHistogramObject = "h_xangle"
+  process.ctppsLHCInfoRandomXangleESSource.beamEnergy = 6500.
+  process.ctppsLHCInfoRandomXangleESSource.betaStar = 0.40
+  process.esPreferLHCInfo = cms.ESPrefer("CTPPSLHCInfoRandomXangleESSource", "ctppsLHCInfoRandomXangleESSource")
+
+  # override beam-parameter source
+  process.load("CalibPPS.ESProducers.ctppsBeamParametersFromLHCInfoESSource_cfi")
+  process.ctppsBeamParametersFromLHCInfoESSource.beamDivX45 = process.ctppsBeamParametersESSource.beamDivX45
+  process.ctppsBeamParametersFromLHCInfoESSource.beamDivX56 = process.ctppsBeamParametersESSource.beamDivX56
+  process.ctppsBeamParametersFromLHCInfoESSource.beamDivY45 = process.ctppsBeamParametersESSource.beamDivY45
+  process.ctppsBeamParametersFromLHCInfoESSource.beamDivY56 = process.ctppsBeamParametersESSource.beamDivY56
+
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxOffsetX45 = process.ctppsBeamParametersESSource.vtxOffsetX45
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxOffsetX56 = process.ctppsBeamParametersESSource.vtxOffsetX56
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxOffsetY45 = process.ctppsBeamParametersESSource.vtxOffsetY45
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxOffsetY56 = process.ctppsBeamParametersESSource.vtxOffsetY56
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxOffsetZ45 = process.ctppsBeamParametersESSource.vtxOffsetZ45
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxOffsetZ56 = process.ctppsBeamParametersESSource.vtxOffsetZ56
+
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxStddevX = process.ctppsBeamParametersESSource.vtxStddevX
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxStddevY = process.ctppsBeamParametersESSource.vtxStddevY
+  process.ctppsBeamParametersFromLHCInfoESSource.vtxStddevZ = process.ctppsBeamParametersESSource.vtxStddevZ
+
+
+  # do not apply vertex smearing again
+  process.ctppsBeamParametersESSource.vtxStddevX = 0
+  process.ctppsBeamParametersESSource.vtxStddevY = 0
+  process.ctppsBeamParametersESSource.vtxStddevZ = 0
+
+  # undo CMS vertex shift
+  #process.ctppsBeamParametersESSource.vtxOffsetX45 = +0.2475 * 1E-1
+  #process.ctppsBeamParametersESSource.vtxOffsetY45 = -0.6924 * 1E-1
+  #process.ctppsBeamParametersESSource.vtxOffsetZ45 = -8.1100 * 1E-1
+  process.ctppsBeamParametersESSource.vtxOffsetX45 = +0.2476 * 1E-1
+  process.ctppsBeamParametersESSource.vtxOffsetY45 = -0.6920 * 1E-1
+  process.ctppsBeamParametersESSource.vtxOffsetZ45 = -8.77500 * 1E-1
+
+  # define alignment
+  #process.ctppsRPAlignmentCorrectionsDataESSourceXML.MisalignedFiles = ["test-Finn/alignment.xml"]
+  #process.ctppsRPAlignmentCorrectionsDataESSourceXML.RealFiles = ["test-Finn/alignment.xml"]
+  process.ctppsRPAlignmentCorrectionsDataESSourceXML.MisalignedFiles = ["alignment.xml"]
+  process.ctppsRPAlignmentCorrectionsDataESSourceXML.RealFiles = ["alignment.xml"]
+
+  # update reco settings
+  process.totemRPUVPatternFinder.tagRecHit = cms.InputTag('ctppsDirectProtonSimulation')
+  process.ctppsPixelLocalTracks.label = "ctppsDirectProtonSimulation"
+  process.ctppsLocalTrackLiteProducer.includeDiamonds = False
+
+  #def UseCrossingAngle(xangle):
+  #  process.ctppsLHCInfoESSource.xangle = xangle
+  #  process.ctppsBeamParametersESSource.halfXangleX45 = xangle * 1E-6
+  #  process.ctppsBeamParametersESSource.halfXangleX56 = xangle * 1E-6
+  #
+  #UseCrossingAngle(130)
+
+##Global tags from here:https://twiki.cern.ch/twiki/bin/viewauth/CMS/JECDataMC
+##To print out global tag: conddb list 94X_mc2017_realistic_v16
+##For v16 global tag uses v23 of Jet energy corrections. Newest is 32.
+#if MC:
+#    process.GlobalTag.globaltag ='94X_mc2017_realistic_v17'
+#else:
+#    #process.GlobalTag.globaltag ='94X_dataRun2_v11'
+#    #process.GlobalTag.globaltag ='106X_dataRun2_testPPS_v1'
+#    process.GlobalTag.globaltag ='106X_dataRun2_v11'
 
 
 ### ADD SOME NEW JET COLLECTIONS                                                                                                              
@@ -286,30 +357,34 @@ process.slimmedJetsJetId = cms.EDFilter("PFJetIDSelectionFunctorFilter",
                                            )
 
 
-from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
-runMetCorAndUncFromMiniAOD(process,
-                           isData= not MC
-                           )
-
-
+from RecoEgamma.EgammaTools.EgammaPostRecoTools import setupEgammaPostRecoSeq
+setupEgammaPostRecoSeq(process,
+                       runVID=True, #saves CPU time by not needlessly re-running VID, if you want the Fall17V2 IDs, set this to True or remove (default is True)
+                       era='2017-Nov17ReReco')  
 
 
 process.demo = cms.EDAnalyzer('Ntupler')
 # Select data or MC - this controls which jet corrections are used and whether PU reweighting info is filled                           
-#era="C"
 process.demo.isMC = cms.bool(MC)
-process.demo.isSignalMC = cms.bool(True)
+process.demo.isSignalMC = cms.bool(False)
 process.demo.year = cms.int32(2017)
 process.demo.era = cms.string(options.era)
 process.demo.isInteractive = cms.bool(bool(options.interactive))
 #pileupName="WJetsToLNu_2J_TuneCP5_13TeV_amcatnloFXFX_pythia8"
 process.demo.mcName=cms.string("h_pileup_"+options.pileupName)
 
-from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
-switchOnVIDElectronIdProducer(process,DataFormat.MiniAOD)
-my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff']
-for idmod in my_id_modules:
-    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
+#from PhysicsTools.SelectorUtils.tools.vid_id_tools import *
+#switchOnVIDElectronIdProducer(process,DataFormat.MiniAOD)
+#my_id_modules = ['RecoEgamma.ElectronIdentification.Identification.cutBasedElectronID_Fall17_94X_V2_cff']
+#for idmod in my_id_modules:
+#    setupAllVIDIdsInModule(process,idmod,setupVIDElectronSelection)
+
+from PhysicsTools.PatUtils.tools.runMETCorrectionsAndUncertainties import runMetCorAndUncFromMiniAOD
+runMetCorAndUncFromMiniAOD(process,
+                           isData= not MC
+                           )
+
+
 
 process.load("SlimmedNtuple.TotalEvents.CfiFile_cfi")
 
@@ -337,94 +412,65 @@ process.ecalBadCalibReducedMINIAODFilter = cms.EDFilter(
     )
 
 
-#process.out = cms.OutputModule('PoolOutputModule',
-#    fileName = cms.untracked.string('ctppsSim.root')
-#)
-
-#process.dump=cms.EDAnalyzer('EventContentAnalyzer')
-#process.transport = cms.Path(
-#    process.beamDivergenceVtxGenerator*
-#    process.ctppsFastProtonSimulation
-#    )
-#process.simulation_step = cms.Path(
-#     process.totemRPUVPatternFinder
-#    * process.totemRPLocalTrackFitter
-#    * process.ctppsPixelLocalTracks
-#    * process.ctppsLocalTrackLiteProducer
-#     *process.dump
-#)
-
+process.dump=cms.EDAnalyzer('EventContentAnalyzer')
+#Update for MET filter here: https://twiki.cern.ch/twiki/bin/view/CMS/MissingETOptionalFiltersRun2#How_to_run_ecal_BadCalibReducedM
 if MC:
     process.p = cms.Path(
         process.totalEvents*
-        process.metFilterMC*
         process.hltFilter*
+        process.metFilterMC*
         process.ecalBadCalibReducedMINIAODFilter*
         process.fullPatMetSequence*
-        process.egmGsfElectronIDSequence*
+        process.egammaPostRecoSeq*
+        #process.egmGsfElectronIDSequence*
         process.slimmedAK8JetsSmeared*
         process.slimmedJetsAK8JetId*
         process.slimmedAK4JetsSmeared*
         process.slimmedJetsJetId*
-        process.beamDivergenceVtxGenerator*
-        process.ctppsFastProtonSimulation*
-        process.totemRPUVPatternFinder
+        process.beamDivergenceVtxGenerator
+        * process.ctppsDirectProtonSimulation
+        * process.totemRPUVPatternFinder
         * process.totemRPLocalTrackFitter
         * process.ctppsPixelLocalTracks
-        * process.ctppsLocalTrackLiteProducer*
-        process.ctppsProtonReconstructionOFDB*
-        process.demo
+        * process.ctppsLocalTrackLiteProducer
+        #* process.dump
+        * process.ctppsProtons
+        *process.demo
         )
     
 else:
     process.p = cms.Path(
-        #process.dump*
-        process.totalEvents*
-        process.metFilter*
         process.hltFilter*
+        process.metFilter*
+        #process.totalEvents*
         process.ecalBadCalibReducedMINIAODFilter*
         process.fullPatMetSequence*
-        process.egmGsfElectronIDSequence*
-        process.slimmedAK8JetsSmeared*
+        #process.egmGsfElectronIDSequence*
+        process.egammaPostRecoSeq*
+        #process.dump*
         process.slimmedJetsAK8JetId*
-        process.slimmedAK4JetsSmeared*
         process.slimmedJetsJetId*
-        process.beamDivergenceVtxGenerator*
-        process.ctppsFastProtonSimulation*
         process.totemRPUVPatternFinder
         * process.totemRPLocalTrackFitter
+        * process.ctppsDiamondRecHits
+        * process.ctppsDiamondLocalTracks
         * process.ctppsPixelLocalTracks
-        * process.ctppsLocalTrackLiteProducer*
-        process.ctppsProtonReconstructionOFDB*
-        process.demo
+        * process.ctppsLocalTrackLiteProducer
+        * process.ctppsProtons
+#        process.totemRPUVPatternFinder *
+#        process.totemRPLocalTrackFitter *
+#        process.ctppsDiamondRecHits *
+#        process.ctppsDiamondLocalTracks *
+#        #process.ctppsPixelLocalReconstruction *
+#        process.ctppsPixelLocalTracks*
+#        process.ctppsLocalTrackLiteProducer *
+#        process.ctppsProtons *
+#        #process.dump#*
+        *process.demo
         )
 
 
-#process.schedule = cms.Schedule(
-#    process.transport,
-#    process.simulation_step#,
-#    #process.p,
-#)
-
-def UseCrossingAngle150():
-  process.ctppsFastProtonSimulation.xangle = process.ctppsLHCInfoESSource.xangle = 150
-  process.ctppsFastProtonSimulation.empiricalAperture45_xi0 = 0.158
-  process.ctppsFastProtonSimulation.empiricalAperture56_xi0 = 0.20
-  #process.ctppsAcceptancePlotter.outputFile = "acceptance_xangle_150.root"
-
-def UseCrossingAngle140():
-  process.ctppsFastProtonSimulation.xangle = process.ctppsLHCInfoESSource.xangle = 140
-  process.ctppsFastProtonSimulation.empiricalAperture45_xi0 = 0.153
-  process.ctppsFastProtonSimulation.empiricalAperture56_xi0 = 0.19
-  #process.ctppsAcceptancePlotter.outputFile = "acceptance_xangle_140.root"
-
-def UseCrossingAngle130():
-  process.ctppsFastProtonSimulation.xangle = process.ctppsLHCInfoESSource.xangle = 130
-  process.ctppsFastProtonSimulation.empiricalAperture45_xi0 = 0.148
-  process.ctppsFastProtonSimulation.empiricalAperture56_xi0 = 0.18
-  #process.ctppsAcceptancePlotter.outputFile = "acceptance_xangle_130.root"
-#
-UseCrossingAngle130()
+#print process.dumpPython()
 
 
 

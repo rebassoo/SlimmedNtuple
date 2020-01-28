@@ -207,16 +207,16 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   *lumiblock_ = iEvent.luminosityBlock();
 
   //get beam-crossing angle and LHC conditions
-  if(isMC==false){
-    edm::ESHandle<LHCInfo> hLHCInfo;
-    std::string lhcInfoLabel("");
-    iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
-    if(hLHCInfo.isValid()){
-      *crossingAngle_=hLHCInfo->crossingAngle();
-      *betaStar_=hLHCInfo->betaStar();
-      *instLumi_=hLHCInfo->instLumi();
-    }
+  //if(isMC==false){
+  edm::ESHandle<LHCInfo> hLHCInfo;
+  std::string lhcInfoLabel("");
+  iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
+  if(hLHCInfo.isValid()){
+    *crossingAngle_=hLHCInfo->crossingAngle();
+    *betaStar_=hLHCInfo->betaStar();
+    *instLumi_=hLHCInfo->instLumi();
   }
+    //}
   edm::Handle< std::vector<reco::Vertex> > vertices_;
   iEvent.getByToken(vertex_token_, vertices_);
   reco::VertexRef vtx(vertices_, 0);
@@ -656,7 +656,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     }
 	   }
 
-	 if((mcIter->pdgId() == 2212) && (fabs(mcIter->pz()) > 3000) && (mcIter->status() == 1))
+	 //if((mcIter->pdgId() == 2212) && (fabs(mcIter->pz()) > 3000) && (mcIter->status() == 1))
+	 if((mcIter->pdgId() == 2212) && (mcIter->status() == 1))
 	   {
 	     double thexi = 1 - ((mcIter->energy())/(13000.0/2.0));
 	     double thet = -(std::pow(mcIter->pt(), 2));
@@ -829,6 +830,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
      *dphiWW_=dphi;
      *WLeptonicPhi_=WLeptonic_phi;
      *WLeptonicPt_=WLeptonic_Pt;
+     *WLeptonicEta_=WLeptonic.Rapidity();
      *recoMWW_=MWW_Nu;
      *recoWWpt_=WW_p4_nu.Pt();
      *recoRapidityWW_=WW_p4_nu.Rapidity();
@@ -1094,6 +1096,7 @@ Ntupler::beginJob()
   dphiWW_ = new float;
   WLeptonicPt_ = new float;
   WLeptonicPhi_ = new float;
+  WLeptonicEta_ = new float;
 
   //ecalBadCalFilter_ = new bool;
 
@@ -1203,6 +1206,7 @@ Ntupler::beginJob()
   tree_->Branch("dphiWW",dphiWW_,"dphiWW/f");
   tree_->Branch("WLeptonicPt",WLeptonicPt_,"WLeptonicPt/f");
   tree_->Branch("WLeptonicPhi",WLeptonicPhi_,"WLeptonicPhi/f");
+  tree_->Branch("WLeptonicEta",WLeptonicEta_,"WLeptonicEta/f");
 
   tree_->Branch("jet_pt",&jet_pt_);
   tree_->Branch("jet_px",&jet_px_);
@@ -1325,6 +1329,7 @@ Ntupler::endJob()
   delete genWWpt_;
   delete WLeptonicPt_;
   delete WLeptonicPhi_;
+  delete WLeptonicEta_;
 
   delete jet_pt_;
   delete jet_px_;

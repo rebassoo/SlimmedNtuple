@@ -238,6 +238,7 @@ private:
   float * genWWpt_;
   float * WLeptonicPt_;
   float * WLeptonicPhi_;
+  float * WLeptonicEta_;
 
   //bool * ecalBadCalFilter_;
 
