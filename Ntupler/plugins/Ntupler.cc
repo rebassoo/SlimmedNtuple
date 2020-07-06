@@ -53,14 +53,21 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
     {
       //reco_protons_token_=consumes<std::vector<reco::ProtonTrack>>(edm::InputTag("ctppsProtonReconstructionOFDB"));
       //LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", "pileup", "pileup");
-      LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", mcName, "pileup");
+      if(year==2017){
+	LumiWeights = new edm::LumiReWeighting("PUHistos_mc.root", "PUHistos_data.root", mcName, "pileup");}
+      if(year==2018){
+	LumiWeights = new edm::LumiReWeighting("PUHistos_mc_2018.root", "PUHistos_data_2018.root","pileup", "pileup");}
+
     }
   
   std::vector<std::string> jecAK8PayloadNames_;
   std::vector<std::string> jecAK8PayloadNames_withL1_;
   std::string prefix;
   if (isInteractive==true){
-    prefix="2017-JEC-JER/";
+    if(year==2017){
+      prefix="2017-JEC-JER/";}
+    if(year==2018){
+      prefix="2018-JEC-JER/";}
   }
   else{
     prefix="";
@@ -106,10 +113,37 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
        //jecAK8PayloadNames_withL1_.push_back(prefix+"Fall17_17Nov2017_V32_MC_L1FastJet_AK8PFchs.txt");
        //jecAK8PayloadNames_withL1_.push_back(prefix+"Fall17_17Nov2017_V32_MC_L2Relative_AK8PFchs.txt");
        //jecAK8PayloadNames_withL1_.push_back(prefix+"Fall17_17Nov2017_V32_MC_L3Absolute_AK8PFchs.txt");
-       
-       
     }
-  
+
+  if(isMC==true && year==2018)
+    {
+      jecAK8PayloadNames_.push_back("Autumn18_V19_MC_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_V19_MC_L3Absolute_AK8PFchs.txt");
+    }
+  if(isMC==false && year==2018 && era == "A")
+    {
+      jecAK8PayloadNames_.push_back("Autumn18_RunA_V19_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_RunA_V19_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_RunA_V19_DATA_L2L3Residual_AK8PFchs.txt");
+    }
+  if(isMC==false && year==2018 && era == "B")
+    {
+      jecAK8PayloadNames_.push_back("Autumn18_RunB_V19_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_RunB_V19_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_RunB_V19_DATA_L2L3Residual_AK8PFchs.txt");
+    }
+  if(isMC==false && year==2018 && era == "C")
+    {
+      jecAK8PayloadNames_.push_back("Autumn18_RunC_V19_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_RunC_V19_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_RunC_V19_DATA_L2L3Residual_AK8PFchs.txt");
+    }
+  if(isMC==false && year==2018 && era == "D")
+    {
+      jecAK8PayloadNames_.push_back("Autumn18_RunD_V19_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_RunD_V19_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back("Autumn18_RunD_V19_DATA_L2L3Residual_AK8PFchs.txt");
+    }
   /*
    std::vector<JetCorrectorParameters> vPar_withL1;
    for ( std::vector<std::string>::const_iterator payloadBegin = jecAK8PayloadNames_withL1_.begin(),
@@ -145,6 +179,18 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
 
 
      }
+
+
+   if(isMC==true && year==2018)
+     {
+       jerAK8chsName_res_ = prefix+"Autumn18_V7b_MC_PtResolution_AK8PFchs.txt";
+       jerAK8chsName_sf_ = prefix+"Autumn18_V7b_MC_SF_AK8PFchs.txt";
+       jerAK4chsName_res_ = prefix+"Autumn18_V7b_MC_PtResolution_AK4PFchs.txt";
+       jerAK4chsName_sf_ = prefix+"Autumn18_V7b_MC_SF_AK8PFchs.txt";
+
+     }
+
+
 
 }
 
@@ -603,17 +649,17 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    // Fill pileup reweighting info if running on MC
    *pileupWeight_=1;
    *mc_pu_trueinteractions_=-999;
-   if(isMC == true)
-     {
-       float trueInteractions=0;
-       edm::Handle<std::vector< PileupSummaryInfo > >  PupInfo;
-       iEvent.getByToken(pu_token_, PupInfo);
-       std::vector<PileupSummaryInfo>::const_iterator PVI;
-       //cout<<"True num interactions is: "<<PupInfo->begin()->getTrueNumInteractions()<<endl;                                                              
-       trueInteractions=PupInfo->begin()->getTrueNumInteractions();
-       *pileupWeight_ = LumiWeights->weight( trueInteractions );
-       *mc_pu_trueinteractions_ = trueInteractions;
-     }
+   //if(isMC == true)
+   //{
+   float trueInteractions=0;
+   edm::Handle<std::vector< PileupSummaryInfo > >  PupInfo;
+   iEvent.getByToken(pu_token_, PupInfo);
+   std::vector<PileupSummaryInfo>::const_iterator PVI;
+   //cout<<"True num interactions is: "<<PupInfo->begin()->getTrueNumInteractions()<<endl;                                                              
+   trueInteractions=PupInfo->begin()->getTrueNumInteractions();
+   *pileupWeight_ = LumiWeights->weight( trueInteractions );
+   *mc_pu_trueinteractions_ = trueInteractions;
+    //}
 
 
    /*
@@ -656,8 +702,8 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	     }
 	   }
 
-	 //if((mcIter->pdgId() == 2212) && (fabs(mcIter->pz()) > 3000) && (mcIter->status() == 1))
-	 if((mcIter->pdgId() == 2212) && (mcIter->status() == 1))
+	 if((mcIter->pdgId() == 2212) && (fabs(mcIter->pz()) > 650) && (mcIter->status() == 1))
+	 //if((mcIter->pdgId() == 2212) && (mcIter->status() == 1))
 	   {
 	     double thexi = 1 - ((mcIter->energy())/(13000.0/2.0));
 	     double thet = -(std::pow(mcIter->pt(), 2));
