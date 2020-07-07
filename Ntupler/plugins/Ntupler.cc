@@ -253,16 +253,16 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   *lumiblock_ = iEvent.luminosityBlock();
 
   //get beam-crossing angle and LHC conditions
-  //if(isMC==false){
-  edm::ESHandle<LHCInfo> hLHCInfo;
-  std::string lhcInfoLabel("");
-  iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
-  if(hLHCInfo.isValid()){
-    *crossingAngle_=hLHCInfo->crossingAngle();
-    *betaStar_=hLHCInfo->betaStar();
-    *instLumi_=hLHCInfo->instLumi();
+  if(isMC==false){
+    edm::ESHandle<LHCInfo> hLHCInfo;
+    std::string lhcInfoLabel("");
+    iSetup.get<LHCInfoRcd>().get(lhcInfoLabel, hLHCInfo);
+    if(hLHCInfo.isValid()){
+      *crossingAngle_=hLHCInfo->crossingAngle();
+      *betaStar_=hLHCInfo->betaStar();
+      *instLumi_=hLHCInfo->instLumi();
+    }
   }
-    //}
   edm::Handle< std::vector<reco::Vertex> > vertices_;
   iEvent.getByToken(vertex_token_, vertices_);
   reco::VertexRef vtx(vertices_, 0);
@@ -649,17 +649,17 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    // Fill pileup reweighting info if running on MC
    *pileupWeight_=1;
    *mc_pu_trueinteractions_=-999;
-   //if(isMC == true)
-   //{
-   float trueInteractions=0;
-   edm::Handle<std::vector< PileupSummaryInfo > >  PupInfo;
-   iEvent.getByToken(pu_token_, PupInfo);
-   std::vector<PileupSummaryInfo>::const_iterator PVI;
-   //cout<<"True num interactions is: "<<PupInfo->begin()->getTrueNumInteractions()<<endl;                                                              
-   trueInteractions=PupInfo->begin()->getTrueNumInteractions();
-   *pileupWeight_ = LumiWeights->weight( trueInteractions );
-   *mc_pu_trueinteractions_ = trueInteractions;
-    //}
+   if(isMC == true)
+   {
+     float trueInteractions=0;
+     edm::Handle<std::vector< PileupSummaryInfo > >  PupInfo;
+     iEvent.getByToken(pu_token_, PupInfo);
+     std::vector<PileupSummaryInfo>::const_iterator PVI;
+     //cout<<"True num interactions is: "<<PupInfo->begin()->getTrueNumInteractions()<<endl;                                                              
+     trueInteractions=PupInfo->begin()->getTrueNumInteractions();
+     *pileupWeight_ = LumiWeights->weight( trueInteractions );
+     *mc_pu_trueinteractions_ = trueInteractions;
+   }
 
 
    /*
