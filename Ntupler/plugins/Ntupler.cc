@@ -117,32 +117,32 @@ Ntupler::Ntupler(const edm::ParameterSet& iConfig):
 
   if(isMC==true && year==2018)
     {
-      jecAK8PayloadNames_.push_back("Autumn18_V19_MC_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_V19_MC_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_V19_MC_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_V19_MC_L3Absolute_AK8PFchs.txt");
     }
   if(isMC==false && year==2018 && era == "A")
     {
-      jecAK8PayloadNames_.push_back("Autumn18_RunA_V19_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_RunA_V19_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_RunA_V19_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunA_V19_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunA_V19_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunA_V19_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2018 && era == "B")
     {
-      jecAK8PayloadNames_.push_back("Autumn18_RunB_V19_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_RunB_V19_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_RunB_V19_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunB_V19_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunB_V19_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunB_V19_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2018 && era == "C")
     {
-      jecAK8PayloadNames_.push_back("Autumn18_RunC_V19_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_RunC_V19_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_RunC_V19_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunC_V19_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunC_V19_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunC_V19_DATA_L2L3Residual_AK8PFchs.txt");
     }
   if(isMC==false && year==2018 && era == "D")
     {
-      jecAK8PayloadNames_.push_back("Autumn18_RunD_V19_DATA_L2Relative_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_RunD_V19_DATA_L3Absolute_AK8PFchs.txt");
-      jecAK8PayloadNames_.push_back("Autumn18_RunD_V19_DATA_L2L3Residual_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunD_V19_DATA_L2Relative_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunD_V19_DATA_L3Absolute_AK8PFchs.txt");
+      jecAK8PayloadNames_.push_back(prefix+"Autumn18_RunD_V19_DATA_L2L3Residual_AK8PFchs.txt");
     }
   /*
    std::vector<JetCorrectorParameters> vPar_withL1;
@@ -225,7 +225,9 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
   iEvent.getByToken(hlt_token_,hltResults);
   const edm::TriggerNames & trigNames = iEvent.triggerNames(*hltResults);
   std::string TriggerPrefix_mu = "HLT_IsoMu27_";
+  std::string TriggerPrefix_mu2 = "HLT_IsoMu24_";
   std::string TriggerPrefix_e = "HLT_Ele35_WPTight_Gsf_v";
+  std::string TriggerPrefix_e2 = "HLT_Ele32_WPTight_Gsf_v";
   bool passTrigger_mu=false;
   bool passTrigger_e=false;
   for(unsigned int i=0; i<trigNames.size();i++)
@@ -240,12 +242,24 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  passTrigger_mu=true;
 	}
       }
+
+      if(TriggerName.find(TriggerPrefix_mu2) != std::string::npos){
+	if((hltResults->accept(i)>0)&&(prescale_value==1)){
+	  passTrigger_mu=true;
+	}
+      }
       
       if(TriggerName.find(TriggerPrefix_e) != std::string::npos){
 	if((hltResults->accept(i)>0)&&(prescale_value==1)){
 	  passTrigger_e=true;
 	 }
       }
+      if(TriggerName.find(TriggerPrefix_e2) != std::string::npos){
+	if((hltResults->accept(i)>0)&&(prescale_value==1)){
+	  passTrigger_e=true;
+	 }
+      }
+
     }
   // Run and vertex multiplicity info
   *run_ = iEvent.id().run();
@@ -800,6 +814,7 @@ Ntupler::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
        //if(fabs(pfcand.pdgId())==211&&pfcand.fromPV(0)==3){
        if((*jet_eta_).size()>0){
 	 if(pfcand.fromPV(0)==3&&(fabs(pfcand.pdgId())==13||fabs(pfcand.pdgId())==211||fabs(pfcand.pdgId()) == 11 )){
+		 
 	   double deltaR=sqrt(  (pfcand.eta()-(*jet_eta_)[0])*(pfcand.eta()-(*jet_eta_)[0]) + deltaPhi(pfcand.phiAtVtx(),(*jet_phi_)[0])*deltaPhi(pfcand.phiAtVtx(),(*jet_phi_)[0]));
 	   if (deltaR>0.8){
 	     //cout<<"z distance: "<<pfcand.vertex().z()-vtx->position().z()-vtx->position().z()<<endl;
